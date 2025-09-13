@@ -1,165 +1,298 @@
-# ToxiGen Hate Speech Detection
+# Hate Speech Detection: HateXplain + ToxiGen Unified Dataset
 
-A machine learning project for hate speech detection using the ToxiGen dataset.
+A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups.
 
-## Project Structure
+## 🎯 Project Overview
+
+This project provides:
+- **Dual Dataset Integration**: Combines real social media data (HateXplain) with synthetic data (ToxiGen)
+- **Filtered Target Groups**: Focuses on 3 specific demographics for targeted analysis
+- **Unified Schema**: Consistent 12-field schema for both datasets
+- **Robust Pipeline**: End-to-end data collection, processing, and unification
+- **High Test Coverage**: Comprehensive test suite with 70%+ coverage
+
+## 📁 Project Structure
 
 ```
 HateSpeechDetection_ver2/
 ├── data/
-│   └── toxigen/           # Downloaded dataset files
-│       ├── train.parquet
-│       ├── annotated.parquet
-│       └── annotations.parquet
-├── data_collection/
-│   └── toxigen_downloader.py  # Dataset download utility
-├── tests/                 # Test suite
-│   ├── test_toxigen_data_presence.py
-│   └── test_toxigen_downloader.py
-├── requirements.txt       # Project dependencies
-├── pyproject.toml        # Project configuration & pytest settings
-└── run_tests.py          # Test runner convenience script
+│   ├── hatexplain/           # HateXplain raw dataset
+│   │   ├── dataset.json
+│   │   ├── post_id_divisions.json
+│   │   └── classes*.npy
+│   ├── toxigen/              # ToxiGen raw dataset  
+│   │   ├── train.parquet
+│   │   ├── annotated.parquet
+│   │   └── annotations.parquet
+│   └── processed/            # Processed & unified data
+│       ├── hatexplain/       # Processed HateXplain
+│       ├── toxigen/          # Processed ToxiGen
+│       └── unified/          # Final unified dataset
+│           ├── unified_train.json
+│           ├── unified_val.json
+│           ├── unified_test.json
+│           └── unified_dataset_stats.json
+├── data_collection/          # Dataset downloaders
+│   ├── hatexplain_downloader.py
+│   ├── toxigen_downloader.py
+│   ├── hatexplain_data_presence_validator.py
+│   └── toxigen_data_presence_validator.py
+├── data_preparation/         # Data processing pipeline
+│   ├── data_preparation_hatexplain.py
+│   ├── data_preparation_toxigen.py
+│   └── data_unification.py
+├── tests/                    # Comprehensive test suite
+├── requirements.txt          # Project dependencies
+├── pyproject.toml           # Project configuration
+├── run_tests.py             # Test runner
+├── README.md                # This file
+└── UNIFICATION_GUIDE.md     # Detailed unification documentation
 ```
 
-## Setup
+## 🚀 Quick Start
 
-1. **Install dependencies:**
+### 1. Setup Environment
+
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Download the ToxiGen dataset:**
+### 2. Download Datasets
+
+Download both HateXplain and ToxiGen datasets:
+
 ```bash
+# Download HateXplain dataset
+python -m data_collection.hatexplain_downloader
+
+# Download ToxiGen dataset  
 python -m data_collection.toxigen_downloader
 ```
 
-Or with specific options:
+### 3. Process Datasets
+
 ```bash
-python -m data_collection.toxigen_downloader --format parquet --overwrite
+# Process HateXplain data
+python -m data_preparation.data_preparation_hatexplain
+
+# Process ToxiGen data
+python -m data_preparation.data_preparation_toxigen
 ```
 
-## Testing
-
-This project uses pytest with comprehensive test coverage and multiple test categories.
-
-### Quick Start
+### 4. Create Unified Dataset
 
 ```bash
-# Run all tests
+# Unify both datasets (filtered to LGBTQ, Mexican, Middle East)
+python -m data_preparation.data_unification
+```
+
+This creates the unified dataset with **64,321 entries** across 3 target groups:
+
+- **LGBTQ**: 22,785 entries (35.4%)
+- **Mexican**: 20,632 entries (32.1%)  
+- **Middle East**: 20,904 entries (32.5%)
+
+## 📊 Unified Dataset Features
+
+### Target Groups & Mapping
+
+| **Group** | **HateXplain Source** | **ToxiGen Source** | **Final Count** |
+|-----------|----------------------|-------------------|-----------------|
+| **LGBTQ** | Homosexual, Gay | lgbtq | 22,785 |
+| **Mexican** | Hispanic, Latino | mexican | 20,632 |
+| **Middle East** | Arab | middle_east | 20,904 |
+
+### Label Distribution
+
+- **Binary Labels**: 46.9% hate, 53.1% normal (balanced for training)
+- **Multiclass Labels**: hate, offensive, normal, toxic_implicit, benign
+- **Sources**: 95.8% ToxiGen (synthetic), 4.2% HateXplain (real social media)
+
+### Unified Schema (12 Fields)
+
+| **Field** | **Purpose** | **Example Values** |
+|-----------|-------------|-------------------|
+| `text` | Input text | "This is offensive content..." |
+| `label_binary` | Binary classification | "hate", "normal" |
+| `label_multiclass` | Multi-class labels | "hatespeech", "toxic_implicit", "benign" |
+| `target_group_norm` | Normalized group | "lgbtq", "mexican", "middle_east" |
+| `persona_tag` | Persona identifier | "LGBTQ", "MEXICAN", "MIDDLE_EAST" |
+| `source_dataset` | Data provenance | "hatexplain", "toxigen" |
+| `rationale_text` | Label explanation | Human rationale (HateXplain only) |
+| `is_synthetic` | Generated flag | true (ToxiGen), false (HateXplain) |
+| `fine_tuning_embedding` | Model features | Computed embedding vector |
+| `original_id` | Source identifier | Original dataset ID |
+| `split` | Data split | "train", "val", "test" |
+
+## 🧪 Testing & Validation
+
+This project includes comprehensive testing for all components with 70%+ coverage.
+
+### Quick Test Commands
+
+```bash
+# Run all tests with coverage
 python run_tests.py all
 
-# Run just unit tests (fast)
+# Run only fast unit tests  
 python run_tests.py unit
 
-# Run data validation tests with output
+# Run data validation tests
 python run_tests.py data
 
 # Run without coverage (fastest)
 python run_tests.py fast
 ```
 
-### Direct pytest Usage
+### Test Categories
 
-```bash
-# All tests with coverage
-pytest tests/ -v
+**Data Collection Tests:**
 
-# Unit tests only
-pytest tests/ -v -m "unit"
+- HateXplain downloader validation
+- ToxiGen downloader validation  
+- Data presence verification
+- File integrity checks
 
-# Data tests with output
-pytest tests/ -v -m "data" -s
+**Data Preparation Tests:**
 
-# Integration tests
-pytest tests/ -v -m "integration"
+- HateXplain processing pipeline
+- ToxiGen processing pipeline
+- Label mapping validation
+- Feature extraction verification
 
-# Skip slow tests
-pytest tests/ -v -m "not slow"
-```
+**Unification Tests:**
 
-### Test Markers
-
-- `@pytest.mark.unit` - Fast unit tests, no external dependencies
-- `@pytest.mark.integration` - Integration tests with external systems
-- `@pytest.mark.data` - Tests requiring dataset files
-- `@pytest.mark.slow` - Long-running tests
+- Schema consistency validation
+- Target group filtering
+- Label distribution verification  
+- Split ratio validation
 
 ### Coverage Reports
 
-Coverage reports are automatically generated and saved to `htmlcov/index.html`.
-
-View coverage in browser:
 ```bash
+# Generate and view coverage report
 python run_tests.py coverage
-# Open htmlcov/index.html in your browser
+# Open htmlcov/index.html in browser
 ```
 
-## Dataset Information
-
-The ToxiGen dataset contains three splits:
-
-- **train**: ~250k synthetic text examples for training
-- **annotated**: ~9k human-annotated examples for evaluation  
-- **annotations**: ~27k raw annotation data from human study
-
-### Dataset Schema
-
-**Train split fields:**
-- `prompt` - Input prompt used for generation
-- `generation` - Generated text sample
-- `generation_method` - Method used for generation
-- `group` - Target demographic group
-- `prompt_label` - Label for the prompt
-- `roberta_prediction` - RoBERTa model prediction
-
-**Annotated split fields:**
-- `text` - Text sample
-- `target_group` - Target demographic
-- `factual?` - Factual content indicator
-- `ingroup_effect` - Ingroup/outgroup effect
-- `lewd` - Lewd content indicator
-- `framing` - Framing analysis
-
-## Development
-
-### Adding New Tests
-
-1. Create test files in `tests/` following the pattern `test_*.py`
-2. Use appropriate markers: `@pytest.mark.unit`, `@pytest.mark.integration`, etc.
-3. Follow the existing patterns for mocking external dependencies
-
-### Running Specific Tests
+### Manual pytest Usage
 
 ```bash
-# Run specific test file
-pytest tests/test_toxigen_data_presence.py -v
+# All tests with detailed output
+pytest tests/ -v
 
-# Run specific test function
-pytest tests/test_toxigen_data_presence.py::test_toxigen_data_presence -v
+# Run specific test categories
+pytest tests/ -v -m "unit"           # Unit tests only
+pytest tests/ -v -m "data"           # Data validation tests  
+pytest tests/ -v -m "integration"    # Integration tests
 
-# Run with specific marker
-pytest -m "unit and not slow" -v
+# Run specific test files
+pytest tests/test_hatexplain_downloader.py -v
+pytest tests/test_toxigen_data_preparation.py -v
 ```
 
-### Configuration
+## 📈 Dataset Information
 
-Test configuration is managed in `pyproject.toml`:
+### HateXplain Dataset
 
-- **Coverage threshold**: 70% minimum
-- **Test discovery**: `tests/` directory, `test_*.py` files
-- **Coverage reports**: Terminal + HTML
-- **Markers**: Custom markers for test categorization
+**Source**: Real social media posts from Twitter and Gab  
+**Size**: ~20K posts with human annotations  
+**Splits**: train/val/test (80/10/10)  
+**Labels**: hate, offensive, normal  
+**Target Groups**: 13+ demographic groups (filtered to 3 for this project)
 
-## Dependencies
+**Key Fields:**
 
-Core dependencies:
-- `datasets` - Hugging Face datasets library
-- `pandas` - Data manipulation
-- `pyarrow` - Parquet file support
+- `post_text` - Original social media text
+- `majority_label` - Human-annotated labels  
+- `target` - Target demographic groups
+- `rationale_text` - Human explanations for labels
 
-Testing dependencies:
-- `pytest` - Test framework
-- `pytest-cov` - Coverage reporting
-- `pytest-mock` - Mocking utilities
+### ToxiGen Dataset  
 
-See `requirements.txt` for full dependency list and versions.
+**Source**: Machine-generated synthetic text  
+**Size**: ~250K generated examples  
+**Splits**: train/val/test (70/10/20)  
+**Labels**: toxic/benign based on prompts  
+**Target Groups**: 13 minority demographic groups
+
+**Key Fields:**
+
+- `generation` - Machine-generated text
+- `prompt_label` - Binary toxicity label (1=toxic, 0=benign)
+- `group` - Target demographic group  
+- `roberta_prediction` - RoBERTa toxicity score
+
+### Unified Dataset Output
+
+After processing and unification:
+
+- **Total Entries**: 64,321 (filtered from ~270K original)
+- **Target Groups**: 3 (LGBTQ, Mexican, Middle East)  
+- **Label Balance**: 47% hate, 53% normal
+- **Data Split**: 80% train, 10% val, 10% test
+- **File Format**: JSON with unified 12-field schema
+
+## 🔧 Development & Extension
+
+### Adding New Target Groups
+
+1. Update `VALID_TARGET_GROUPS` in `data_unification.py`
+2. Add mapping rules in `TARGET_GROUP_NORMALIZATION`  
+3. Update persona tags in `TOP_PERSONA_TAGS`
+4. Re-run unification pipeline
+
+### Modifying Label Mapping
+
+**HateXplain**: Edit `map_hatexplain_labels()` in `data_unification.py`  
+**ToxiGen**: Edit `map_toxigen_labels()` in `data_unification.py`
+
+### Custom Processing
+
+Extend the data processors:
+
+- `data_preparation_hatexplain.py` - HateXplain-specific processing
+- `data_preparation_toxigen.py` - ToxiGen-specific processing  
+- `data_unification.py` - Cross-dataset unification logic
+
+## 📋 Dependencies
+
+**Core Libraries:**
+
+- `datasets` - Hugging Face datasets for loading
+- `pandas` - Data manipulation and analysis
+- `pyarrow` - Efficient Parquet file processing
+- `numpy` - Numerical computing support
+
+**Testing Libraries:**
+
+- `pytest` - Test framework with fixtures
+- `pytest-cov` - Coverage reporting and analysis  
+- `pytest-mock` - Mocking utilities for isolation
+
+**See `requirements.txt` for complete dependency list with versions.**
+
+## 📚 Additional Documentation
+
+- **`UNIFICATION_GUIDE.md`** - Detailed unification process and schema documentation
+- **`htmlcov/index.html`** - Test coverage reports (generated after running tests)
+- **`data/processed/unified/unified_dataset_stats.json`** - Dataset statistics and distributions
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Add tests for new functionality  
+4. Ensure test coverage remains above 70%
+5. Commit changes (`git commit -m 'Add amazing feature'`)
+6. Push to branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
+
+## 📄 License
+
+This project processes publicly available datasets:
+
+- **HateXplain**: MIT License  
+- **ToxiGen**: Apache License 2.0
+
+Please cite the original papers when using this unified dataset.
