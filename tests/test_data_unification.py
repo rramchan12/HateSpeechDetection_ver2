@@ -495,7 +495,7 @@ class TestUnifyEntry:
         assert result['label_binary'] == 'hate'
         assert result['label_multiclass'] == 'toxic_implicit'
         assert result['source_dataset'] == 'toxigen'
-        assert result['is_synthetic'] == True
+        assert result['is_synthetic'] == False  # Real examples from ToxiGen, not synthetically generated in this pipeline
         assert result['rationale_text'] is None
         assert result['original_id'] == 'tg_12345'
         assert result['split'] == 'train'
@@ -672,7 +672,7 @@ class TestAnalyzeUnifiedDataset:
                     'target_group_norm': 'mexican',
                     'persona_tag': 'mexican',
                     'source_dataset': 'toxigen',
-                    'is_synthetic': True,
+                    'is_synthetic': False,  # Real ToxiGen examples
                     'rationale_text': None
                 },
                 {
@@ -682,7 +682,7 @@ class TestAnalyzeUnifiedDataset:
                     'target_group_norm': 'middle_east',
                     'persona_tag': 'arab',
                     'source_dataset': 'toxigen',
-                    'is_synthetic': True,
+                    'is_synthetic': False,  # Real ToxiGen examples
                     'rationale_text': None
                 }
             ]

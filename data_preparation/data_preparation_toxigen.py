@@ -466,9 +466,9 @@ class ToxiGenDataProcessor:
                     'lewd': row.get('lewd', 'unknown')
                 }
                 
-                # Binary label (threshold-based)
-                toxicity_threshold = 3.0
-                features['label_binary'] = 'hate' if features['toxicity_human'] >= toxicity_threshold else 'normal'
+                # Binary label - use the existing label_binary field that was set from prompt_label
+                # Don't overwrite it with threshold-based logic
+                features['label_binary'] = row.get('label_binary', 'benign')
                 
                 # Text-based features
                 text_lower = text.lower() if text else ''

@@ -394,6 +394,85 @@ class HateXplainDataProcessor:
         
         return cleaned_tokens
     
+    def _is_synthetically_augmented(self, post_id: str, entry: Dict[str, Any]) -> bool:
+        """
+        Hook for synthetic data augmentation detection.
+        
+        This method serves as a hook for future synthetic data generation functionality.
+        Currently returns False for all original HateXplain entries, but can be extended
+        to detect synthetically augmented entries when augmentation is implemented.
+        
+        Args:
+            post_id: Unique identifier for the post
+            entry: Post entry data
+            
+        Returns:
+            Boolean indicating if this entry was synthetically generated/augmented
+            
+        Note:
+            Future implementation could include:
+            - Detection of augmented entries based on metadata
+            - Integration with synthetic text generation pipelines
+            - Paraphrase augmentation detection
+            - Back-translation augmentation detection
+        """
+        # Hook for future synthetic generation
+        # Currently all HateXplain entries are original (not synthetic)
+        # This can be extended when implementing data augmentation
+        
+        # Example future logic:
+        # if 'augmentation_method' in entry:
+        #     return True
+        # if post_id.startswith('synthetic_'):
+        #     return True
+        # if entry.get('generation_source') == 'paraphrase':
+        #     return True
+        
+        return False  # All original HateXplain entries are real social media data
+    
+    def generate_synthetic_augmentations(self, augmentation_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        Hook for future synthetic data augmentation.
+        
+        This method serves as a placeholder for future synthetic data generation functionality
+        that can augment the HateXplain dataset with additional training examples.
+        
+        Args:
+            augmentation_config: Configuration for augmentation methods
+            
+        Returns:
+            Dictionary containing augmentation statistics and results
+            
+        Note:
+            Future implementation could include:
+            - Paraphrase generation using language models
+            - Back-translation augmentation
+            - Synonym replacement
+            - Adversarial text generation
+            - Template-based generation
+        """
+        logger.info("Synthetic augmentation hook called (not implemented yet)")
+        
+        if augmentation_config is None:
+            augmentation_config = {
+                'methods': ['paraphrase', 'back_translation'],
+                'augmentation_ratio': 0.2,  # 20% additional synthetic data
+                'target_labels': ['hate'],   # Focus on minority class
+                'preserve_rationales': True
+            }
+        
+        # Placeholder for future implementation
+        augmentation_stats = {
+            'original_entries': len(self.dataset) if self.dataset else 0,
+            'synthetic_entries_generated': 0,
+            'augmentation_methods_used': [],
+            'target_labels_augmented': [],
+            'total_entries_after_augmentation': len(self.dataset) if self.dataset else 0
+        }
+        
+        logger.warning("Synthetic augmentation not yet implemented. Returning placeholder stats.")
+        return augmentation_stats
+    
     def extract_features(self) -> Union[pd.DataFrame, List[Dict]]:
         """
         Extract features from the cleaned dataset.
@@ -497,6 +576,9 @@ class HateXplainDataProcessor:
                 features['exclamation_count'] = text.count('!')
                 features['question_count'] = text.count('?')
                 features['caps_ratio'] = sum(1 for c in features['text'] if c.isupper()) / len(features['text']) if features['text'] else 0
+                
+                # Synthetic augmentation flag (hook for future synthetic generation)
+                features['is_synthetic'] = self._is_synthetically_augmented(post_id, entry)
                 
                 # Determine split
                 for split_name, post_ids in self.divisions.items():

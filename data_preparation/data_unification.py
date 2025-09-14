@@ -166,18 +166,21 @@ class DatasetUnifier:
         
         return None
     
-    def extract_persona_tag(self, target_group_norm: Optional[str]) -> Optional[str]:
+    def extract_persona_tag(self, original_target_group: str, target_group_norm: Optional[str]) -> Optional[str]:
         """
-        Extract persona tag for top target groups.
+        Extract persona tag preserving original identity while normalizing target groups.
         
         Args:
+            original_target_group: Original target group from source dataset
             target_group_norm: Normalized target group name
             
         Returns:
-            Persona tag if in top personas, None otherwise
+            Original persona tag (lowercased) if target group is valid, None otherwise
         """
-        if target_group_norm and target_group_norm in self.TOP_PERSONA_TAGS:
-            return target_group_norm
+        # Only return persona tag if the normalized target group is valid
+        if target_group_norm and target_group_norm in self.VALID_TARGET_GROUPS:
+            # Return the original target group (lowercased) as persona tag
+            return original_target_group.lower().strip()
         
         return None
     
@@ -218,7 +221,7 @@ class DatasetUnifier:
             multiclass_label = 'toxic_implicit'  # ToxiGen is implicit toxicity
         else:  # benign or normal
             binary_label = 'normal'
-            multiclass_label = 'benign'
+            multiclass_label = 'benign_implicit'  # ToxiGen is implicit toxicity
         
         return binary_label, multiclass_label
     
@@ -296,11 +299,12 @@ class DatasetUnifier:
             
             # Target group normalization (already validated above)
             unified['target_group_norm'] = target_group_norm
-            unified['persona_tag'] = self.extract_persona_tag(target_group_norm)
+            unified['persona_tag'] = self.extract_persona_tag(target_raw, target_group_norm)
             
             # Source and synthetic flags
             unified['source_dataset'] = 'hatexplain'
-            unified['is_synthetic'] = False  # HateXplain is real social media data
+            # Check if this entry was synthetically augmented (from future synthetic generation)
+            unified['is_synthetic'] = entry.get('is_synthetic', False)
             
             # Rationale text
             rationale = entry.get('rationale_text', 'NA')
@@ -318,11 +322,11 @@ class DatasetUnifier:
             
             # Target group normalization (already validated above)
             unified['target_group_norm'] = target_group_norm
-            unified['persona_tag'] = self.extract_persona_tag(target_group_norm)
+            unified['persona_tag'] = self.extract_persona_tag(target_raw, target_group_norm)
             
             # Source and synthetic flags
             unified['source_dataset'] = 'toxigen'
-            unified['is_synthetic'] = True  # ToxiGen is machine-generated
+            unified['is_synthetic'] = False  # Real examples from ToxiGen dataset, not synthetically generated in this pipeline
             
             # No rationale available for ToxiGen
             unified['rationale_text'] = None
@@ -592,7 +596,9 @@ def main():
     # Export unified dataset
     unifier.export_unified_dataset(format='json')
     
-    print("\n✅ Dataset unification completed successfully!")
+    print("\n" + "*" * 60)
+    print("*** Dataset unification completed successfully! ***")
+    print("*" * 60)
 
 
 if __name__ == "__main__":

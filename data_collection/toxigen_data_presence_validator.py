@@ -144,10 +144,10 @@ if __name__ == "__main__":
     """Run the validator when executed directly."""
     try:
         summary = validate_toxigen_data_presence()
-        print(f"\n✅ Validation successful! Found {len(summary)} splits.")
+        print(f"\n>> Validation successful! Found {len(summary)} splits.")
     except AssertionError as e:
-        print(f"❌ Validation failed: {e}")
+        print(f">> ERROR: Validation failed: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"💥 Unexpected error: {e}")
+        print(f">> UNEXPECTED ERROR: {e}")
         sys.exit(1)

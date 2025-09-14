@@ -46,23 +46,23 @@ def _download_file(url: str, destination: Path, overwrite: bool = False) -> bool
         True if downloaded successfully, False otherwise
     """
     if destination.exists() and not overwrite:
-        print(f"✓ {destination.name} already exists (use --overwrite to replace)")
+        print(f">> {destination.name} already exists (use --overwrite to replace)")
         return True
         
     try:
-        print(f"📥 Downloading {destination.name}...")
+        print(f">> Downloading {destination.name}...")
         urllib.request.urlretrieve(url, destination)
         
         # Verify file was downloaded and has content
         if destination.exists() and destination.stat().st_size > 0:
-            print(f"✅ Downloaded {destination.name} ({destination.stat().st_size:,} bytes)")
+            print(f">> Downloaded {destination.name} ({destination.stat().st_size:,} bytes)")
             return True
         else:
-            print(f"❌ Failed to download {destination.name} - file is empty or missing")
+            print(f">> ERROR: Failed to download {destination.name} - file is empty or missing")
             return False
             
     except urllib.error.URLError as e:
-        print(f"❌ Failed to download {destination.name}: {e}")
+        print(f">> ERROR: Failed to download {destination.name}: {e}")
         return False
     except Exception as e:
         print(f"💥 Unexpected error downloading {destination.name}: {e}")
@@ -100,14 +100,14 @@ def _validate_dataset_integrity(data_dir: Path) -> bool:
         missing_fields = [field for field in required_fields if field not in sample_entry]
         
         if missing_fields:
-            print(f"❌ Sample entry missing required fields: {missing_fields}")
+            print(f">> ERROR: Sample entry missing required fields: {missing_fields}")
             return False
             
-        print(f"✅ Dataset validation passed - {len(dataset):,} entries found")
+        print(f">> Dataset validation passed - {len(dataset):,} entries found")
         return True
         
     except json.JSONDecodeError as e:
-        print(f"❌ dataset.json is not valid JSON: {e}")
+        print(f">> ERROR: dataset.json is not valid JSON: {e}")
         return False
     except Exception as e:
         print(f"❌ Error validating dataset: {e}")
