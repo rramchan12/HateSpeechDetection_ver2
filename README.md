@@ -1,15 +1,16 @@
 # Hate Speech Detection: HateXplain + ToxiGen Unified Dataset
 
-A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups.
+A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing and validation.
 
 ## 🎯 Project Overview
 
 This project provides:
 - **Dual Dataset Integration**: Combines real social media data (HateXplain) with synthetic data (ToxiGen)
 - **Filtered Target Groups**: Focuses on 3 specific demographics for targeted analysis
-- **Unified Schema**: Consistent 12-field schema for both datasets
+- **Unified Schema**: Consistent 12-field schema with preserved persona identities
 - **Robust Pipeline**: End-to-end data collection, processing, and unification
-- **High Test Coverage**: Comprehensive test suite with 70%+ coverage
+- **Comprehensive Testing**: 36 unit tests with 63%+ coverage for core unification logic
+- **Persona Preservation**: Original target group identities preserved as persona tags
 
 ## 📁 Project Structure
 
@@ -42,6 +43,12 @@ HateSpeechDetection_ver2/
 │   ├── data_preparation_toxigen.py
 │   └── data_unification.py
 ├── tests/                    # Comprehensive test suite
+│   ├── test_data_unification.py    # 36 unit tests for unification logic
+│   ├── test_hatexplain_downloader.py
+│   ├── test_toxigen_data_preparation.py
+│   ├── test_hatexplain_data_presence.py
+│   ├── test_toxigen_data_presence.py
+│   └── test_toxigen_downloader.py
 ├── requirements.txt          # Project dependencies
 ├── pyproject.toml           # Project configuration
 ├── run_tests.py             # Test runner
@@ -92,21 +99,30 @@ This creates the unified dataset with **64,321 entries** across 3 target groups:
 - **Mexican**: 20,632 entries (32.1%)  
 - **Middle East**: 20,904 entries (32.5%)
 
+**Key Features:**
+
+- **Persona Preservation**: Original target group identities preserved (e.g., "Arab" → `target_group_norm: "middle_east"`, `persona_tag: "arab"`)
+- **Label Consistency**: Standardized binary and multiclass labels with implicit toxicity markers
+- **Synthetic Augmentation Ready**: Future-proofed for synthetic data generation with HateXplain
+
 ## 📊 Unified Dataset Features
 
 ### Target Groups & Mapping
 
-| **Group** | **HateXplain Source** | **ToxiGen Source** | **Final Count** |
-|-----------|----------------------|-------------------|-----------------|
-| **LGBTQ** | Homosexual, Gay | lgbtq | 22,785 |
-| **Mexican** | Hispanic, Latino | mexican | 20,632 |
-| **Middle East** | Arab | middle_east | 20,904 |
+| **Group** | **HateXplain Source** | **ToxiGen Source** | **Persona Tags** | **Final Count** |
+|-----------|----------------------|-------------------|-----------------|-----------------|
+| **LGBTQ** | Homosexual, Gay | lgbtq | homosexual, gay, lgbtq | 22,785 |
+| **Mexican** | Hispanic, Latino | mexican | hispanic, latino, mexican | 20,632 |
+| **Middle East** | Arab | middle_east | arab, middle_east | 20,904 |
+
+**Persona Tag Preservation**: Original target group identities are preserved in `persona_tag` field while `target_group_norm` provides normalized grouping for consistent analysis.
 
 ### Label Distribution
 
 - **Binary Labels**: 46.9% hate, 53.1% normal (balanced for training)
-- **Multiclass Labels**: hate, offensive, normal, toxic_implicit, benign
+- **Multiclass Labels**: hate, offensive, normal, toxic_implicit, benign_implicit
 - **Sources**: 95.8% ToxiGen (synthetic), 4.2% HateXplain (real social media)
+- **Rationale Coverage**: 3.2% of entries include human explanations
 
 ### Unified Schema (12 Fields)
 
@@ -114,19 +130,37 @@ This creates the unified dataset with **64,321 entries** across 3 target groups:
 |-----------|-------------|-------------------|
 | `text` | Input text | "This is offensive content..." |
 | `label_binary` | Binary classification | "hate", "normal" |
-| `label_multiclass` | Multi-class labels | "hatespeech", "toxic_implicit", "benign" |
+| `label_multiclass` | Multi-class labels | "hatespeech", "toxic_implicit", "benign_implicit" |
 | `target_group_norm` | Normalized group | "lgbtq", "mexican", "middle_east" |
-| `persona_tag` | Persona identifier | "LGBTQ", "MEXICAN", "MIDDLE_EAST" |
+| `persona_tag` | Original identity preserved | "homosexual", "arab", "hispanic" |
 | `source_dataset` | Data provenance | "hatexplain", "toxigen" |
 | `rationale_text` | Label explanation | Human rationale (HateXplain only) |
 | `is_synthetic` | Generated flag | true (ToxiGen), false (HateXplain) |
-| `fine_tuning_embedding` | Model features | Computed embedding vector |
+| `fine_tuning_embedding` | Model features | "[PERSONA:ARAB] text [POLICY:HATE_SPEECH_DETECTION]" |
 | `original_id` | Source identifier | Original dataset ID |
 | `split` | Data split | "train", "val", "test" |
 
 ## 🧪 Testing & Validation
 
-This project includes comprehensive testing for all components with 70%+ coverage.
+This project includes comprehensive testing for all components with detailed coverage analysis.
+
+### Unit Test Coverage
+
+**Data Unification Tests (36 tests)**:
+
+- ✅ **Class Initialization** (3 tests): Basic setup, default directories, constants validation
+- ✅ **Target Group Normalization** (8 tests): Valid/invalid groups, None/empty handling, whitespace processing
+- ✅ **Persona Tag Extraction** (7 tests): Identity preservation, case handling, validation logic
+- ✅ **Label Mapping** (2 tests): HateXplain and ToxiGen label transformations
+- ✅ **Fine-Tuning Embeddings** (5 tests): Persona placeholders, rationale handling, template formatting
+- ✅ **Entry Unification** (9 tests): Valid entries, invalid filtering, synthetic flag handling
+- ✅ **Dataset Loading** (3 tests): File I/O, missing files, partial data handling
+- ✅ **Dataset Analysis** (3 tests): Statistics generation, error conditions
+
+**Coverage Statistics**:
+
+- **Core Unification Logic**: 63% coverage (273 lines tested)
+- **All Tests Combined**: 36 tests passing with comprehensive edge case handling
 
 ### Quick Test Commands
 
@@ -162,10 +196,13 @@ python run_tests.py fast
 
 **Unification Tests:**
 
-- Schema consistency validation
-- Target group filtering
-- Label distribution verification  
-- Split ratio validation
+- ✅ **Schema Consistency**: 12-field unified schema validation
+- ✅ **Target Group Filtering**: Only LGBTQ, Mexican, Middle East included
+- ✅ **Persona Tag Preservation**: Original identities maintained (e.g., "Arab" → "arab")
+- ✅ **Label Distribution**: Binary/multiclass mapping verification
+- ✅ **Synthetic Flag Handling**: Proper is_synthetic field management
+- ✅ **Fine-Tuning Embeddings**: Persona placeholder generation
+- ✅ **Split Ratio Validation**: Train/val/test distribution checks
 
 ### Coverage Reports
 
@@ -187,6 +224,7 @@ pytest tests/ -v -m "data"           # Data validation tests
 pytest tests/ -v -m "integration"    # Integration tests
 
 # Run specific test files
+pytest tests/test_data_unification.py -v      # 36 unification unit tests
 pytest tests/test_hatexplain_downloader.py -v
 pytest tests/test_toxigen_data_preparation.py -v
 ```
