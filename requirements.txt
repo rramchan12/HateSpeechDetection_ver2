@@ -20,5 +20,8 @@ jupyter>=1.0.0
 matplotlib>=3.5.0
 seaborn>=0.11.0
 
+# Prompt validation and Azure AI
+azure-ai-inference>=1.0.0b9
+
 # Optional: for better performance
 accelerate>=0.20.0
