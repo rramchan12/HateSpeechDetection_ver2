@@ -1,6 +1,5 @@
 """
 Prompt strategy templates for hate speech detection.
-Simplified scaffolding version with basic structure.
 """
 
 from dataclasses import dataclass
@@ -25,20 +24,19 @@ class PromptStrategy:
 
 def create_strategy_templates() -> Dict[str, PromptStrategy]:
     """
-    SCAFFOLDING: Create basic strategy templates.
+    Create all available prompt strategy templates.
     
     Returns:
-        Dict: Strategy name to PromptStrategy mapping (placeholder)
+        Dict: Strategy name to PromptStrategy mapping
     """
     
-    # Basic templates for scaffolding
     templates = {
         "policy": PromptStrategy(
             name="policy",
             template=PromptTemplate(
-                system_prompt="You are a content moderation assistant.",
-                user_template="Analyze this text: {text}",
-                description="Policy-based content moderation"
+                system_prompt="You are a content moderation assistant responsible for evaluating social media posts for potential hate speech violations. Your decisions must align with the platform's official hate speech policy.\nYou will receive:\n1. A summary of the platform's hate speech policy.\n2. A single post to evaluate.\nYour task is to:\n- Determine whether the post violates the policy.\n- Respond with one of the following labels: Hate or Normal.\n- Optionally include a brief rationale explaining your decision.\nAlways base your judgment strictly on the policy definition provided. Do not rely on personal opinion or general social norms.",
+                user_template="[POLICY PROMPT]\nAccording to our platform's hate speech policy, content that attacks or demeans people based on race, religion, gender, or sexual orientation is prohibited. Please classify the following post as either: Hate or Normal.\n[POST]\n\"{text}\"",
+                description="Policy-based content moderation using platform guidelines"
             ),
             parameters={"temperature": 0.1}
         ),
@@ -46,9 +44,9 @@ def create_strategy_templates() -> Dict[str, PromptStrategy]:
         "persona": PromptStrategy(
             name="persona", 
             template=PromptTemplate(
-                system_prompt="You are an expert in social media content analysis.",
-                user_template="Evaluate this content: {text}",
-                description="Persona-based analysis"
+                system_prompt="You are a content moderation assistant evaluating social media posts for hate speech. You will receive structured prompts that simulate different personas.\nFor each persona, respond with:\n- Classification: Hate or Normal\n- Rationale: Brief explanation (optional)\nAfter processing all personas, provide:\n- A consolidated decision based on all persona responses.",
+                user_template="[PERSONA PROMPT]\nPersona 1 (a Middle Eastern person): Would you consider the following post hate speech?\nPersona 2 (a conservative nationalist): How would you classify this post?\n[POST]\n\"{text}\"",
+                description="Persona-based analysis using multiple perspective evaluation"
             ),
             parameters={"temperature": 0.1}
         ),
@@ -56,9 +54,9 @@ def create_strategy_templates() -> Dict[str, PromptStrategy]:
         "combined": PromptStrategy(
             name="combined",
             template=PromptTemplate(
-                system_prompt="You are a comprehensive content analysis system.",
-                user_template="Analyze this text comprehensively: {text}",
-                description="Combined policy and persona approach"
+                system_prompt="You are a content moderation assistant evaluating social media posts for hate speech. You will receive structured prompts that include:\n1. A policy definition summarizing what constitutes hate speech.\n2. Multiple persona-based instructions simulating diverse viewpoints.\n3. A target post.\nFor each persona, respond with:\n- Classification: Hate or Normal\n- Rationale: Brief explanation (optional)\nFinally, provide a consolidated policy decision based on all persona responses, conservatively. A hate vote would override all normal votes.",
+                user_template="Policy: Hate speech is defined as content that attacks or demeans people based on race, religion, gender, or sexual orientation.\nPersona 1 (a young mexican student): Per the above policy, would you consider the following post hate speech?\nPersona 2 (a young gay man): Per the above policy, how would you classify this post?\n[POST]\n\"{text}\"",
+                description="Combined policy and persona approach with conservative hate detection"
             ),
             parameters={"temperature": 0.1}
         ),
@@ -66,9 +64,9 @@ def create_strategy_templates() -> Dict[str, PromptStrategy]:
         "baseline": PromptStrategy(
             name="baseline",
             template=PromptTemplate(
-                system_prompt="You are a text classifier.",
-                user_template="Classify this text: {text}",
-                description="Baseline classification approach"
+                system_prompt="You are a content moderation assistant trained to classify social media posts as either Hate or Normal.\nYou will receive a single post in each prompt. Respond with one of the following labels:\n- Hate\n- Normal\nYou are not provided with persona or policy context. Base your decision on general understanding of hateful language and social norms.",
+                user_template="Post: \"{text}\"",
+                description="Baseline classification approach without persona or policy context"
             ),
             parameters={"temperature": 0.1}
         )
@@ -79,7 +77,7 @@ def create_strategy_templates() -> Dict[str, PromptStrategy]:
 
 def format_prompt_with_context(template: str, text: str, **kwargs) -> str:
     """
-    SCAFFOLDING: Format prompt template with context.
+    Format prompt template with context.
     
     Args:
         template: Prompt template string
@@ -87,65 +85,6 @@ def format_prompt_with_context(template: str, text: str, **kwargs) -> str:
         **kwargs: Additional formatting arguments
         
     Returns:
-        str: Formatted prompt (basic implementation)
+        str: Formatted prompt
     """
-    # TODO: Implement sophisticated prompt formatting
     return template.format(text=text, **kwargs)
-
-
-# ============================================================================
-# SCAFFOLDING: Future strategy development functions
-# ============================================================================
-
-def create_custom_strategy(name: str, system_prompt: str, user_template: str) -> PromptStrategy:
-    """
-    SCAFFOLDING: Create custom strategy.
-    
-    Args:
-        name: Strategy name
-        system_prompt: System prompt
-        user_template: User prompt template
-        
-    Returns:
-        PromptStrategy: Custom strategy (placeholder)
-    """
-    # TODO: Implement custom strategy creation
-    return PromptStrategy(
-        name=name,
-        template=PromptTemplate(
-            system_prompt=system_prompt,
-            user_template=user_template,
-            description=f"Custom strategy: {name}"
-        ),
-        parameters={"temperature": 0.1}
-    )
-
-
-def optimize_strategy_parameters(strategy: PromptStrategy, optimization_data: Dict) -> PromptStrategy:
-    """
-    SCAFFOLDING: Optimize strategy parameters.
-    
-    Args:
-        strategy: Strategy to optimize
-        optimization_data: Data for optimization
-        
-    Returns:
-        PromptStrategy: Optimized strategy (placeholder)
-    """
-    # TODO: Implement parameter optimization
-    return strategy
-
-
-def validate_strategy_effectiveness(strategy: PromptStrategy, test_data: Dict) -> Dict:
-    """
-    SCAFFOLDING: Validate strategy effectiveness.
-    
-    Args:
-        strategy: Strategy to validate
-        test_data: Test data
-        
-    Returns:
-        Dict: Validation metrics (placeholder)
-    """
-    # TODO: Implement effectiveness validation
-    return {"status": "scaffolding", "strategy": strategy.name}

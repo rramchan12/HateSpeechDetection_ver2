@@ -126,51 +126,203 @@ class PromptValidator:
             self.logger.error(f"Connection error: {e}")
             return False
     
-    # ============================================================================
-    # SCAFFOLDING: Future prompt strategy validation methods
-    # ============================================================================
-    
-    def validate_strategies(self, sample_size: int = 25) -> Dict:
+    def test_single_strategy(self, strategy_name: str, text: str, true_label: str = None) -> ValidationResult:
         """
-        SCAFFOLDING: Validate all prompt strategies.
-        
-        Args:
-            sample_size: Number of samples to test
-            
-        Returns:
-            Dict: Validation results (placeholder)
-        """
-        # TODO: Implement strategy validation logic
-        self.logger.info(f"SCAFFOLDING: Strategy validation for {sample_size} samples")
-        return {"status": "scaffolding", "message": "Strategy validation not implemented yet"}
-    
-    def test_single_strategy(self, strategy_name: str, text: str) -> Dict:
-        """
-        SCAFFOLDING: Test a single prompt strategy.
+        Test a single prompt strategy with GPT-OSS-20B.
         
         Args:
             strategy_name: Name of strategy to test
             text: Input text
+            true_label: Optional true label for accuracy calculation
             
         Returns:
-            Dict: Test results (placeholder)
+            ValidationResult: Test results with prediction and metrics
         """
-        # TODO: Implement single strategy testing
-        self.logger.info(f"SCAFFOLDING: Testing {strategy_name} strategy")
-        return {"status": "scaffolding", "strategy": strategy_name, "text": text}
+        if not self.client:
+            self.logger.error("Client not initialized")
+            return ValidationResult(
+                strategy_name=strategy_name,
+                input_text=text,
+                predicted_label=None,
+                true_label=true_label,
+                response_text="Error: Client not initialized",
+                response_time=0.0,
+                metrics={"error": "No client"}
+            )
+        
+        try:
+            templates = create_strategy_templates()
+            if strategy_name not in templates:
+                raise ValueError(f"Unknown strategy: {strategy_name}")
+            
+            strategy = templates[strategy_name]
+            
+            # Format prompts
+            system_prompt = strategy.template.system_prompt
+            user_prompt = strategy.template.user_template.format(text=text)
+            
+            # Make API call
+            start_time = time.time()
+            response = self.client.complete(
+                messages=[
+                    SystemMessage(content=system_prompt),
+                    UserMessage(content=user_prompt)
+                ],
+                max_tokens=200,
+                temperature=strategy.parameters.get("temperature", 0.1),
+                model=self.deployment_name
+            )
+            response_time = time.time() - start_time
+            
+            if response and response.choices:
+                response_content = response.choices[0].message.content
+                response_text = response_content.strip() if response_content else "Empty response"
+                
+                # Parse prediction
+                predicted_label = self._parse_prediction(response_text)
+                
+                # Calculate basic metrics
+                metrics = {}
+                if true_label:
+                    metrics["correct"] = predicted_label == true_label
+                metrics["response_time"] = response_time
+                
+                return ValidationResult(
+                    strategy_name=strategy_name,
+                    input_text=text,
+                    predicted_label=predicted_label,
+                    true_label=true_label,
+                    response_text=response_text,
+                    response_time=response_time,
+                    metrics=metrics
+                )
+            else:
+                return ValidationResult(
+                    strategy_name=strategy_name,
+                    input_text=text,
+                    predicted_label=None,
+                    true_label=true_label,
+                    response_text="No response received",
+                    response_time=response_time,
+                    metrics={"error": "No response"}
+                )
+                
+        except Exception as e:
+            self.logger.error(f"Error testing strategy {strategy_name}: {e}")
+            return ValidationResult(
+                strategy_name=strategy_name,
+                input_text=text,
+                predicted_label=None,
+                true_label=true_label,
+                response_text=f"Error: {str(e)}",
+                response_time=0.0,
+                metrics={"error": str(e)}
+            )
     
-    def batch_validate(self, texts: List[str], strategies: List[str] = None) -> Dict:
+    def batch_validate(self, texts: List[str], strategies: List[str] = None, true_labels: List[str] = None) -> Dict:
         """
-        SCAFFOLDING: Batch validation across multiple texts and strategies.
+        Batch validation across multiple texts and strategies.
         
         Args:
             texts: List of texts to validate
-            strategies: List of strategies to test
+            strategies: List of strategies to test (default: all strategies)
+            true_labels: Optional list of true labels
             
         Returns:
-            Dict: Batch results (placeholder)
+            Dict: Comprehensive validation results
         """
-        # TODO: Implement batch validation
-        strategies = strategies or ["policy", "persona", "combined", "baseline"]
-        self.logger.info(f"SCAFFOLDING: Batch validation for {len(texts)} texts, {len(strategies)} strategies")
-        return {"status": "scaffolding", "text_count": len(texts), "strategy_count": len(strategies)}
+        strategies = strategies or ["baseline", "policy", "persona", "combined"]
+        true_labels = true_labels or [None] * len(texts)
+        
+        self.logger.info(f"Running batch validation: {len(texts)} texts, {len(strategies)} strategies")
+        
+        results = []
+        strategy_summaries = {}
+        
+        for strategy in strategies:
+            strategy_results = []
+            
+            for i, text in enumerate(texts):
+                true_label = true_labels[i] if i < len(true_labels) else None
+                result = self.test_single_strategy(strategy, text, true_label)
+                results.append(result)
+                strategy_results.append(result)
+                
+                # Brief pause between API calls
+                time.sleep(0.5)
+            
+            # Calculate strategy summary
+            successful = [r for r in strategy_results if r.predicted_label is not None]
+            with_labels = [r for r in successful if r.true_label is not None]
+            correct = [r for r in with_labels if r.metrics.get("correct", False)]
+            
+            strategy_summaries[strategy] = {
+                "total_tests": len(strategy_results),
+                "successful": len(successful),
+                "success_rate": len(successful) / len(strategy_results) if strategy_results else 0,
+                "accuracy": len(correct) / len(with_labels) if with_labels else 0,
+                "avg_response_time": sum(r.response_time for r in successful) / len(successful) if successful else 0
+            }
+        
+        return {
+            "results": results,
+            "strategy_summaries": strategy_summaries,
+            "total_tests": len(results),
+            "strategies_tested": strategies
+        }
+    
+    def validate_strategies(self, sample_size: int = 25) -> Dict:
+        """
+        Validate all prompt strategies using test dataset.
+        
+        Args:
+            sample_size: Number of samples to test from dataset
+            
+        Returns:
+            Dict: Comprehensive validation results
+        """
+        try:
+            # Load test data
+            data = load_unified_dataset()
+            test_data = data.get('test_data', [])
+            
+            if not test_data:
+                self.logger.warning("No test data available, using sample size of 5")
+                sample_size = min(sample_size, 5)
+                texts = [f"Sample text {i}" for i in range(sample_size)]
+                labels = ["unknown"] * sample_size
+            else:
+                # Sample from test data
+                import random
+                random.seed(42)  # For reproducibility
+                samples = random.sample(test_data, min(sample_size, len(test_data)))
+                texts = [sample["text"] for sample in samples]
+                labels = [sample.get("label_binary", "unknown") for sample in samples]
+            
+            self.logger.info(f"Validating strategies with {len(texts)} samples")
+            return self.batch_validate(texts, true_labels=labels)
+            
+        except Exception as e:
+            self.logger.error(f"Error in strategy validation: {e}")
+            return {"error": str(e)}
+    
+    def _parse_prediction(self, response_text: str) -> str:
+        """
+        Parse model response to extract prediction.
+        
+        Args:
+            response_text: Raw model response
+            
+        Returns:
+            str: Parsed prediction ('hate', 'not_hate', or 'unknown')
+        """
+        if not response_text or response_text.strip() == "":
+            return "unknown"
+        
+        response_lower = response_text.lower()
+        if "hate" in response_lower and "not hate" not in response_lower and "normal" not in response_lower:
+            return "hate"
+        elif "normal" in response_lower or "not hate" not in response_lower:
+            return "not_hate"
+        else:
+            return "unknown"
