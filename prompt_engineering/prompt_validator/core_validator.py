@@ -161,25 +161,44 @@ class PromptValidator:
             system_prompt = strategy.template.system_prompt
             user_prompt = strategy.template.user_template.format(text=text)
             
-            # Make API call
+            # Make API call with optional response format from strategy parameters
             start_time = time.time()
-            response = self.client.complete(
-                messages=[
+            
+            # Prepare API call parameters
+            api_params = {
+                "messages": [
                     SystemMessage(content=system_prompt),
                     UserMessage(content=user_prompt)
                 ],
-                max_tokens=200,
-                temperature=strategy.parameters.get("temperature", 0.1),
-                model=self.deployment_name
-            )
+                "max_tokens": 300,  # Increased for rationale field
+                "temperature": strategy.parameters.get("temperature", 0.1),
+                "model": self.deployment_name
+            }
+            
+            # Try to add response_format if specified in strategy parameters
+            response_format = strategy.parameters.get("response_format")
+            if response_format:
+                try:
+                    # Try with response_format first
+                    api_params["response_format"] = response_format
+                    self.logger.info(f"Attempting to use response_format: {response_format}")
+                    response = self.client.complete(**api_params)
+                except Exception as e:
+                    # If response_format fails, retry without it
+                    self.logger.warning(f"response_format not supported ({e}), falling back to prompt engineering")
+                    api_params.pop("response_format", None)
+                    response = self.client.complete(**api_params)
+            else:
+                # No response_format specified, use standard call
+                response = self.client.complete(**api_params)
             response_time = time.time() - start_time
             
             if response and response.choices:
                 response_content = response.choices[0].message.content
                 response_text = response_content.strip() if response_content else "Empty response"
                 
-                # Parse prediction
-                predicted_label = self._parse_prediction(response_text)
+                # Parse prediction and rationale
+                predicted_label, rationale = self._parse_prediction(response_text)
                 
                 # Calculate basic metrics
                 metrics = {}
@@ -194,7 +213,8 @@ class PromptValidator:
                     true_label=true_label,
                     response_text=response_text,
                     response_time=response_time,
-                    metrics=metrics
+                    metrics=metrics,
+                    rationale=rationale  # Added rationale
                 )
             else:
                 return ValidationResult(
@@ -204,7 +224,8 @@ class PromptValidator:
                     true_label=true_label,
                     response_text="No response received",
                     response_time=response_time,
-                    metrics={"error": "No response"}
+                    metrics={"error": "No response"},
+                    rationale="No response received from model"
                 )
                 
         except Exception as e:
@@ -216,7 +237,8 @@ class PromptValidator:
                 true_label=true_label,
                 response_text=f"Error: {str(e)}",
                 response_time=0.0,
-                metrics={"error": str(e)}
+                metrics={"error": str(e)},
+                rationale=f"Error occurred: {str(e)}"
             )
     
     def batch_validate(self, texts: List[str], strategies: List[str] = None, true_labels: List[str] = None) -> Dict:
@@ -306,23 +328,97 @@ class PromptValidator:
             self.logger.error(f"Error in strategy validation: {e}")
             return {"error": str(e)}
     
-    def _parse_prediction(self, response_text: str) -> str:
+    def _parse_prediction(self, response_text: str) -> Tuple[str, str]:
         """
-        Parse model response to extract prediction.
+        Parse model response to extract prediction and rationale from JSON format.
         
         Args:
-            response_text: Raw model response
+            response_text: Raw model response (expected JSON format)
             
         Returns:
-            str: Parsed prediction ('hate', 'not_hate', or 'unknown')
+            Tuple[str, str]: (prediction, rationale) where prediction is 'hate' or 'normal'
         """
         if not response_text or response_text.strip() == "":
-            return "unknown"
+            return "normal", "No response received"
+        
+        # Try to parse as JSON first
+        try:
+            import json
+            # Clean up response text
+            cleaned_text = response_text.strip()
+            
+            # Handle common JSON formatting issues
+            if not cleaned_text.startswith('{'):
+                # Look for JSON-like content in the response
+                import re
+                json_match = re.search(r'\{[^}]*"classification"[^}]*\}', cleaned_text)
+                if json_match:
+                    cleaned_text = json_match.group(0)
+                else:
+                    # If no JSON found, fall back to text parsing
+                    prediction = self._parse_text_prediction(cleaned_text)
+                    return prediction, "Fallback text parsing used"
+            
+            # Parse JSON
+            parsed_response = json.loads(cleaned_text)
+            classification = parsed_response.get('classification', '').lower().strip()
+            rationale = parsed_response.get('rationale', 'No rationale provided').strip()
+            
+            # Normalize to expected labels
+            normalized_prediction = self._normalize_prediction(classification)
+            return normalized_prediction, rationale
+            
+        except (json.JSONDecodeError, KeyError, AttributeError):
+            # Fall back to text parsing if JSON parsing fails
+            prediction = self._parse_text_prediction(response_text)
+            return prediction, "Fallback due to JSON parsing error"
+    
+    def _normalize_prediction(self, prediction: str) -> str:
+        """
+        Normalize model predictions to binary labels.
+        
+        Args:
+            prediction: Raw prediction string
+            
+        Returns:
+            str: Standardized prediction ('hate' or 'normal')
+        """
+        if not prediction:
+            return "normal"
+        
+        prediction = prediction.lower().strip()
+        
+        # Map variations to standard labels
+        hate_variants = ['hate', 'hate_speech', 'hateful', 'toxic', '1']
+        normal_variants = ['normal', 'not_hate', 'non_hate', 'no_hate', 'clean', '0', 'not_hateful']
+        
+        if prediction in hate_variants or any(variant in prediction for variant in hate_variants):
+            return "hate"
+        elif prediction in normal_variants or any(variant in prediction for variant in normal_variants):
+            return "normal"
+        else:
+            # Default to normal for unclear cases
+            return "normal"
+    
+    def _parse_text_prediction(self, response_text: str) -> str:
+        """
+        Parse non-JSON response text for prediction.
+        
+        Args:
+            response_text: Raw model response text
+            
+        Returns:
+            str: Parsed prediction ('hate' or 'normal')
+        """
+        if not response_text:
+            return "normal"
         
         response_lower = response_text.lower()
-        if "hate" in response_lower and "not hate" not in response_lower and "normal" not in response_lower:
+        
+        # Look for explicit labels
+        if 'hate' in response_lower and ('not hate' not in response_lower and 'non-hate' not in response_lower):
             return "hate"
-        elif "normal" in response_lower or "not hate" not in response_lower:
-            return "not_hate"
+        elif 'normal' in response_lower or 'not hate' in response_lower or 'non-hate' in response_lower:
+            return "normal"
         else:
-            return "unknown"
+            return "normal"  # Default to normal

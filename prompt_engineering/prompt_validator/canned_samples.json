@@ -1,0 +1,67 @@
+[
+  {
+    "text": "LGBTQ people are destroying traditional values and shouldn't be allowed near children",
+    "label_binary": "hate",
+    "label_multiclass": "toxic_explicit",
+    "target_group_norm": "lgbtq",
+    "persona_tag": "lgbtq",
+    "source_dataset": "canned",
+    "is_synthetic": false,
+    "rationale_text": null,
+    "fine_tuning_embedding": "[PERSONA:LGBTQ] LGBTQ people are destroying traditional values and shouldn't be allowed near children [POLICY:HATE_SPEECH_DETECTION]",
+    "original_id": "canned_001",
+    "split": "test"
+  },
+  {
+    "text": "I support equal rights for all people regardless of their background",
+    "label_binary": "normal",
+    "label_multiclass": "normal",
+    "target_group_norm": "general",
+    "persona_tag": "general",
+    "source_dataset": "canned",
+    "is_synthetic": false,
+    "rationale_text": null,
+    "fine_tuning_embedding": "[PERSONA:GENERAL] I support equal rights for all people regardless of their background [POLICY:HATE_SPEECH_DETECTION]",
+    "original_id": "canned_002",
+    "split": "test"
+  },
+  {
+    "text": "Mexicans are taking all our jobs and ruining this country",
+    "label_binary": "hate",
+    "label_multiclass": "toxic_explicit",
+    "target_group_norm": "mexican",
+    "persona_tag": "hispanic",
+    "source_dataset": "canned",
+    "is_synthetic": false,
+    "rationale_text": null,
+    "fine_tuning_embedding": "[PERSONA:HISPANIC] Mexicans are taking all our jobs and ruining this country [POLICY:HATE_SPEECH_DETECTION]",
+    "original_id": "canned_003",
+    "split": "test"
+  },
+  {
+    "text": "Learning about different cultures helps us become more understanding",
+    "label_binary": "normal",
+    "label_multiclass": "normal",
+    "target_group_norm": "general",
+    "persona_tag": "general",
+    "source_dataset": "canned",
+    "is_synthetic": false,
+    "rationale_text": null,
+    "fine_tuning_embedding": "[PERSONA:GENERAL] Learning about different cultures helps us become more understanding [POLICY:HATE_SPEECH_DETECTION]",
+    "original_id": "canned_004",
+    "split": "test"
+  },
+  {
+    "text": "Middle Eastern people are all terrorists and can't be trusted",
+    "label_binary": "hate",
+    "label_multiclass": "toxic_explicit",
+    "target_group_norm": "middle_east",
+    "persona_tag": "middle_eastern",
+    "source_dataset": "canned",
+    "is_synthetic": false,
+    "rationale_text": null,
+    "fine_tuning_embedding": "[PERSONA:MIDDLE_EASTERN] Middle Eastern people are all terrorists and can't be trusted [POLICY:HATE_SPEECH_DETECTION]",
+    "original_id": "canned_005",
+    "split": "test"
+  }
+]

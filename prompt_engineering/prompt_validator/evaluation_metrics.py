@@ -16,6 +16,7 @@ class ValidationResult:
     response_text: str
     response_time: float
     metrics: Dict
+    rationale: Optional[str] = None  # Added rationale field
 
 
 class EvaluationMetrics:

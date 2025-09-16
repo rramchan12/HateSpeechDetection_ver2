@@ -1,6 +1,20 @@
 """
-Command-line runner for prompt validator.
-Simplified version focusing on connection testing.
+Command-line runner for GPT-OSS-20B prompt validation.
+
+This module provides a comprehensive CLI interface for testing and evaluating 
+different prompt strategies for hate speech detection using GPT-OSS-20B.
+
+Main functionalities:
+- Connection testing to Azure AI endpoint
+- Single strategy testing with canned samples
+- Comprehensive strategy evaluation with unified datasets
+- Performance metrics and result file generation
+
+Usage:
+    python runner.py                          # Run default comprehensive test
+    python runner.py --test-connection        # Test endpoint connection only
+    python runner.py --test-prompt baseline   # Test specific strategy with canned samples
+    python runner.py --test-strategy all      # Test all strategies with unified data
 """
 
 import argparse
@@ -8,338 +22,513 @@ import logging
 import os
 import sys
 import csv
+import json
 from datetime import datetime
 from pathlib import Path
+from typing import List, Dict, Any, Optional
 
+# Local imports
 from core_validator import PromptValidator
+from strategy_templates import load_strategy_templates
 
 
-def setup_logging():
-    """Setup basic logging configuration"""
+# ============================================================================
+# UTILITY FUNCTIONS
+# ============================================================================
+
+def get_available_strategies() -> List[str]:
+    """
+    Get list of available strategies from JSON configuration file.
+    
+    Returns:
+        List[str]: Available strategy names
+    """
+    try:
+        templates = load_strategy_templates()
+        return list(templates.keys())
+    except Exception as e:
+        print(f"Warning: Could not load strategies from JSON: {e}")
+        return ["baseline", "policy", "persona", "combined"]  # fallback
+
+
+def get_strategy_choices() -> List[str]:
+    """
+    Get strategy choices including 'all' option for CLI argument parsing.
+    
+    Returns:
+        List[str]: Strategy names plus 'all' option
+    """
+    strategies = get_available_strategies()
+    return strategies + ["all"]
+
+
+def setup_logging() -> None:
+    """
+    Configure logging for the application.
+    Sets up INFO level logging with timestamp and module information.
+    """
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
 
 
-def test_connection():
-    """Test connection to GPT-OSS-20B"""
+# ============================================================================
+# CONNECTION TESTING
+# ============================================================================
+
+def test_connection() -> bool:
+    """
+    Test connection to GPT-OSS-20B endpoint with simple validation request.
+    
+    Returns:
+        bool: True if connection successful, False otherwise
+    """
     print("\nTESTING GPT-OSS-20B CONNECTION")
     print("=" * 35)
     
-    # Check environment variables
+    # Validate environment variables
     endpoint = os.getenv('AZURE_AI_ENDPOINT')
     key = os.getenv('AZURE_AI_KEY')
     
     if not endpoint or not key:
-        print("ERROR: Missing environment variables")
-        print("Please set:")
-        print("  AZURE_AI_ENDPOINT=<your_azure_ai_endpoint>")
-        print("  AZURE_AI_KEY=<your_azure_ai_key>")
+        print("ERROR: AZURE_AI_ENDPOINT or AZURE_AI_KEY not set in environment")
+        print("Please set these environment variables and try again")
         return False
     
-    # Initialize validator and test connection
-    validator = PromptValidator(endpoint=endpoint, key=key)
+    print(f"Environment variables configured")
+    print(f"Endpoint: {endpoint}")
     
-    if validator.validate_connection():
-        print("Connection successful! Ready for validation.")
-        return True
-    else:
-        print("Connection failed. Check credentials and endpoint.")
+    # Initialize validator and test with simple prompt
+    try:
+        validator = PromptValidator()
+        print("Validator initialized successfully")
+        
+        # Use canned sample for connection test
+        test_text = "This is a test message to verify the connection"
+        result = validator.test_single_strategy("baseline", test_text, "normal")
+        
+        if result and hasattr(result, 'predicted_label'):
+            print(f"Connection successful! Model responded with: {result.predicted_label}")
+            print(f"Response time: {result.response_time:.3f}s")
+            if hasattr(result, 'rationale') and result.rationale:
+                print(f"Rationale: {result.rationale}")
+            return True
+        else:
+            print("ERROR: Connection failed: No valid response from model")
+            return False
+            
+    except Exception as e:
+        print(f"ERROR: Connection failed: {str(e)}")
         return False
 
 
-def run_validation_demo(sample_size: int = 5):
-    """Run validation demonstration with real strategy testing"""
-    print(f"\nVALIDATION DEMO (Sample Size: {sample_size})")
-    print("=" * 35)
+# ============================================================================
+# PROMPT STRATEGY TESTING
+# ============================================================================
+
+def test_prompt_strategy(strategy: str) -> bool:
+    """
+    Test a specific prompt strategy using canned samples from JSON file.
     
-    # Initialize validator 
-    validator = PromptValidator()
+    This function demonstrates prompt format and validates basic functionality
+    without running comprehensive evaluation metrics.
     
-    # Test connection
-    if not validator.validate_connection():
-        print("Connection failed. Cannot run validation demo.")
+    Args:
+        strategy (str): Strategy name to test
+        
+    Returns:
+        bool: True if test successful, False otherwise
+    """
+    print(f"\nTESTING PROMPT STRATEGY: {strategy.upper()}")
+    print("=" * 50)
+    
+    # Load canned samples for testing
+    canned_samples_path = Path(__file__).parent / "canned_samples.json"
+    if not canned_samples_path.exists():
+        print(f"ERROR: Canned samples file not found: {canned_samples_path}")
         return False
     
-    # Demo real validation methods
-    print("\n1. Testing strategy validation...")
-    result1 = validator.validate_strategies(sample_size=sample_size)
-    
-    if "error" in result1:
-        print(f"   Error: {result1['error']}")
-    else:
-        print(f"   Tested {result1['total_tests']} samples across {len(result1['strategies_tested'])} strategies")
-        for strategy, summary in result1['strategy_summaries'].items():
-            print(f"   {strategy}: {summary['success_rate']:.1%} success, {summary['accuracy']:.1%} accuracy")
-    
-    print("\n2. Testing single strategy...")
-    result2 = validator.test_single_strategy("policy", "This is a test text", "not_hate")
-    print(f"   Strategy: {result2.strategy_name}")
-    print(f"   Prediction: {result2.predicted_label}")
-    print(f"   Response Time: {result2.response_time:.2f}s")
-    
-    print("\n3. Testing batch validation...")
-    test_texts = ["Text expressing political opinion", "Text with potential bias", "Neutral comment"]
-    test_labels = ["not_hate", "hate", "not_hate"]
-    result3 = validator.batch_validate(test_texts, strategies=["baseline", "policy"], true_labels=test_labels)
-    print(f"   Batch results: {result3['total_tests']} tests completed")
-    for strategy, summary in result3['strategy_summaries'].items():
-        print(f"   {strategy}: {summary['success_rate']:.1%} success rate")
-    
-    print("\nVALIDATION DEMO COMPLETE")
-    print("All methods are fully implemented and tested with GPT-OSS-20B.")
-    return True
-
-
-def test_individual_strategies(sample_size: int = 5):
-    """Test each strategy individually and print detailed evaluation metrics"""
-    print(f"\nTESTING INDIVIDUAL STRATEGIES (Sample Size: {sample_size})")
-    print("=" * 55)
-    
-    # Create timestamp for output files
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = Path("validation_outputs")
-    output_dir.mkdir(exist_ok=True)
+    try:
+        with open(canned_samples_path, 'r', encoding='utf-8') as f:
+            samples = json.load(f)
+        print(f"Loaded {len(samples)} canned samples")
+    except Exception as e:
+        print(f"ERROR: Error loading canned samples: {e}")
+        return False
     
     # Initialize validator
-    validator = PromptValidator()
-    
-    # Test connection
-    if not validator.validate_connection():
-        print("Connection failed. Cannot run strategy testing.")
+    try:
+        validator = PromptValidator()
+        print("Validator initialized")
+    except Exception as e:
+        print(f"ERROR: Error initializing validator: {e}")
         return False
     
-    # Strategy names
-    strategies = ["baseline", "policy", "persona", "combined"]
+    # Test strategy on first sample
+    test_sample = samples[0]
+    text = test_sample['text']
+    expected_label = test_sample['label_binary']
     
-    # Sample test data (mix of hate and not_hate examples)
-    test_data = [
-        ("I love everyone regardless of their background", "not_hate"),
-        ("This policy seems unfair to certain groups", "hate"),
-        ("Great work on the diversity initiative", "not_hate"),
-        ("Some people just don't belong here", "hate"),
-        ("The new guidelines promote equality", "not_hate")
-    ][:sample_size]
+    print(f"\nTest Sample:")
+    print(f"Text: {text[:100]}{'...' if len(text) > 100 else ''}")
+    print(f"Expected: {expected_label}")
     
-    print(f"Using {len(test_data)} test samples for evaluation\n")
+    try:
+        result = validator.test_single_strategy(strategy, text, expected_label)
+        if result:
+            print(f"Strategy '{strategy}' completed successfully")
+            print(f"  Prediction: {result.predicted_label}")
+            print(f"  Response time: {result.response_time:.3f}s")
+            if hasattr(result, 'rationale') and result.rationale:
+                print(f"  Rationale: {result.rationale}")
+            return True
+        else:
+            print(f"ERROR: Strategy '{strategy}' failed: No result returned")
+            return False
+            
+    except Exception as e:
+        print(f"ERROR: Error testing strategy '{strategy}': {e}")
+        return False
+
+
+# ============================================================================
+# COMPREHENSIVE STRATEGY EVALUATION
+# ============================================================================
+
+def test_strategies(strategies: List[str], sample_size: int = 5) -> bool:
+    """
+    Run comprehensive evaluation of specified strategies using unified dataset.
     
+    This function loads data, runs validation on multiple samples, calculates
+    performance metrics, and saves detailed results to output files.
+    
+    Args:
+        strategies (List[str]): List of strategy names to evaluate
+        sample_size (int): Number of samples to test per strategy
+        
+    Returns:
+        bool: True if evaluation completed successfully
+    """
+    print(f"\nCOMPREHENSIVE STRATEGY EVALUATION")
+    print("=" * 50)
+    print(f"Strategies: {', '.join(strategies)}")
+    print(f"Sample size: {sample_size}")
+    
+    # Load test data
+    canned_samples_path = Path(__file__).parent / "canned_samples.json"
+    if not canned_samples_path.exists():
+        print(f"ERROR: Canned samples file not found: {canned_samples_path}")
+        return False
+    
+    try:
+        with open(canned_samples_path, 'r', encoding='utf-8') as f:
+            samples = json.load(f)
+        
+        # Limit to requested sample size
+        if len(samples) > sample_size:
+            samples = samples[:sample_size]
+        
+        print(f"Loaded {len(samples)} test samples")
+    except Exception as e:
+        print(f"ERROR: Error loading test data: {e}")
+        return False
+    
+    # Initialize validator
+    try:
+        validator = PromptValidator()
+        print("Validator initialized")
+    except Exception as e:
+        print(f"ERROR: Error initializing validator: {e}")
+        return False
+    
+    # Prepare output directory
+    output_dir = Path(__file__).parent / "validation_outputs"
+    output_dir.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Storage for all results
     all_results = {}
-    detailed_results = []  # For CSV output
+    detailed_results = []
     
+    # Run evaluation for each strategy
     for strategy in strategies:
-        print(f"TESTING STRATEGY: {strategy.upper()}")
-        print("-" * 30)
-        
+        print(f"\n--- Testing Strategy: {strategy.upper()} ---")
         strategy_results = []
-        predictions = []
-        true_labels = []
-        total_time = 0
         
-        for i, (text, true_label) in enumerate(test_data):
-            print(f"  Sample {i+1}: Testing '{text[:50]}{'...' if len(text) > 50 else ''}'")
+        for i, sample in enumerate(samples, 1):
+            text = sample['text']
+            true_label = sample['label_binary']
+            
+            print(f"Sample {i}/{len(samples)}: Processing...")
             
             try:
                 result = validator.test_single_strategy(strategy, text, true_label)
-                strategy_results.append(result)
-                predictions.append(result.predicted_label)
-                true_labels.append(true_label)
-                total_time += result.response_time
-                
-                print(f"    Predicted: {result.predicted_label} | True: {true_label} | Time: {result.response_time:.2f}s")
-                
-                # Store detailed result for CSV
-                detailed_results.append({
-                    'timestamp': timestamp,
-                    'strategy': strategy,
-                    'sample_id': i+1,
-                    'input_text': text,
-                    'predicted_label': result.predicted_label,
-                    'true_label': true_label,
-                    'response_time': result.response_time,
-                    'response_text': result.response_text[:100] + "..." if len(result.response_text) > 100 else result.response_text,
-                    'correct': result.predicted_label == true_label
-                })
-                
+                if result:
+                    # Store detailed result
+                    detailed_result = {
+                        'strategy': strategy,
+                        'sample_id': i,
+                        'text': text,
+                        'true_label': true_label,
+                        'predicted_label': result.predicted_label,
+                        'response_time': result.response_time,
+                        'rationale': getattr(result, 'rationale', '') or ''
+                    }
+                    detailed_results.append(detailed_result)
+                    strategy_results.append(result)
+                    
+                    print(f"  Predicted: {result.predicted_label} (time: {result.response_time:.3f}s)")
+                else:
+                    print(f"  ERROR: Failed to get prediction")
+                    
             except Exception as e:
-                print(f"    ERROR: {str(e)}")
-                predictions.append("error")
-                true_labels.append(true_label)
+                print(f"  ERROR: {e}")
+        
+        all_results[strategy] = strategy_results
+        print(f"Completed {strategy}: {len(strategy_results)}/{len(samples)} successful predictions")
+    
+    # Generate and save performance metrics
+    return _save_evaluation_results(all_results, detailed_results, samples, timestamp, output_dir)
+
+
+def _save_evaluation_results(all_results: Dict[str, List], detailed_results: List[Dict], 
+                           samples: List[Dict], timestamp: str, output_dir: Path) -> bool:
+    """
+    Calculate metrics and save all evaluation results to files.
+    
+    Args:
+        all_results: Results grouped by strategy
+        detailed_results: Detailed prediction results
+        samples: Original test samples
+        timestamp: Timestamp for file naming
+        output_dir: Directory to save output files
+        
+    Returns:
+        bool: True if saving completed successfully
+    """
+    from evaluation_metrics import EvaluationMetrics
+    from sklearn.metrics import confusion_matrix
+    
+    try:
+        # Initialize evaluation metrics calculator
+        evaluator = EvaluationMetrics()
+        # Save detailed results to CSV
+        detailed_csv_path = output_dir / f"strategy_unified_results_{timestamp}.csv"
+        with open(detailed_csv_path, 'w', newline='', encoding='utf-8') as f:
+            if detailed_results:
+                fieldnames = detailed_results[0].keys()
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(detailed_results)
+        print(f"Detailed results saved to: {detailed_csv_path}")
+        
+        # Save test samples
+        samples_csv_path = output_dir / f"test_samples_{timestamp}.csv"
+        with open(samples_csv_path, 'w', newline='', encoding='utf-8') as f:
+            if samples:
+                fieldnames = samples[0].keys()
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(samples)
+        print(f"Test samples saved to: {samples_csv_path}")
+        
+        # Calculate and save performance metrics
+        performance_data = []
+        report_lines = []
+        
+        report_lines.append("HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT")
+        report_lines.append("=" * 60)
+        report_lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report_lines.append(f"Total samples tested: {len(samples)}")
+        report_lines.append("")
+        
+        # Add test samples to report
+        report_lines.append("TEST SAMPLES:")
+        report_lines.append("-" * 20)
+        for i, sample in enumerate(samples, 1):
+            report_lines.append(f"{i}. Text: {sample['text'][:100]}{'...' if len(sample['text']) > 100 else ''}")
+            report_lines.append(f"   Label: {sample['label_binary']}")
+            report_lines.append("")
+        
+        report_lines.append("\nSTRATEGY PERFORMANCE:")
+        report_lines.append("-" * 25)
+        
+        for strategy, results in all_results.items():
+            if not results:
+                continue
                 
-                # Store error result for CSV
-                detailed_results.append({
-                    'timestamp': timestamp,
-                    'strategy': strategy,
-                    'sample_id': i+1,
-                    'input_text': text,
-                    'predicted_label': "error",
-                    'true_label': true_label,
-                    'response_time': 0.0,
-                    'response_text': f"ERROR: {str(e)}",
-                    'correct': False
-                })
-        
-        # Calculate metrics using the evaluation_metrics module
-        from evaluation_metrics import EvaluationMetrics
-        metrics_calculator = EvaluationMetrics()
-        
-        # Calculate metrics
-        metrics = metrics_calculator.calculate_metrics(predictions, true_labels)
-        
-        # Store results
-        all_results[strategy] = {
-            'metrics': metrics,
-            'avg_response_time': total_time / len(test_data) if test_data else 0,
-            'total_samples': len(test_data),
-            'predictions': predictions,
-            'true_labels': true_labels
-        }
-        
-        # Print metrics
-        print(f"  METRICS:")
-        print(f"    Accuracy: {metrics.get('accuracy', 0):.2%}")
-        print(f"    Correct Predictions: {metrics.get('correct_predictions', 0)}/{metrics.get('total_samples', 0)}")
-        print(f"    Average Response Time: {total_time / len(test_data):.2f}s")
-        
-        if 'error' in metrics:
-            print(f"    Error: {metrics['error']}")
-        
-        print()
-    
-    # Save detailed results to CSV
-    csv_file = output_dir / f"strategy_test_results_{timestamp}.csv"
-    with open(csv_file, 'w', newline='', encoding='utf-8') as f:
-        if detailed_results:
-            fieldnames = detailed_results[0].keys()
-            writer = csv.DictWriter(f, fieldnames=fieldnames)
-            writer.writeheader()
-            writer.writerows(detailed_results)
-    
-    print(f"📁 DETAILED RESULTS SAVED TO: {csv_file}")
-    
-    # Save summary metrics to CSV
-    summary_file = output_dir / f"strategy_summary_{timestamp}.csv"
-    with open(summary_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.writer(f)
-        writer.writerow(['strategy', 'accuracy', 'correct_predictions', 'total_samples', 'avg_response_time'])
-        for strategy, results in all_results.items():
-            accuracy = results['metrics'].get('accuracy', 0)
-            correct = results['metrics'].get('correct_predictions', 0)
-            total = results['metrics'].get('total_samples', 0)
-            avg_time = results['avg_response_time']
-            writer.writerow([strategy, accuracy, correct, total, avg_time])
-    
-    print(f"📊 SUMMARY METRICS SAVED TO: {summary_file}")
-    
-    # Save detailed report to text file
-    report_file = output_dir / f"strategy_report_{timestamp}.txt"
-    with open(report_file, 'w', encoding='utf-8') as f:
-        f.write(f"STRATEGY TESTING REPORT\n")
-        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Sample Size: {sample_size}\n")
-        f.write("=" * 50 + "\n\n")
-        
-        # Add test samples section
-        f.write("TEST SAMPLES\n")
-        f.write("-" * 20 + "\n")
-        for i, (text, true_label) in enumerate(test_data):
-            f.write(f"Sample {i+1}: {text}\n")
-            f.write(f"True Label: {true_label}\n")
-            f.write("\n")
-        
-        f.write("STRATEGY PERFORMANCE\n")
-        f.write("-" * 20 + "\n")
-        for strategy, results in all_results.items():
-            f.write(f"STRATEGY: {strategy.upper()}\n")
-            f.write("-" * 20 + "\n")
-            f.write(f"Accuracy: {results['metrics'].get('accuracy', 0):.2%}\n")
-            f.write(f"Correct Predictions: {results['metrics'].get('correct_predictions', 0)}/{results['metrics'].get('total_samples', 0)}\n")
-            f.write(f"Average Response Time: {results['avg_response_time']:.2f}s\n")
+            # Extract predictions and true labels
+            y_true = [sample['label_binary'] for sample in samples[:len(results)]]
+            y_pred = [result.predicted_label for result in results]
             
-            # Add individual predictions for this strategy
-            f.write(f"Individual Results:\n")
-            for i, (pred, true_label) in enumerate(zip(results['predictions'], results['true_labels'])):
-                status = "✓" if pred == true_label else "✗"
-                f.write(f"  Sample {i+1}: {pred} (expected: {true_label}) {status}\n")
-            f.write("\n")
+            # Calculate metrics using sklearn
+            from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+            
+            try:
+                accuracy = accuracy_score(y_true, y_pred)
+                precision = precision_score(y_true, y_pred, pos_label='hate', average='binary', zero_division=0)
+                recall = recall_score(y_true, y_pred, pos_label='hate', average='binary', zero_division=0)
+                f1 = f1_score(y_true, y_pred, pos_label='hate', average='binary', zero_division=0)
+                
+                metrics = {
+                    'accuracy': accuracy,
+                    'precision': precision,
+                    'recall': recall,
+                    'f1_score': f1
+                }
+            except Exception as e:
+                print(f"Warning: Error calculating metrics for {strategy}: {e}")
+                metrics = {
+                    'accuracy': 0.0,
+                    'precision': 0.0,
+                    'recall': 0.0,
+                    'f1_score': 0.0
+                }
+            
+            # Create confusion matrix
+            cm = confusion_matrix(y_true, y_pred, labels=['hate', 'normal'])
+            tn, fp, fn, tp = cm.ravel() if cm.size == 4 else [0, 0, 0, 0]
+            
+            # Store performance data
+            performance_row = {
+                'strategy': strategy,
+                'accuracy': metrics['accuracy'],
+                'precision': metrics['precision'],
+                'recall': metrics['recall'],
+                'f1_score': metrics['f1_score'],
+                'true_positive': int(tp),
+                'true_negative': int(tn),
+                'false_positive': int(fp),
+                'false_negative': int(fn)
+            }
+            performance_data.append(performance_row)
+            
+            # Add to report
+            report_lines.append(f"\n{strategy.upper()} Strategy:")
+            report_lines.append(f"  Accuracy:  {metrics['accuracy']:.3f}")
+            report_lines.append(f"  Precision: {metrics['precision']:.3f}")
+            report_lines.append(f"  Recall:    {metrics['recall']:.3f}")
+            report_lines.append(f"  F1-Score:  {metrics['f1_score']:.3f}")
+            report_lines.append(f"  Confusion Matrix: TP={tp}, TN={tn}, FP={fp}, FN={fn}")
         
-        # Find best strategy
-        best_strategy = max(all_results.keys(), 
-                           key=lambda s: all_results[s]['metrics'].get('accuracy', 0))
-        best_accuracy = all_results[best_strategy]['metrics'].get('accuracy', 0)
+        # Save performance metrics
+        performance_csv_path = output_dir / f"performance_metrics_{timestamp}.csv"
+        if performance_data:
+            with open(performance_csv_path, 'w', newline='', encoding='utf-8') as f:
+                fieldnames = performance_data[0].keys()
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                writer.writerows(performance_data)
+        print(f"Performance metrics saved to: {performance_csv_path}")
         
-        f.write(f"BEST PERFORMING STRATEGY: {best_strategy.upper()} ({best_accuracy:.2%} accuracy)\n")
-    
-    print(f"📋 DETAILED REPORT SAVED TO: {report_file}")
-    print()
-    
-    # Print summary comparison
-    print("STRATEGY COMPARISON SUMMARY")
-    print("=" * 35)
-    print(f"{'Strategy':<12} {'Accuracy':<10} {'Correct':<8} {'Avg Time':<10}")
-    print("-" * 45)
-    
-    for strategy, results in all_results.items():
-        accuracy = results['metrics'].get('accuracy', 0)
-        correct = results['metrics'].get('correct_predictions', 0)
-        total = results['metrics'].get('total_samples', 0)
-        avg_time = results['avg_response_time']
+        # Save human-readable report
+        report_path = output_dir / f"evaluation_report_{timestamp}.txt"
+        with open(report_path, 'w', encoding='utf-8') as f:
+            f.write('\n'.join(report_lines))
+        print(f"Evaluation report saved to: {report_path}")
         
-        print(f"{strategy:<12} {accuracy:<10.2%} {correct}/{total:<6} {avg_time:<10.2f}s")
+        return True
+        
+    except Exception as e:
+        print(f"ERROR: Error saving results: {e}")
+        return False
+
+
+# ============================================================================
+# COMMAND LINE INTERFACE
+# ============================================================================
+
+def create_parser() -> argparse.ArgumentParser:
+    """
+    Create and configure the argument parser for the CLI.
     
-    # Find best performing strategy
-    best_strategy = max(all_results.keys(), 
-                       key=lambda s: all_results[s]['metrics'].get('accuracy', 0))
-    best_accuracy = all_results[best_strategy]['metrics'].get('accuracy', 0)
+    Returns:
+        argparse.ArgumentParser: Configured argument parser
+    """
+    parser = argparse.ArgumentParser(
+        description="GPT-OSS-20B Prompt Validation CLI",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python runner.py                           # Run comprehensive evaluation (default)
+  python runner.py --test-connection         # Test endpoint connection only
+  python runner.py --test-prompt baseline    # Test baseline strategy with canned samples
+  python runner.py --test-strategy all       # Test all strategies with evaluation metrics
+  python runner.py --test-strategy baseline persona --sample-size 3
+        """
+    )
     
-    print(f"\nBEST PERFORMING STRATEGY: {best_strategy.upper()} ({best_accuracy:.2%} accuracy)")
+    # Connection testing
+    parser.add_argument(
+        '--test-connection',
+        action='store_true',
+        help='Test connection to GPT-OSS-20B endpoint'
+    )
     
-    return True
+    # Prompt strategy testing (quick validation with canned samples)
+    parser.add_argument(
+        '--test-prompt',
+        choices=get_available_strategies(),
+        help='Test specific prompt strategy with canned samples (quick validation)'
+    )
+    
+    # Strategy evaluation (comprehensive with metrics)
+    parser.add_argument(
+        '--test-strategy',
+        nargs='+',
+        choices=get_strategy_choices(),
+        help='Run comprehensive strategy evaluation with metrics and output files'
+    )
+    
+    # Sample size control
+    parser.add_argument(
+        '--sample-size',
+        type=int,
+        default=5,
+        help='Number of samples to use for strategy testing (default: 5)'
+    )
+    
+    return parser
 
 
 def main():
-    """Main entry point"""
-    parser = argparse.ArgumentParser(description="Prompt Strategy Validator")
-    parser.add_argument("--test-connection", action="store_true", 
-                       help="Test connection only")
-    parser.add_argument("--sample-size", type=int, default=5,
-                       help="Number of samples for validation demo (default: 5)")
-    parser.add_argument("--demo", action="store_true",
-                       help="Run validation demonstration with real strategy testing")
-    parser.add_argument("--test-strategies", action="store_true",
-                       help="Test each strategy individually with 5 samples and print evaluation metrics")
+    """
+    Main entry point for the CLI application.
     
+    Handles argument parsing, validates environment setup, and dispatches
+    to appropriate testing/evaluation functions. If no arguments provided,
+    runs comprehensive evaluation of all strategies.
+    """
+    setup_logging()
+    parser = create_parser()
     args = parser.parse_args()
     
-    # Setup logging
-    setup_logging()
+    # If no arguments provided, run comprehensive test as default
+    if len(sys.argv) == 1:
+        print("No arguments provided. Running comprehensive strategy evaluation...")
+        args.test_strategy = ["all"]
+        args.sample_size = 20
     
-    # Handle different modes
+    success = True
+    
+    # Handle connection testing
     if args.test_connection:
         success = test_connection()
-        sys.exit(0 if success else 1)
     
-    elif args.demo:
-        success = run_validation_demo(args.sample_size)
-        sys.exit(0 if success else 1)
+    # Handle prompt strategy testing (quick validation)
+    elif args.test_prompt:
+        success = test_prompt_strategy(args.test_prompt)
     
-    elif args.test_strategies:
-        success = test_individual_strategies(5)  # Always use 5 samples for strategy testing
-        sys.exit(0 if success else 1)
+    # Handle comprehensive strategy evaluation
+    elif args.test_strategy:
+        strategies = args.test_strategy
+        if "all" in strategies:
+            strategies = get_available_strategies()
+        success = test_strategies(strategies, args.sample_size)
     
-    else:
-        # Default: run connection test and validation demo
-        print("PROMPT VALIDATOR - PRODUCTION VERSION")
-        print("=" * 40)
-        print("Fully implemented with real GPT-OSS-20B strategy testing.")
-        print()
-        
-        # Test connection
-        if test_connection():
-            print()
-            run_validation_demo(args.sample_size)
-        
-        sys.exit(0)
+    # Exit with appropriate code
+    sys.exit(0 if success else 1)
 
 
 if __name__ == "__main__":
