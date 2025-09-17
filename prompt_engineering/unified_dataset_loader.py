@@ -44,7 +44,7 @@ class UnifiedDatasetLoader:
         # Define dataset paths
         self.base_path = Path(__file__).parent
         self.canned_path = self.base_path / "data_samples" / "canned_basic_all.json"
-        self.unified_path = self.base_path.parent.parent / "data" / "processed" / "unified" / "unified_test.json"
+        self.unified_path = self.base_path.parent / "data" / "processed" / "unified" / "unified_test.json"
         
         # Cache for loaded datasets
         self._canned_cache = None
