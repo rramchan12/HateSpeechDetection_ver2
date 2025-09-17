@@ -11,11 +11,13 @@ This validator provides:
 - **Results Storage**: Comprehensive output files with timestamped results
 - **Clean Output**: Professional logging and reporting without emojis
 - **Modular Design**: Separate components for easy extension and customization
+- **Flexible Data Loading**: Support for both canned samples and unified dataset
+- **Robust Metrics**: Fixed metrics calculation handling None predictions
 
 ## Features
 
 ### **Four Prompt Strategies (JSON-Configurable)**
-All strategies are now loaded from `strategy_templates.json` for easy customization and enforce structured JSON response format with rationale:
+All strategies are loaded from `prompt_templates/all_combined.json` for easy customization and enforce structured JSON response format with rationale:
 
 1. **Baseline**: Simple classification without additional context
 2. **Policy**: Platform guidelines-based content moderation  
@@ -31,23 +33,24 @@ All strategies enforce structured JSON format responses:
 - **Rationale Tracking**: Model explanations captured and saved in output files
 
 ### **JSON Configuration**
-Strategy templates are stored in `strategy_templates.json`:
+Strategy templates are stored in `prompt_templates/all_combined.json`:
 ```json
 {
-  "baseline": {
-    "name": "baseline", 
-    "description": "Baseline classification approach",
-    "system_prompt": "You are a content moderation assistant...",
-    "user_template": "Post: \"{text}\"",
-    "response_format": {"type": "json_object"},
-    "parameters": {"temperature": 0.1}
+  "strategies": {
+    "baseline": {
+      "name": "baseline", 
+      "description": "Baseline classification approach",
+      "system_prompt": "You are a content moderation assistant...",
+      "user_template": "Classify the following text: \"{text}\"",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "response_format": "json_object"
+      }
+    }
   }
 }
 ```
-
-### **Comprehensive Analytics**
-- Individual sample performance tracking
-- Strategy comparison with accuracy metrics
 - Response time analysis
 - Error pattern identification  
 - Confusion matrix and F1-score calculations
@@ -68,14 +71,14 @@ Set required environment variables:
 
 ```bash
 # Required: Azure AI Inference endpoint and key
-export AZURE_AI_ENDPOINT="https://your-endpoint.services.ai.azure.com/models"
-export AZURE_AI_KEY="your-azure-ai-key"
+export AZURE_INFERENCE_SDK_ENDPOINT="https://your-endpoint.services.ai.azure.com/models"
+export AZURE_INFERENCE_SDK_KEY="your-azure-ai-key"
 ```
 
 **Windows PowerShell:**
 ```powershell
-$env:AZURE_AI_ENDPOINT="https://your-endpoint.services.ai.azure.com/models"
-$env:AZURE_AI_KEY="your-azure-ai-key"
+$env:AZURE_INFERENCE_SDK_ENDPOINT="https://your-endpoint.services.ai.azure.com/models"
+$env:AZURE_INFERENCE_SDK_KEY="your-azure-ai-key"
 ```
 
 ### 2. Install Dependencies
@@ -88,7 +91,7 @@ pip install -r requirements.txt
 ### 3. Test Connection
 
 ```bash
-cd prompt_engineering/prompt_validator
+cd prompt_engineering
 python runner.py --test-connection
 ```
 
@@ -98,34 +101,34 @@ python runner.py --test-connection
 
 #### Connection Testing Only
 ```bash
-python runner.py --test-connection
+python prompt_runner.py --test-connection
 ```
 
-#### Quick Strategy Testing (Single Sample)
+#### Quick Strategy Testing (Canned Samples)
 ```bash
-# Test specific strategy with one canned sample
-python runner.py --test-prompt baseline
-python runner.py --test-prompt persona
-python runner.py --test-prompt policy
-python runner.py --test-prompt combined
+# Test specific strategy with canned samples
+python prompt_runner.py --dataset-type canned --num-samples 2 --strategy baseline
+python prompt_runner.py --dataset-type canned --num-samples 5 --strategy persona
+python prompt_runner.py --dataset-type canned --num-samples all --strategy policy
 ```
 
-#### Comprehensive Strategy Evaluation
+#### Comprehensive Strategy Evaluation (Unified Dataset)
 ```bash
-# Test all strategies with detailed metrics and output files
-python runner.py --test-strategy all
-python runner.py --test-strategy baseline persona --sample-size 10
+# Test all strategies with unified dataset
+python prompt_runner.py --dataset-type unified --num-samples 25 --strategy all
+python prompt_runner.py --dataset-type unified --num-samples 100 --strategy baseline policy
 ```
 
-#### Default Mode (Comprehensive Evaluation)
+#### Combined Strategy Testing
 ```bash
-# Run comprehensive evaluation of all strategies (default: 20 samples)
-python runner.py
+# Test specific strategies on different datasets
+python prompt_runner.py --dataset-type canned --num-samples all --strategy combined
+python prompt_runner.py --dataset-type unified --num-samples 50 --strategy persona combined
 ```
 
 ### **Output Files**
 
-All test runs generate timestamped files in `validation_outputs/`:
+All test runs generate timestamped files in `outputs/`:
 
 1. **`strategy_unified_results_TIMESTAMP.csv`**
    - Individual sample results for each strategy
@@ -145,23 +148,49 @@ All test runs generate timestamped files in `validation_outputs/`:
 ## Project Structure
 
 ```
-prompt_validator/
-├── core_validator.py          # Main validator (connection + validation logic)
-├── strategy_templates.py      # Prompt strategy loader (loads from JSON)
-├── strategy_templates.json    # Strategy configuration (JSON)
-├── canned_samples.json        # Test samples in unified format
-├── evaluation_metrics.py      # Metrics calculation
-├── runner.py                  # CLI interface (dynamic strategy loading)
-├── requirements.txt           # Dependencies
-├── validation_outputs/        # Generated result files
-└── README.md                 # This file
+prompt_engineering/
+├── prompts_validator.py              # Main validator (connection + validation logic)
+├── strategy_templates_loader.py      # Prompt strategy loader (loads from JSON)
+├── evaluation_metrics_calc.py        # Metrics calculation and result structures
+├── persistence_helper.py             # Output file management and saving
+├── azureai_mi_connector_wrapper.py   # Azure AI SDK connection wrapper
+├── unified_dataset_loader.py         # Flexible dataset loading (canned + unified)
+├── prompt_runner.py                  # CLI interface with unified dataset support
+├── prompt_templates/
+│   └── all_combined.json             # Strategy configuration (all 4 strategies)
+├── data_samples/
+│   └── canned_basic_all.json         # Test samples in unified format
+├── outputs/                          # Generated result files
+├── README.md                         # This file
+├── STRATEGY_TEST_RESULTS.md          # Test results documentation
+└── DEBUG.md                          # Debugging guide
+```
+
+### **Flexible Dataset Loading**
+
+The system supports two dataset types:
+
+1. **Canned Dataset** (`data_samples/canned_basic_all.json`):
+   - 5 carefully curated samples
+   - Covers hate/normal labels for LGBTQ, Mexican, and Middle Eastern groups
+   - Perfect for quick testing and validation
+
+2. **Unified Dataset** (from `../../../data/processed/unified/unified_test.json`):
+   - Full unified test dataset with 12,589+ samples
+   - Filtered to LGBTQ, Mexican, and Middle East target groups
+   - Comprehensive evaluation capability
+
+### **CLI Arguments**
+
+```bash
+python prompt_runner.py --dataset-type [canned|unified] --num-samples [N|all] --strategy [baseline|policy|persona|combined|all]
 ```
 ## Environment Variables
 
 | Variable | Required | Description | Example |
 |----------|----------|-------------|---------|
-| `AZURE_AI_ENDPOINT` | Yes | Azure AI Inference endpoint | `https://your-endpoint.services.ai.azure.com/models` |
-| `AZURE_AI_KEY` | Yes | Azure AI authentication key | `your-32-character-key` |
+| `AZURE_INFERENCE_SDK_ENDPOINT` | Yes | Azure AI Inference endpoint | `https://your-endpoint.services.ai.azure.com/models` |
+| `AZURE_INFERENCE_SDK_KEY` | Yes | Azure AI authentication key | `your-32-character-key` |
 
 ## Current Implementation
 
@@ -181,6 +210,39 @@ prompt_validator/
 2. **Persona**: Persona-based prompting incorporating target group identity and bias awareness  
 3. **Policy**: Policy-based prompting with platform community standards and hate speech definitions
 4. **Combined**: Fusion of persona and policy strategies for comprehensive bias-aware classification
+
+### **Strategy Configuration**
+
+Each strategy is defined in `strategy_templates.json` with configurable model parameters:
+
+```json
+{
+  "strategies": {
+    "baseline": {
+      "name": "baseline",
+      "description": "...",
+      "system_prompt": "...",
+      "user_template": "...",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    }
+  }
+}
+```
+
+**Configurable Parameters:**
+- `max_tokens`: Maximum response length (default: 512)
+- `temperature`: Response randomness (0.0-2.0, default: 0.1)
+- `top_p`: Nucleus sampling threshold (0.0-1.0, default: 1.0)
+- `frequency_penalty`: Token frequency penalty (-2.0 to 2.0, default: 0.0)
+- `presence_penalty`: Token presence penalty (-2.0 to 2.0, default: 0.0)
+- `response_format`: Response format ("json_object" or null, default: "json_object")
 
 ## CLI Reference
 
@@ -212,7 +274,7 @@ python runner.py --test-strategy all --sample-size 10
 #### PromptValidator
 
 ```python
-from core_validator import PromptValidator
+from prompts_validator import PromptValidator
 
 # Initialize with environment variables
 validator = PromptValidator()
@@ -278,10 +340,10 @@ python runner.py --test-prompt baseline
 
 ### Connection Issues
 
-- Verify environment variables are set (`AZURE_AI_ENDPOINT`, `AZURE_AI_KEY`)
+- Verify environment variables are set (`AZURE_INFERENCE_SDK_ENDPOINT`, `AZURE_INFERENCE_SDK_KEY`)
 - Check Azure AI endpoint accessibility
 - Validate authentication key format
-- Test with `python runner.py --test-connection`
+- Test with `python prompt_runner.py --test-connection`
 
 ### Import Errors
 
@@ -294,3 +356,27 @@ python runner.py --test-prompt baseline
 - Monitor response times in output files
 - Consider adjusting model parameters in strategy templates
 - Review prompt complexity for timeout issues
+
+## Recent Improvements
+
+### Directory Reorganization (September 2025)
+- **Moved strategy templates**: `strategy_templates.json` → `prompt_templates/all_combined.json`
+- **Moved test samples**: `canned_samples.json` → `data_samples/canned_basic_all.json`  
+- **Renamed output directory**: `validation_outputs/` → `outputs/`
+- **Updated all code references**: Complete refactoring to use new paths
+
+### Metrics Calculation Fix
+- **Fixed None prediction handling**: Robust metrics calculation that filters out None predictions
+- **Improved error handling**: Better fallback mechanisms for failed JSON parsing
+- **Enhanced debugging**: Clear error messages for "Fallback due to JSON parsing error"
+
+### Enhanced CLI Interface  
+- **Unified dataset support**: Choose between canned samples and full unified dataset
+- **Flexible sample sizes**: Support for specific counts or "all" samples
+- **Strategy selection**: Test individual strategies or all together
+- **Clean argument structure**: `--dataset-type`, `--num-samples`, `--strategy`
+
+### System Reliability
+- **Modular design**: Separated concerns across multiple specialized modules
+- **Comprehensive testing**: All components tested and validated
+- **Production ready**: Robust error handling and logging throughout

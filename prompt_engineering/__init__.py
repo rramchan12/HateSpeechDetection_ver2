@@ -11,15 +11,15 @@ This package provides clean validation without UI elements, focused on
 prompt performance assessment for hate speech detection.
 """
 
-from .core_validator import PromptValidator
-from .strategy_templates import PromptStrategy, create_strategy_templates
-from .evaluation_metrics import EvaluationMetrics, ValidationResult
+from .prompts_validator import PromptValidator
+from .strategy_templates_loader import PromptStrategy, load_strategy_templates
+from .evaluation_metrics_calc import EvaluationMetrics, ValidationResult
 
 __version__ = "1.0.0"
 __all__ = [
     "PromptValidator",
     "PromptStrategy", 
-    "create_strategy_templates",
+    "load_strategy_templates",
     "EvaluationMetrics",
     "ValidationResult"
 ]

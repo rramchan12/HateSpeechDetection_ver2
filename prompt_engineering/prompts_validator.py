@@ -1,6 +1,6 @@
 """
 Core validation engine for testing GPT-OSS-20B connection and prompt strategies.
-Simplified version focusing on connection testing with scaffolding for future features.
+Refactored to use the new Azure AI connector wrapper.
 """
 
 import logging
@@ -8,14 +8,10 @@ import os
 from typing import Dict, List, Optional, Tuple
 import time
 
-# Azure AI Inference SDK
-from azure.ai.inference import ChatCompletionsClient
-from azure.ai.inference.models import SystemMessage, UserMessage
-from azure.core.credentials import AzureKeyCredential
-
 # Local imports
-from strategy_templates import PromptStrategy, PromptTemplate, create_strategy_templates, format_prompt_with_context
-from evaluation_metrics import EvaluationMetrics, ValidationResult
+from azureai_mi_connector_wrapper import AzureAIConnector
+from strategy_templates_loader import PromptStrategy, PromptTemplate, load_strategy_templates, format_prompt_with_context
+from evaluation_metrics_calc import EvaluationMetrics, ValidationResult
 
 
 def load_unified_dataset():
@@ -46,85 +42,50 @@ def load_unified_dataset():
 
 class PromptValidator:
     """
-    Connection-focused validator for GPT-OSS-20B with scaffolding for prompt strategies.
+    Prompt validation engine using the Azure AI connector wrapper.
     """
     
-    def __init__(self, endpoint: str = None, key: str = None, deployment_name: str = "gpt-oss-120b"):
+    def __init__(self, endpoint: str = None, key: str = None, model_name: str = "gpt-oss-120b"):
         """
         Initialize the prompt validator.
         
         Args:
-            endpoint: Azure AI endpoint URL
-            key: Azure AI key
-            deployment_name: Model deployment name
+            endpoint: Azure AI endpoint URL (optional - will use hardcoded if None)
+            key: Azure AI key (optional - will use hardcoded if None)
+            model_name: Model deployment name
         """
         # Setup logging
         self.logger = logging.getLogger(__name__)
         
-        # Connection settings
-        self.endpoint = endpoint or os.getenv('AZURE_AI_ENDPOINT')
-        self.key = key or os.getenv('AZURE_AI_KEY')
-        self.deployment_name = deployment_name
+        # Initialize Azure AI connector
+        # Only pass non-None values to preserve hardcoded defaults
+        connector_kwargs = {"model_name": model_name}
+        if endpoint is not None:
+            connector_kwargs["endpoint"] = endpoint
+        if key is not None:
+            connector_kwargs["key"] = key
+            
+        self.connector = AzureAIConnector(**connector_kwargs)
         
-        # Validation state
-        self.is_connected = False
-        self.client = None
+        # Legacy compatibility properties
+        self.endpoint = self.connector.endpoint
+        self.key = self.connector.key
+        self.deployment_name = self.connector.model_name
+        self.client = self.connector.client
+        self.is_connected = self.connector.is_connected
         
-        # Initialize client
-        if self.endpoint and self.key:
-            self._initialize_client()
-        else:
-            self.logger.error("Missing Azure AI credentials. Set AZURE_AI_ENDPOINT and AZURE_AI_KEY environment variables.")
-    
-    def _initialize_client(self):
-        """Initialize Azure AI client"""
-        try:
-            self.client = ChatCompletionsClient(
-                endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.key)
-            )
-            self.logger.info(f"PromptValidator initialized with endpoint: {self.endpoint}")
-        except Exception as e:
-            self.logger.error(f"Failed to initialize client: {e}")
+        self.logger.info(f"PromptValidator initialized with Azure AI connector")
     
     def validate_connection(self):
         """
-        Test connection to GPT-OSS-20B.
+        Test connection to GPT-OSS-20B using the connector.
         
         Returns:
             bool: True if connection successful
         """
-        if not self.client:
-            self.logger.error("Client not initialized")
-            return False
-        
-        self.logger.info("Validating connection to GPT-OSS-20B...")
-        
-        try:
-            # Test connection
-            test_response = self.client.complete(
-                messages=[
-                    SystemMessage(content="You are a helpful assistant."),
-                    UserMessage(content="Respond with 'Connection successful' only.")
-                ],
-                max_tokens=10,
-                temperature=0.0,
-                model=self.deployment_name
-            )
-            
-            if test_response and test_response.choices:
-                response_content = test_response.choices[0].message.content
-                response_text = response_content.strip() if response_content else "Empty response"
-                self.logger.info(f"Connection validated. Response: {response_text}")
-                self.is_connected = True
-                return True
-            else:
-                self.logger.error("Connection failed: No response received")
-                return False
-                
-        except Exception as e:
-            self.logger.error(f"Connection error: {e}")
-            return False
+        success = self.connector.test_connection()
+        self.is_connected = success
+        return success
     
     def test_single_strategy(self, strategy_name: str, text: str, true_label: str = None) -> ValidationResult:
         """
@@ -151,7 +112,7 @@ class PromptValidator:
             )
         
         try:
-            templates = create_strategy_templates()
+            templates = load_strategy_templates()
             if strategy_name not in templates:
                 raise ValueError(f"Unknown strategy: {strategy_name}")
             
@@ -161,41 +122,37 @@ class PromptValidator:
             system_prompt = strategy.template.system_prompt
             user_prompt = strategy.template.user_template.format(text=text)
             
-            # Make API call with optional response format from strategy parameters
+            # Make API call with parameters from strategy template
             start_time = time.time()
             
-            # Prepare API call parameters
+            # Get all parameters from strategy template with defaults
+            strategy_params = strategy.parameters or {}
             api_params = {
-                "messages": [
-                    SystemMessage(content=system_prompt),
-                    UserMessage(content=user_prompt)
-                ],
-                "max_tokens": 300,  # Increased for rationale field
-                "temperature": strategy.parameters.get("temperature", 0.1),
-                "model": self.deployment_name
+                "max_tokens": strategy_params.get("max_tokens", 512),
+                "temperature": strategy_params.get("temperature", 0.1),
+                "top_p": strategy_params.get("top_p", 1.0),
+                "frequency_penalty": strategy_params.get("frequency_penalty", 0.0),
+                "presence_penalty": strategy_params.get("presence_penalty", 0.0)
             }
             
             # Try to add response_format if specified in strategy parameters
-            response_format = strategy.parameters.get("response_format")
+            response_format = strategy_params.get("response_format")
             if response_format:
-                try:
-                    # Try with response_format first
-                    api_params["response_format"] = response_format
-                    self.logger.info(f"Attempting to use response_format: {response_format}")
-                    response = self.client.complete(**api_params)
-                except Exception as e:
-                    # If response_format fails, retry without it
-                    self.logger.warning(f"response_format not supported ({e}), falling back to prompt engineering")
-                    api_params.pop("response_format", None)
-                    response = self.client.complete(**api_params)
-            else:
-                # No response_format specified, use standard call
-                response = self.client.complete(**api_params)
+                api_params["response_format"] = response_format
+                self.logger.info(f"Attempting to use response_format: {response_format}")
+            
+            self.logger.info(f"Using strategy parameters: {api_params}")
+            
+            # Use the connector's simple_completion method
+            response_content = self.connector.simple_completion(
+                system_message=system_prompt,
+                user_message=user_prompt,
+                **api_params
+            )
             response_time = time.time() - start_time
             
-            if response and response.choices:
-                response_content = response.choices[0].message.content
-                response_text = response_content.strip() if response_content else "Empty response"
+            if response_content:
+                response_text = response_content.strip()
                 
                 # Parse prediction and rationale
                 predicted_label, rationale = self._parse_prediction(response_text)

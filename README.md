@@ -1,6 +1,6 @@
 # Hate Speech Detection: HateXplain + ToxiGen Unified Dataset
 
-A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing and validation.
+A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing, validation, and **prompt engineering capabilities for GPT-OSS-20B**.
 
 ## 🎯 Project Overview
 
@@ -11,6 +11,7 @@ This project provides:
 - **Robust Pipeline**: End-to-end data collection, processing, and unification
 - **Comprehensive Testing**: 36 unit tests with 63%+ coverage for core unification logic
 - **Persona Preservation**: Original target group identities preserved as persona tags
+- **Prompt Engineering**: Professional validation system for GPT-OSS-20B with multiple strategies
 
 ## 📁 Project Structure
 
@@ -49,6 +50,18 @@ HateSpeechDetection_ver2/
 │   ├── test_hatexplain_data_presence.py
 │   ├── test_toxigen_data_presence.py
 │   └── test_toxigen_downloader.py
+├── eda/                      # Exploratory Data Analysis
+│   ├── unified_dataset_eda.ipynb    # Comprehensive EDA notebook
+│   └── unified_dataset_eda.py       # EDA script version
+├── prompt_engineering/       # GPT-OSS-20B prompt validation system
+│   ├── prompts_validator.py          # Core prompt validation logic
+│   ├── strategy_templates_loader.py  # Strategy template management
+│   ├── evaluation_metrics_calc.py    # Metrics calculation and reporting
+│   ├── prompt_runner.py              # CLI interface for validation
+│   ├── data_samples/                 # Curated test samples
+│   ├── prompt_templates/             # Strategy templates (policy, persona, etc.)
+│   ├── outputs/                      # Validation results and reports
+│   └── README.md                     # Detailed prompt engineering documentation
 ├── requirements.txt          # Project dependencies
 ├── pyproject.toml           # Project configuration
 ├── run_tests.py             # Test runner
@@ -92,6 +105,28 @@ python -m data_preparation.data_preparation_toxigen
 # Unify both datasets (filtered to LGBTQ, Mexican, Middle East)
 python -m data_preparation.data_unification
 ```
+
+### 5. Prompt Engineering & Validation
+
+The project includes a comprehensive prompt validation system for GPT-OSS-20B:
+
+```bash
+# Navigate to prompt engineering directory
+cd prompt_engineering
+
+# Test connection to GPT-OSS-20B
+python prompt_runner.py --test-connection
+
+# Run validation with different strategies
+python prompt_runner.py --dataset-type canned --strategy all
+python prompt_runner.py --dataset-type unified --num-samples 100 --strategy policy persona
+```
+
+**See `prompt_engineering/README.md` for detailed documentation on:**
+- Strategy configuration (Policy, Persona, Combined, Baseline)
+- Dataset options (canned samples vs. full unified dataset)
+- Metrics analysis and reporting
+- Azure AI integration and debugging
 
 This creates the unified dataset with **64,321 entries** across 3 target groups:
 
@@ -140,7 +175,40 @@ This creates the unified dataset with **64,321 entries** across 3 target groups:
 | `original_id` | Source identifier | Original dataset ID |
 | `split` | Data split | "train", "val", "test" |
 
-## 🧪 Testing & Validation
+## � Prompt Engineering & Validation
+
+The project includes a comprehensive **GPT-OSS-20B prompt validation system** for testing hate speech detection strategies:
+
+### Available Strategies
+
+- **Baseline**: Direct text classification without additional context
+- **Policy**: Context-aware classification with hate speech policy guidelines
+- **Persona**: Identity-informed classification using persona tags (Arab, LGBTQ, etc.)
+- **Combined**: Policy + Persona integration for comprehensive analysis
+
+### Key Features
+
+- **Flexible Dataset Support**: Test with curated samples or full unified dataset
+- **Comprehensive Metrics**: Accuracy, precision, recall, F1-score with detailed reporting
+- **Azure AI Integration**: Seamless connection to GPT-OSS-20B via Azure AI endpoints
+- **Production Ready**: Robust error handling, logging, and output management
+- **CLI Interface**: Simple command-line tools for validation workflows
+
+### Quick Validation Example
+
+```bash
+cd prompt_engineering
+
+# Test all strategies with canned samples
+python prompt_runner.py --dataset-type canned --strategy all
+
+# Large-scale validation with unified dataset
+python prompt_runner.py --dataset-type unified --num-samples 500 --strategy combined
+```
+
+**For detailed documentation**, see `prompt_engineering/README.md`
+
+## �🧪 Testing & Validation
 
 This project includes comprehensive testing for all components with detailed coverage analysis.
 
@@ -308,11 +376,19 @@ Extend the data processors:
 - `pytest-cov` - Coverage reporting and analysis  
 - `pytest-mock` - Mocking utilities for isolation
 
+**Prompt Engineering Libraries:**
+
+- `azure-ai-inference` - Azure AI model integration
+- `python-dotenv` - Environment variable management
+- `scikit-learn` - Machine learning metrics and evaluation
+
 **See `requirements.txt` for complete dependency list with versions.**
 
 ## 📚 Additional Documentation
 
 - **`UNIFICATION_GUIDE.md`** - Detailed unification process and schema documentation
+- **`prompt_engineering/README.md`** - Comprehensive prompt engineering and validation guide
+- **`eda/unified_dataset_eda.ipynb`** - Exploratory data analysis notebook
 - **`htmlcov/index.html`** - Test coverage reports (generated after running tests)
 - **`data/processed/unified/unified_dataset_stats.json`** - Dataset statistics and distributions
 

@@ -2,49 +2,57 @@
 
 ## Overview
 
-This document contains the latest test results for all four prompt strategies evaluated against the GPT-OSS-20B model using our unified hate speech dataset.
+This document contains the latest test results for all four prompt strategies evaluated against the GPT-OSS-20B model using our canned test samples and unified hate speech dataset.
 
 ## Test Configuration
 
 - **Model**: GPT-OSS-20B via Azure AI Inference
-- **Test Samples**: 5 diverse examples from unified dataset
+- **Dataset Options**: 
+  - Canned samples (5 curated examples)
+  - Unified dataset (12,589+ filtered samples)
 - **Strategies Tested**: Baseline, Persona, Policy, Combined
-- **Evaluation Metrics**: Accuracy, Response Time, Individual Prediction Analysis
+- **Evaluation Metrics**: Accuracy, Precision, Recall, F1-Score, Confusion Matrix, Response Time
+- **Output Format**: JSON with rationale explanations
 
-## Latest Test Run Results
+## Latest Test Run Results (Canned Dataset)
 
 ### Test Samples Used
 
 1. **Sample 1** (Label: hate)
    - Text: "LGBTQ people are destroying traditional values and shouldn't be allowed near children"
    - Target Group: LGBTQ
+   - Persona Tag: lgbtq
 
-2. **Sample 2** (Label: normal)
+2. **Sample 2** (Label: normal)  
    - Text: "I support equal rights for all people regardless of their background"
    - Target Group: General
+   - Persona Tag: general
 
 3. **Sample 3** (Label: hate)
    - Text: "Mexicans are taking all our jobs and ruining this country"
    - Target Group: Mexican
+   - Persona Tag: hispanic
 
 4. **Sample 4** (Label: normal)
    - Text: "Learning about different cultures helps us become more understanding"
    - Target Group: General
+   - Persona Tag: general
 
 5. **Sample 5** (Label: hate)
    - Text: "Middle Eastern people are all terrorists and can't be trusted"
    - Target Group: Middle East
+   - Persona Tag: middle_eastern
 
-### Strategy Performance Summary
+### Strategy Performance Summary (Latest Run: 2025-09-18)
 
 | Strategy | Accuracy | Precision | Recall | F1-Score | Avg Response Time |
 |----------|----------|-----------|--------|----------|------------------|
-| Baseline | TBD% | TBD | TBD | TBD | TBD ms |
-| Persona | TBD% | TBD | TBD | TBD | TBD ms |
-| Policy | TBD% | TBD | TBD | TBD | TBD ms |
-| Combined | TBD% | TBD | TBD | TBD | TBD ms |
+| Baseline | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
+| Persona | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
+| Policy | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
+| Combined | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
 
-*Results will be updated after next test run with `python runner.py --test-strategy all`*
+**Note**: Perfect scores on canned dataset indicate high performance on clear-cut examples. More comprehensive evaluation needed with larger unified dataset samples.
 
 ### Individual Prediction Results
 
@@ -93,7 +101,7 @@ This document contains the latest test results for all four prompt strategies ev
 
 ## Output Files Generated
 
-All test runs generate timestamped files in `validation_outputs/`:
+All test runs generate timestamped files in `outputs/`:
 
 1. **Detailed Results**: `strategy_unified_results_TIMESTAMP.csv`
    - Individual sample results for each strategy
@@ -117,22 +125,27 @@ All test runs generate timestamped files in `validation_outputs/`:
 To generate updated results and populate this document:
 
 ```bash
-# Run comprehensive strategy testing with default settings
-python runner.py
+# Run comprehensive strategy testing with canned samples
+python prompt_runner.py --dataset-type canned --num-samples all --strategy all
 
-# Run with specific strategies and sample size
-python runner.py --test-strategy all --sample-size 10
+# Run with unified dataset for larger scale testing
+python prompt_runner.py --dataset-type unified --num-samples 25 --strategy all
 
-# Test single strategy quickly
-python runner.py --test-prompt baseline
+# Test single strategy quickly with canned data
+python prompt_runner.py --dataset-type canned --num-samples 2 --strategy baseline
 
-# Results will be saved to validation_outputs/ and can be used to update this document
+# Test specific strategies on unified dataset
+python prompt_runner.py --dataset-type unified --num-samples 50 --strategy policy combined
+
+# Results will be saved to outputs/ and can be used to update this document
 ```
 
 ## CLI Commands Summary
 
-- `python runner.py --test-connection`: Test Azure AI endpoint connectivity
-- `python runner.py --test-prompt <strategy>`: Quick single-sample test
+- `python prompt_runner.py --dataset-type canned --num-samples [N|all] --strategy [strategy|all]`: Test with curated samples
+- `python prompt_runner.py --dataset-type unified --num-samples [N|all] --strategy [strategy|all]`: Test with full dataset  
+- **Strategies**: `baseline`, `policy`, `persona`, `combined`, `all`
+- **Output Location**: All results saved to `outputs/` directory with timestamps
 - `python runner.py --test-strategy all`: Comprehensive evaluation with metrics
 - `python runner.py`: Default comprehensive evaluation (20 samples)
 
