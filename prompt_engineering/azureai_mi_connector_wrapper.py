@@ -2,11 +2,13 @@
 Azure AI Inference SDK Connector Wrapper
 
 This module provides a clean wrapper around the Azure AI Inference SDK
-for connecting to GPT-OSS-120B and other Azure AI models.
+for connecting to multiple AI models (GPT-OSS-20B, GPT-5, etc.) using 
+configuration from model_connection.yaml.
 
 Features:
-- Simple connection management
-- Environment variable configuration
+- YAML-based model configuration
+- Multiple model support (GPT-OSS-20B, GPT-5)
+- Environment variable substitution
 - JSON response format support
 - Error handling and logging
 - Flexible message handling
@@ -14,41 +16,125 @@ Features:
 
 import os
 import logging
+import re
+import yaml
+from pathlib import Path
 from typing import Dict, List, Optional, Any, Union
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
 
 
+class ModelConfigLoader:
+    """Helper class to load and process model configuration from YAML"""
+    
+    def __init__(self, config_path: Optional[str] = None):
+        """Initialize config loader with path to YAML file"""
+        self.logger = logging.getLogger(__name__)
+        if config_path is None:
+            # Default to model_connection.yaml in same directory as this script
+            config_path = Path(__file__).parent / "model_connection.yaml"
+        self.config_path = Path(config_path)
+        self._config = None
+    
+    def load_config(self) -> Dict[str, Any]:
+        """Load configuration from YAML file with environment variable substitution"""
+        if self._config is not None:
+            return self._config
+            
+        try:
+            with open(self.config_path, 'r', encoding='utf-8') as f:
+                config_content = f.read()
+            
+            # Substitute environment variables (${VAR_NAME} format)
+            config_content = self._substitute_env_vars(config_content)
+            
+            # Parse YAML
+            self._config = yaml.safe_load(config_content)
+            self.logger.info(f"Loaded model configuration from {self.config_path}")
+            return self._config
+            
+        except FileNotFoundError:
+            self.logger.error(f"Configuration file not found: {self.config_path}")
+            raise
+        except yaml.YAMLError as e:
+            self.logger.error(f"Error parsing YAML configuration: {e}")
+            raise
+        except Exception as e:
+            self.logger.error(f"Error loading configuration: {e}")
+            raise
+    
+    def _substitute_env_vars(self, content: str) -> str:
+        """Replace ${VAR_NAME} with environment variable values"""
+        def replace_var(match):
+            var_name = match.group(1)
+            env_value = os.getenv(var_name)
+            if env_value is None:
+                self.logger.warning(f"Environment variable {var_name} not found, keeping placeholder")
+                return match.group(0)  # Keep original ${VAR_NAME} if not found
+            return env_value
+        
+        return re.sub(r'\$\{([^}]+)\}', replace_var, content)
+    
+    def get_model_config(self, model_id: str) -> Dict[str, Any]:
+        """Get configuration for a specific model"""
+        config = self.load_config()
+        
+        if model_id not in config.get('models', {}):
+            available_models = list(config.get('models', {}).keys())
+            raise ValueError(f"Model '{model_id}' not found in configuration. Available: {available_models}")
+        
+        return config['models'][model_id]
+    
+    def get_default_model_id(self) -> str:
+        """Get the default model ID from configuration"""
+        config = self.load_config()
+        return config.get('default_model', 'gpt-oss-20b')
+    
+    def list_available_models(self) -> List[str]:
+        """Get list of available model IDs"""
+        config = self.load_config()
+        return list(config.get('models', {}).keys())
+
+
 class AzureAIConnector:
     """
-    Wrapper class for Azure AI Inference SDK connections.
+    Wrapper class for Azure AI Inference SDK connections with YAML configuration support.
     
-    Provides a simplified interface for connecting to Azure AI models
-    with support for environment variable configuration and JSON responses.
+    Provides a simplified interface for connecting to multiple Azure AI models
+    with configuration loaded from model_connection.yaml file.
     """
     
     def __init__(self, 
-                 endpoint: Optional[str] = None, 
-                 key: Optional[str] = None, 
-                 model_name: str = "gpt-oss-120b"):
+                 model_id: Optional[str] = None,
+                 config_path: Optional[str] = None):
         """
-
-        
-        Initialize the Azure AI connector.
+        Initialize the Azure AI connector with YAML configuration.
         
         Args:
-            endpoint: Azure AI endpoint URL (defaults to AZURE_INFERENCE_SDK_ENDPOINT env variable)
-            key: Azure AI API key (defaults to AZURE_INFERENCE_SDK_KEY env variable)
-            model_name: Model deployment name
+            model_id: Model identifier (e.g., 'gpt-oss-20b', 'gpt-5'). 
+                     If None, uses default from config.
+            config_path: Path to model_connection.yaml file. If None, 
+                        uses default location.
         """
         # Setup logging
         self.logger = logging.getLogger(__name__)
         
-        # Configuration - Use environment variables if not provided
-        self.endpoint = endpoint or os.getenv("AZURE_INFERENCE_SDK_ENDPOINT")
-        self.key = key or os.getenv("AZURE_INFERENCE_SDK_KEY")
-        self.model_name = model_name
+        # Load configuration
+        self.config_loader = ModelConfigLoader(config_path)
+        
+        # Determine model to use
+        if model_id is None:
+            model_id = self.config_loader.get_default_model_id()
+        
+        self.model_id = model_id
+        self.model_config = self.config_loader.get_model_config(model_id)
+        
+        # Extract connection details
+        self.endpoint = self.model_config.get('endpoint')
+        self.key = self.model_config.get('api_key')
+        self.model_name = self.model_config.get('model_deployment')
+        self.default_parameters = self.model_config.get('default_parameters', {})
         
         # Connection state
         self.client = None
@@ -60,9 +146,10 @@ class AzureAIConnector:
     def _initialize_client(self):
         """Initialize the Azure AI client."""
         if not self.endpoint or not self.key:
-            self.logger.error("Missing Azure AI credentials. Please set environment variables:")
-            self.logger.error("- AZURE_INFERENCE_SDK_ENDPOINT")
-            self.logger.error("- AZURE_INFERENCE_SDK_KEY")
+            self.logger.error(f"Missing Azure AI credentials for model '{self.model_id}':")
+            self.logger.error(f"- endpoint: {'✓' if self.endpoint else '✗ (check environment variables in config)'}")
+            self.logger.error(f"- api_key: {'✓' if self.key else '✗ (check environment variables in config)'}")
+            self.logger.error("Please ensure environment variables referenced in model_connection.yaml are set")
             return
         
         try:
@@ -70,9 +157,9 @@ class AzureAIConnector:
                 endpoint=self.endpoint,
                 credential=AzureKeyCredential(self.key)
             )
-            self.logger.info(f"Azure AI client initialized with endpoint: {self.endpoint}")
+            self.logger.info(f"Azure AI client initialized for '{self.model_id}' with endpoint: {self.endpoint}")
         except Exception as e:
-            self.logger.error(f"Failed to initialize Azure AI client: {e}")
+            self.logger.error(f"Failed to initialize Azure AI client for '{self.model_id}': {e}")
     
     def test_connection(self) -> bool:
         """
@@ -111,11 +198,11 @@ class AzureAIConnector:
     
     def complete(self, 
                  messages: List[Union[SystemMessage, UserMessage]],
-                 max_tokens: int = 2048,
-                 temperature: float = 1.0,
-                 top_p: float = 1.0,
-                 frequency_penalty: float = 0.0,
-                 presence_penalty: float = 0.0,
+                 max_tokens: Optional[int] = None,
+                 temperature: Optional[float] = None,
+                 top_p: Optional[float] = None,
+                 frequency_penalty: Optional[float] = None,
+                 presence_penalty: Optional[float] = None,
                  response_format: Optional[str] = None,
                  **kwargs) -> Optional[Any]:
         """
@@ -123,12 +210,12 @@ class AzureAIConnector:
         
         Args:
             messages: List of SystemMessage and UserMessage objects
-            max_tokens: Maximum tokens in response
-            temperature: Sampling temperature (0.0 to 2.0)
-            top_p: Nucleus sampling parameter
-            frequency_penalty: Frequency penalty (-2.0 to 2.0)
-            presence_penalty: Presence penalty (-2.0 to 2.0)
-            response_format: Response format ("json_object" or None)
+            max_tokens: Maximum tokens in response (uses config default if None)
+            temperature: Sampling temperature (uses config default if None)
+            top_p: Nucleus sampling parameter (uses config default if None)
+            frequency_penalty: Frequency penalty (uses config default if None)
+            presence_penalty: Presence penalty (uses config default if None)
+            response_format: Response format (uses config default if None)
             **kwargs: Additional parameters
             
         Returns:
@@ -139,21 +226,25 @@ class AzureAIConnector:
             return None
         
         try:
-            # Build request parameters
+            # Use configuration defaults if parameters not provided
+            defaults = self.default_parameters
+            
+            # Build request parameters with config defaults
             params = {
                 "messages": messages,
-                "max_tokens": max_tokens,
-                "temperature": temperature,
-                "top_p": top_p,
-                "frequency_penalty": frequency_penalty,
-                "presence_penalty": presence_penalty,
+                "max_tokens": max_tokens if max_tokens is not None else defaults.get("max_tokens", 2048),
+                "temperature": temperature if temperature is not None else defaults.get("temperature", 1.0),
+                "top_p": top_p if top_p is not None else defaults.get("top_p", 1.0),
+                "frequency_penalty": frequency_penalty if frequency_penalty is not None else defaults.get("frequency_penalty", 0.0),
+                "presence_penalty": presence_penalty if presence_penalty is not None else defaults.get("presence_penalty", 0.0),
                 "model": self.model_name,
                 **kwargs
             }
             
-            # Add response_format if specified
-            if response_format:
-                params["response_format"] = response_format
+            # Add response_format if specified or use default
+            final_response_format = response_format if response_format is not None else defaults.get("response_format")
+            if final_response_format:
+                params["response_format"] = final_response_format
             
             # Make API call
             response = self.client.complete(**params)
@@ -195,36 +286,99 @@ class AzureAIConnector:
             return response.choices[0].message.content
         return None
     
+    def get_model_info(self) -> Dict[str, Any]:
+        """
+        Get detailed information about the current model configuration.
+        
+        Returns:
+            Dictionary with model configuration details
+        """
+        return {
+            "model_id": self.model_id,
+            "model_name": self.model_config.get("name", "Unknown"),
+            "endpoint": self.endpoint,
+            "model_deployment": self.model_name,
+            "provider": self.model_config.get("provider", "Unknown"),
+            "description": self.model_config.get("description", "No description"),
+            "default_parameters": self.default_parameters,
+            "is_connected": self.is_connected,
+            "client_initialized": self.client is not None
+        }
+    
     def get_connection_info(self) -> Dict[str, Any]:
         """
-        Get connection information.
+        Get basic connection information.
         
         Returns:
             Dictionary with connection details
         """
         return {
+            "model_id": self.model_id,
             "endpoint": self.endpoint,
-            "model_name": self.model_name,
+            "model_deployment": self.model_name,
             "is_connected": self.is_connected,
             "client_initialized": self.client is not None
         }
+    
+    def list_available_models(self) -> List[str]:
+        """
+        Get list of available models from configuration.
+        
+        Returns:
+            List of available model IDs
+        """
+        return self.config_loader.list_available_models()
+    
+    def switch_model(self, model_id: str) -> bool:
+        """
+        Switch to a different model configuration.
+        
+        Args:
+            model_id: Model identifier to switch to
+            
+        Returns:
+            True if switch successful, False otherwise
+        """
+        try:
+            # Load new model configuration
+            new_config = self.config_loader.get_model_config(model_id)
+            
+            # Update configuration
+            self.model_id = model_id
+            self.model_config = new_config
+            self.endpoint = new_config.get('endpoint')
+            self.key = new_config.get('api_key')
+            self.model_name = new_config.get('model_deployment')
+            self.default_parameters = new_config.get('default_parameters', {})
+            
+            # Reset connection state
+            self.client = None
+            self.is_connected = False
+            
+            # Reinitialize client
+            self._initialize_client()
+            
+            self.logger.info(f"Switched to model: {model_id}")
+            return self.client is not None
+            
+        except Exception as e:
+            self.logger.error(f"Failed to switch to model '{model_id}': {e}")
+            return False
 
 
-def create_connector(endpoint: str = None, 
-                    key: str = None, 
-                    model_name: str = "gpt-oss-120b") -> AzureAIConnector:
+def create_connector(model_id: str = None, 
+                    config_path: str = None) -> AzureAIConnector:
     """
-    Factory function to create an Azure AI connector.
+    Factory function to create an Azure AI connector with YAML configuration.
     
     Args:
-        endpoint: Azure AI endpoint URL
-        key: Azure AI API key
-        model_name: Model deployment name
+        model_id: Model identifier (e.g., 'gpt-oss-20b', 'gpt-5')
+        config_path: Path to model_connection.yaml file
         
     Returns:
         AzureAIConnector instance
     """
-    return AzureAIConnector(endpoint=endpoint, key=key, model_name=model_name)
+    return AzureAIConnector(model_id=model_id, config_path=config_path)
 
 
 def test_connection_simple() -> bool:
@@ -241,34 +395,58 @@ def test_connection_simple() -> bool:
 # Example usage and testing
 if __name__ == "__main__":
     """
-    Test the Azure AI connector wrapper.
+    Test the Azure AI connector wrapper with YAML configuration.
     """
     # Setup logging
     logging.basicConfig(level=logging.INFO)
     
-    # Create connector
+    print("=== Azure AI Connector with YAML Configuration ===")
+    
+    # Test 1: Create connector with default model (from config)
+    print("\n1. Creating connector with default model...")
     connector = create_connector()
+    model_info = connector.get_model_info()
+    print(f"   Model: {model_info['model_id']} ({model_info['model_name']})")
+    print(f"   Description: {model_info['description']}")
+    print(f"   Default parameters: {model_info['default_parameters']}")
     
-    print("Testing Azure AI Connector...")
-    print(f"Connection info: {connector.get_connection_info()}")
-    print("-" * 50)
+    # Test 2: List available models
+    print("\n2. Available models in configuration:")
+    available_models = connector.list_available_models()
+    for model_id in available_models:
+        print(f"   - {model_id}")
     
-    # Test connection
+    # Test 3: Test connection
+    print("\n3. Testing connection...")
     if connector.test_connection():
-        print("✅ Connection successful!")
+        print("   ✅ Connection successful!")
         
-        # Test simple completion
-        print("\nTesting simple completion...")
+        # Test simple completion with config defaults
+        print("\n4. Testing completion with config defaults...")
         response = connector.simple_completion(
             system_message="You are a helpful assistant.",
-            user_message="What are 3 things to visit in Seattle? Please respond in JSON format.",
-            response_format="json_object"
+            user_message="Respond with just 'Hello from {model_name}' where {model_name} is your model name.",
         )
         
         if response:
-            print("✅ Simple completion successful!")
-            print(f"Response: {response}")
+            print(f"   ✅ Response: {response}")
         else:
-            print("❌ Simple completion failed")
+            print("   ❌ No response received")
+            
+        # Test 5: Switch model (if GPT-5 is available)
+        if "gpt-5" in available_models:
+            print(f"\n5. Switching to GPT-5...")
+            if connector.switch_model("gpt-5"):
+                print("   ✅ Successfully switched to GPT-5")
+                new_info = connector.get_model_info()
+                print(f"   New model: {new_info['model_id']} ({new_info['model_name']})")
+            else:
+                print("   ❌ Failed to switch to GPT-5")
+        else:
+            print(f"\n5. GPT-5 not configured, skipping model switch test")
+            
     else:
-        print("❌ Connection failed")
+        print("   ❌ Connection failed!")
+        print("   Check your environment variables and configuration")
+    
+    print("\n=== Test Complete ===")

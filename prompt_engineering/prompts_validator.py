@@ -3,8 +3,11 @@ Core validation engine for testing GPT-OSS-20B connection and prompt strategies.
 Refactored to use the new Azure AI connector wrapper.
 """
 
+import argparse
 import logging
 import os
+import sys
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 import time
 
@@ -40,32 +43,73 @@ def load_unified_dataset():
     return data
 
 
+def load_canned_dataset():
+    """
+    Load the canned dataset from data_samples directory
+    
+    Returns:
+        Dictionary containing train_data, val_data, test_data
+    """
+    import json
+    from pathlib import Path
+    
+    # Try to load canned_basic_all.json from data_samples directory
+    data_samples_dir = Path(__file__).parent / "data_samples"
+    canned_file = data_samples_dir / "canned_basic_all.json"
+    
+    data = {}
+    
+    if canned_file.exists():
+        with open(canned_file, 'r', encoding='utf-8') as f:
+            canned_data = json.load(f)
+            # Split into train/val/test (simple approach: 70/15/15 split)
+            total_samples = len(canned_data)
+            train_end = int(0.7 * total_samples)
+            val_end = int(0.85 * total_samples)
+            
+            data["train_data"] = canned_data[:train_end]
+            data["val_data"] = canned_data[train_end:val_end]
+            data["test_data"] = canned_data[val_end:]
+    else:
+        # Fallback to empty data
+        data = {"train_data": [], "val_data": [], "test_data": []}
+    
+    return data
+
+
 class PromptValidator:
     """
-    Prompt validation engine using the Azure AI connector wrapper.
+    Prompt validation engine using the Azure AI connector wrapper with YAML configuration.
     """
     
-    def __init__(self, endpoint: str = None, key: str = None, model_name: str = "gpt-oss-120b"):
+    def __init__(self, model_id: str = None, config_path: str = None, 
+                 endpoint: str = None, key: str = None, model_name: str = None):
         """
-        Initialize the prompt validator.
+        Initialize the prompt validator with YAML configuration support.
         
         Args:
-            endpoint: Azure AI endpoint URL (optional - will use hardcoded if None)
-            key: Azure AI key (optional - will use hardcoded if None)
-            model_name: Model deployment name
+            model_id: Model identifier from YAML config (e.g., 'gpt-oss-20b', 'gpt-5')
+            config_path: Path to model_connection.yaml file
+            endpoint: Azure AI endpoint URL (legacy compatibility - overrides YAML)
+            key: Azure AI key (legacy compatibility - overrides YAML)
+            model_name: Model deployment name (legacy compatibility - overrides YAML)
         """
         # Setup logging
         self.logger = logging.getLogger(__name__)
         
-        # Initialize Azure AI connector
-        # Only pass non-None values to preserve hardcoded defaults
-        connector_kwargs = {"model_name": model_name}
-        if endpoint is not None:
-            connector_kwargs["endpoint"] = endpoint
-        if key is not None:
-            connector_kwargs["key"] = key
-            
-        self.connector = AzureAIConnector(**connector_kwargs)
+        # Check for legacy usage (backward compatibility)
+        if endpoint is not None or key is not None or model_name is not None:
+            self.logger.warning("Using legacy parameters. Consider migrating to YAML configuration.")
+            # Create legacy connector (if this path is still needed for backward compatibility)
+            # For now, we'll use the new system but log a warning
+            if model_id is None:
+                model_id = "gpt-oss-20b"  # Default fallback
+        
+        # Initialize Azure AI connector with YAML configuration
+        self.connector = AzureAIConnector(model_id=model_id, config_path=config_path)
+        
+        # Store model information
+        self.model_info = self.connector.get_model_info()
         
         # Legacy compatibility properties
         self.endpoint = self.connector.endpoint
@@ -74,7 +118,7 @@ class PromptValidator:
         self.client = self.connector.client
         self.is_connected = self.connector.is_connected
         
-        self.logger.info(f"PromptValidator initialized with Azure AI connector")
+        self.logger.info(f"PromptValidator initialized for model '{self.model_info['model_id']}' ({self.model_info['model_name']})")
     
     def validate_connection(self):
         """
@@ -250,20 +294,28 @@ class PromptValidator:
             "strategies_tested": strategies
         }
     
-    def validate_strategies(self, sample_size: int = 25) -> Dict:
+    def validate_strategies(self, strategies: List[str] = None, data_source: str = "unified", 
+                          output_dir: str = "outputs", sample_size: int = 25) -> Dict:
         """
-        Validate all prompt strategies using test dataset.
+        Validate specified prompt strategies using test dataset.
         
         Args:
+            strategies: List of strategy names to test (default: all)
+            data_source: Data source ('unified' or 'canned')
+            output_dir: Output directory for results
             sample_size: Number of samples to test from dataset
             
         Returns:
             Dict: Comprehensive validation results
         """
         try:
-            # Load test data
-            data = load_unified_dataset()
-            test_data = data.get('test_data', [])
+            # Load test data based on source
+            if data_source == "unified":
+                data = load_unified_dataset()
+                test_data = data.get('test_data', [])
+            else:  # canned
+                data = load_canned_dataset()
+                test_data = data.get('test_data', [])
             
             if not test_data:
                 self.logger.warning("No test data available, using sample size of 5")
@@ -278,12 +330,132 @@ class PromptValidator:
                 texts = [sample["text"] for sample in samples]
                 labels = [sample.get("label_binary", "unknown") for sample in samples]
             
-            self.logger.info(f"Validating strategies with {len(texts)} samples")
-            return self.batch_validate(texts, true_labels=labels)
+            self.logger.info(f"Validating strategies {strategies} with {len(texts)} samples")
+            results = self.batch_validate(texts, strategies=strategies, true_labels=labels)
+            
+            # Generate output files if validation was successful
+            if results and 'results' in results:
+                try:
+                    from persistence_helper import PersistenceHelper
+                    import datetime
+                    
+                    # Generate timestamp
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    
+                    # Initialize persistence helper with output directory
+                    persistence = PersistenceHelper(output_dir)
+                    
+                    # Convert ValidationResult objects to dictionaries for persistence
+                    detailed_results = []
+                    for result in results['results']:
+                        detailed_results.append({
+                            'strategy': result.strategy_name,
+                            'input_text': result.input_text,
+                            'true_label': result.true_label,
+                            'predicted_label': result.predicted_label,
+                            'response_time': result.response_time,
+                            'rationale': result.rationale,
+                            'target_group_norm': getattr(result, 'target_group_norm', 'unknown'),
+                            'persona_tag': getattr(result, 'persona_tag', 'unknown'),
+                            'source_dataset': data_source
+                        })
+                    
+                    # Group ValidationResult objects (not dictionaries) by strategy for metrics calculation
+                    strategy_results = {}
+                    for strategy in strategies:
+                        strategy_results[strategy] = [r for r in results['results'] if r.strategy_name == strategy]
+                    
+                    # Create samples list from the test data
+                    samples = []
+                    for i, text in enumerate(texts):
+                        samples.append({
+                            'text': text,
+                            'label_binary': labels[i] if i < len(labels) else 'unknown',
+                            'target_group_norm': 'unknown',  # This could be enhanced if available
+                            'persona_tag': 'unknown'  # This could be enhanced if available
+                        })
+                    
+                    # Save comprehensive results (CSV files and evaluation report)
+                    output_paths = persistence.calculate_and_save_comprehensive_results(
+                        strategy_results, detailed_results, samples, timestamp
+                    )
+                    
+                    # Add output file information to results
+                    results['output_files'] = output_paths
+                    results['timestamp'] = timestamp
+                    
+                    self.logger.info(f"Results saved to {len(output_paths)} files in {output_dir}/")
+                    
+                except Exception as e:
+                    self.logger.warning(f"Failed to save output files: {e}")
+                    # Continue execution even if file saving fails
+            
+            return results
             
         except Exception as e:
             self.logger.error(f"Error in strategy validation: {e}")
             return {"error": str(e)}
+    
+    def calculate_metrics_only(self, data_source: str = "unified") -> Dict:
+        """
+        Calculate dataset metrics without running model validation.
+        
+        Args:
+            data_source: Data source ('unified' or 'canned')
+            
+        Returns:
+            Dict: Dataset metrics and summary
+        """
+        try:
+            # Load data based on source
+            if data_source == "unified":
+                data = load_unified_dataset()
+            else:  # canned
+                data = load_canned_dataset()
+            
+            # Get test data for metrics
+            test_data = data.get('test_data', [])
+            
+            if not test_data:
+                return {
+                    "error": "No test data available for metrics calculation",
+                    "summary": {
+                        "total_samples": 0,
+                        "hate_samples": 0,
+                        "normal_samples": 0,
+                        "data_source": data_source
+                    }
+                }
+            
+            # Calculate basic metrics
+            labels = [item.get('label_binary', 'unknown') for item in test_data]
+            hate_count = sum(1 for label in labels if label == 'hate')
+            normal_count = sum(1 for label in labels if label == 'normal')
+            
+            metrics = {
+                "dataset_info": {
+                    "source": data_source,
+                    "total_samples": len(test_data),
+                    "hate_samples": hate_count,
+                    "normal_samples": normal_count,
+                    "hate_percentage": round((hate_count / len(test_data)) * 100, 2) if len(test_data) > 0 else 0,
+                    "normal_percentage": round((normal_count / len(test_data)) * 100, 2) if len(test_data) > 0 else 0
+                },
+                "sample_texts": test_data[:3],  # Show first 3 samples
+                "summary": {
+                    "total_samples": len(test_data),
+                    "hate_samples": hate_count,
+                    "normal_samples": normal_count,
+                    "data_source": data_source
+                }
+            }
+            
+            self.logger.info(f"Calculated metrics for {len(test_data)} samples from {data_source} dataset")
+            return metrics
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating metrics: {e}")
+            return {"error": str(e), "summary": {"total_samples": 0}}
     
     def _parse_prediction(self, response_text: str) -> Tuple[str, str]:
         """
@@ -379,3 +551,105 @@ class PromptValidator:
             return "normal"
         else:
             return "normal"  # Default to normal
+
+
+def main():
+    """
+    Main entry point for prompt validation with flexible configuration.
+    
+    Environment Variables:
+        AZURE_AI_ENDPOINT: Azure AI endpoint (if YAML not used)
+        AZURE_AI_KEY: Azure AI key (if YAML not used)
+        MODEL_CONNECTION_PATH: Path to model_connection.yaml (optional)
+    """
+    parser = argparse.ArgumentParser(description="Validate prompts using Azure AI")
+    parser.add_argument("--model", "-m", default="gpt-oss-20b", 
+                      help="Model ID from YAML config (default: gpt-oss-20b)")
+    parser.add_argument("--config", "-c", default=None,
+                      help="Path to model_connection.yaml (default: auto-detect)")
+    parser.add_argument("--data-source", "-d", default="unified", 
+                      choices=["unified", "canned"],
+                      help="Data source to use (default: unified)")
+    parser.add_argument("--strategies", "-s", nargs="+", 
+                      default=["policy", "persona", "combined", "baseline"],
+                      choices=["policy", "persona", "combined", "baseline"],
+                      help="Prompt strategies to validate (default: all)")
+    parser.add_argument("--output-dir", "-o", default="outputs",
+                      help="Output directory for results (default: outputs)")
+    parser.add_argument("--debug", action="store_true",
+                      help="Enable debug logging")
+    parser.add_argument("--metrics-only", action="store_true",
+                      help="Generate metrics without running prompts")
+    
+    # Legacy compatibility arguments (deprecated)
+    parser.add_argument("--endpoint", help="Azure AI endpoint (deprecated - use YAML config)")
+    parser.add_argument("--key", help="Azure AI key (deprecated - use YAML config)")
+    parser.add_argument("--model-name", help="Model deployment name (deprecated - use YAML config)")
+    
+    args = parser.parse_args()
+    
+    # Configure logging
+    level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(level=level, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = logging.getLogger(__name__)
+    
+    try:
+        logger.info(f"Starting prompt validation for model '{args.model}'")
+        
+        # Auto-detect config path if not provided
+        config_path = args.config
+        if config_path is None:
+            # Look for model_connection.yaml in current directory or prompt_engineering directory
+            current_dir = Path(".")
+            prompt_eng_dir = Path("prompt_engineering")
+            
+            for potential_path in [current_dir / "model_connection.yaml", 
+                                 prompt_eng_dir / "model_connection.yaml"]:
+                if potential_path.exists():
+                    config_path = str(potential_path)
+                    logger.info(f"Auto-detected config file: {config_path}")
+                    break
+        
+        # Warn about legacy arguments
+        if args.endpoint or args.key or args.model_name:
+            logger.warning("Legacy arguments detected. Consider migrating to YAML configuration.")
+        
+        # Initialize validator with new interface
+        validator = PromptValidator(
+            model_id=args.model,
+            config_path=config_path,
+            endpoint=args.endpoint,
+            key=args.key,
+            model_name=args.model_name
+        )
+        
+        # Run validation based on arguments
+        if args.metrics_only:
+            logger.info("Running metrics calculation only")
+            results = validator.calculate_metrics_only(data_source=args.data_source)
+        else:
+            logger.info(f"Running validation with strategies: {args.strategies}")
+            results = validator.validate_strategies(
+                strategies=args.strategies,
+                data_source=args.data_source,
+                output_dir=args.output_dir
+            )
+        
+        # Log summary
+        if isinstance(results, dict) and 'summary' in results:
+            logger.info("Validation completed successfully")
+            for key, value in results['summary'].items():
+                logger.info(f"  {key}: {value}")
+        else:
+            logger.info("Validation completed")
+            
+    except Exception as e:
+        logger.error(f"Validation failed: {str(e)}")
+        if args.debug:
+            import traceback
+            traceback.print_exc()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

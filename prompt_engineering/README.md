@@ -1,10 +1,12 @@
 # Prompt Validator for GPT-OSS-20B
 
-A comprehensive prompt validation framework for testing and evaluating different prompt strategies with GPT-OSS-20B, featuring detailed analytics and performance comparison with clean, professional output.
+A comprehensive prompt validation framework for testing and evaluating different prompt strategies with multiple AI models, featuring YAML-based configuration, detailed analytics and performance comparison with clean, professional output.
 
 ## Overview
 
 This validator provides:
+- **Multi-Model Support**: Switch between GPT-OSS-20B, GPT-5, and other configured models
+- **YAML Configuration**: Centralized model configuration with environment variable support
 - **Connection Testing**: Validate Azure AI endpoint connectivity
 - **Strategy Testing**: Four different prompt strategies (Baseline, Policy, Persona, Combined)
 - **Performance Analytics**: Detailed accuracy, timing, and response analysis
@@ -13,6 +15,44 @@ This validator provides:
 - **Modular Design**: Separate components for easy extension and customization
 - **Flexible Data Loading**: Support for both canned samples and unified dataset
 - **Robust Metrics**: Fixed metrics calculation handling None predictions
+
+## Configuration
+
+### **YAML-Based Model Configuration**
+Models are configured in `model_connection.yaml` with support for environment variables:
+
+```yaml
+models:
+  gpt-oss-20b:
+    model_name: "GPT-OSS-20B"
+    endpoint: "https://your-endpoint.azure.com/models"
+    model_deployment: "gpt-oss-120b"
+    provider: "azure_ai_inference"
+    description: "Azure AI hosted GPT-OSS-20B model for hate speech detection"
+    default_parameters:
+      max_tokens: 512
+      temperature: 0.1
+      response_format: "json_object"
+  
+  gpt-5:
+    model_name: "GPT-5"
+    endpoint: "${GPT5_ENDPOINT}"  # Environment variable
+    api_key: "${GPT5_API_KEY}"    # Environment variable
+    model_deployment: "gpt-5"
+    provider: "azure_ai_inference"
+    description: "Azure AI hosted GPT-5 model for advanced text analysis"
+    default_parameters:
+      max_tokens: 1024
+      temperature: 0.2
+      response_format: "json_object"
+```
+
+### **Environment Variables**
+Set these environment variables or update the YAML file directly:
+- `AZURE_AI_ENDPOINT`: Default Azure AI endpoint (for GPT-OSS-20B)
+- `AZURE_AI_KEY`: Default Azure AI key (for GPT-OSS-20B)
+- `GPT5_ENDPOINT`: GPT-5 specific endpoint
+- `GPT5_API_KEY`: GPT-5 specific API key
 
 ## Features
 
@@ -99,31 +139,49 @@ python runner.py --test-connection
 
 ### **Available Commands**
 
-#### Connection Testing Only
+#### Connection Testing and Metrics Only
 ```bash
-python prompt_runner.py --test-connection
+# Test model connection and calculate dataset metrics
+python prompts_validator.py --model gpt-oss-20b --metrics-only
+
+# Use GPT-5 configuration
+python prompts_validator.py --model gpt-5 --metrics-only
+
+# Test with canned data
+python prompts_validator.py --model gpt-oss-20b --data-source canned --metrics-only
 ```
 
 #### Quick Strategy Testing (Canned Samples)
 ```bash
 # Test specific strategy with canned samples
-python prompt_runner.py --dataset-type canned --num-samples 2 --strategy baseline
-python prompt_runner.py --dataset-type canned --num-samples 5 --strategy persona
-python prompt_runner.py --dataset-type canned --num-samples all --strategy policy
+python prompts_validator.py --model gpt-oss-20b --data-source canned --strategies baseline
+
+# Test multiple strategies
+python prompts_validator.py --model gpt-oss-20b --data-source canned --strategies baseline policy persona
 ```
 
 #### Comprehensive Strategy Evaluation (Unified Dataset)
 ```bash
 # Test all strategies with unified dataset
-python prompt_runner.py --dataset-type unified --num-samples 25 --strategy all
-python prompt_runner.py --dataset-type unified --num-samples 100 --strategy baseline policy
+python prompts_validator.py --model gpt-oss-20b --data-source unified --strategies baseline policy persona combined
+
+# Use GPT-5 for evaluation
+python prompts_validator.py --model gpt-5 --data-source unified --strategies baseline policy persona combined
 ```
 
-#### Combined Strategy Testing
+#### Advanced Usage
 ```bash
-# Test specific strategies on different datasets
-python prompt_runner.py --dataset-type canned --num-samples all --strategy combined
-python prompt_runner.py --dataset-type unified --num-samples 50 --strategy persona combined
+# Custom config file path
+python prompts_validator.py --model gpt-oss-20b --config /path/to/model_connection.yaml --strategies baseline
+
+# Enable debug logging
+python prompts_validator.py --model gpt-oss-20b --debug --strategies baseline
+
+# Custom output directory
+python prompts_validator.py --model gpt-oss-20b --output-dir my_results --strategies baseline policy
+
+# Legacy compatibility (deprecated)
+python prompts_validator.py --endpoint "https://your-endpoint.com" --key "your-key" --model-name "your-model" --strategies baseline
 ```
 
 ### **Output Files**
