@@ -22,6 +22,7 @@ seaborn>=0.11.0
 
 # Prompt validation and Azure AI
 azure-ai-inference>=1.0.0b9
+PyYAML>=6.0
 
 # Optional: for better performance
 accelerate>=0.20.0
