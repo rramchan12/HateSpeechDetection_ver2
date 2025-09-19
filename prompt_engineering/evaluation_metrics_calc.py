@@ -309,6 +309,109 @@ class EvaluationMetrics:
     def calculate_metrics(self, predictions: List[str], true_labels: List[str]) -> Dict:
         """Legacy method - use calculate_basic_metrics instead"""
         return self.calculate_basic_metrics(predictions, true_labels)
+    
+    def calculate_metrics_from_runid(self, runid: str, output_dir: str = "outputs") -> Dict[str, any]:
+        """
+        Calculate comprehensive metrics from stored results in a runId folder.
+        
+        Args:
+            runid: Run identifier (e.g., "run_20250920_003815")
+            output_dir: Base output directory containing run folders
+            
+        Returns:
+            Dict[str, Path]: Dictionary mapping output type to file path
+        """
+        import pandas as pd
+        import csv
+        from pathlib import Path
+        
+        runid_dir = Path(output_dir) / runid
+        
+        if not runid_dir.exists():
+            raise FileNotFoundError(f"RunId directory not found: {runid_dir}")
+        
+        # Find results and samples files
+        results_file = None
+        samples_file = None
+        
+        for file_path in runid_dir.glob("strategy_unified_results_*.csv"):
+            results_file = file_path
+            break
+            
+        for file_path in runid_dir.glob("test_samples_*.csv"):
+            samples_file = file_path
+            break
+        
+        if not results_file or not results_file.exists():
+            raise FileNotFoundError(f"Results file not found in {runid_dir}")
+        
+        if not samples_file or not samples_file.exists():
+            raise FileNotFoundError(f"Samples file not found in {runid_dir}")
+        
+        try:
+            # Load results and samples from CSV
+            results_df = pd.read_csv(results_file)
+            samples_df = pd.read_csv(samples_file)
+            
+            # Convert to required formats
+            samples = samples_df.to_dict('records')
+            
+            # Group results by strategy
+            all_results = {}
+            for strategy in results_df['strategy'].unique():
+                strategy_results = results_df[results_df['strategy'] == strategy]
+                # Create ValidationResult-like objects with required attributes
+                validation_results = []
+                for _, row in strategy_results.iterrows():
+                    result_obj = type('ValidationResult', (), {
+                        'predicted_label': row['predicted_label'],
+                        'true_label': row['true_label'],
+                        'strategy_name': row['strategy']
+                    })()
+                    validation_results.append(result_obj)
+                all_results[strategy] = validation_results
+            
+            # Calculate performance metrics for all strategies
+            performance_metrics = self.calculate_metrics_for_all_strategies(all_results, samples)
+            
+            # Convert to dictionary format for CSV export
+            performance_data = self.performance_metrics_to_dict_list(performance_metrics)
+            
+            # Generate human-readable report
+            report_lines = self.generate_performance_report_lines(performance_metrics, samples)
+            
+            # Generate timestamp for output files
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            
+            # Save performance metrics and report to runId directory
+            performance_file = runid_dir / f"performance_metrics_{timestamp}.csv"
+            with open(performance_file, 'w', newline='', encoding='utf-8') as f:
+                if performance_data:
+                    fieldnames = performance_data[0].keys()
+                    writer = csv.DictWriter(f, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(performance_data)
+            
+            self.logger.info(f"Performance metrics saved to: {performance_file}")
+            
+            # Save evaluation report to runId directory
+            report_file = runid_dir / f"evaluation_report_{timestamp}.txt"
+            with open(report_file, 'w', encoding='utf-8') as f:
+                f.write('\n'.join(report_lines))
+            
+            self.logger.info(f"Evaluation report saved to: {report_file}")
+            
+            return {
+                'performance_metrics': performance_file,
+                'evaluation_report': report_file,
+                'total_samples': len(samples),
+                'strategies_tested': list(results_df['strategy'].unique())
+            }
+            
+        except Exception as e:
+            self.logger.error(f"Error calculating metrics from runId {runid}: {e}")
+            raise
 
 
 def create_evaluation_metrics() -> EvaluationMetrics:

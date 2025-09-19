@@ -36,6 +36,14 @@ class PersistenceHelper:
         # Create output directory if it doesn't exist
         self.output_dir.mkdir(exist_ok=True)
         
+        # Track current incremental files
+        self._current_results_file = None
+        self._current_samples_file = None
+        self._results_writer = None
+        self._samples_writer = None
+        self._results_csv_file = None
+        self._samples_csv_file = None
+        
         self.logger.info(f"PersistenceHelper initialized with output directory: {self.output_dir}")
     
     def generate_timestamp(self) -> str:
@@ -46,6 +54,102 @@ class PersistenceHelper:
             str: Timestamp in format YYYYMMDD_HHMMSS
         """
         return datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    def create_runid_directory(self, timestamp: str) -> Path:
+        """
+        Create a runId-specific directory for organizing outputs.
+        
+        Args:
+            timestamp: Timestamp for runId naming
+            
+        Returns:
+            Path: Path to the created runId directory
+        """
+        runid_dir = self.output_dir / f"run_{timestamp}"
+        runid_dir.mkdir(exist_ok=True)
+        self.logger.info(f"Created runId directory: {runid_dir}")
+        return runid_dir
+    
+    def initialize_incremental_storage(self, timestamp: str, runid_dir: Path) -> None:
+        """
+        Initialize incremental storage for results and samples.
+        
+        Args:
+            timestamp: Timestamp for file naming
+            runid_dir: Directory for the specific run
+        """
+        # Initialize results file
+        self._current_results_file = runid_dir / f"strategy_unified_results_{timestamp}.csv"
+        self._results_csv_file = open(self._current_results_file, 'w', newline='', encoding='utf-8')
+        
+        # Initialize samples file  
+        self._current_samples_file = runid_dir / f"test_samples_{timestamp}.csv"
+        self._samples_csv_file = open(self._current_samples_file, 'w', newline='', encoding='utf-8')
+        
+        self.logger.info(f"Initialized incremental storage: results={self._current_results_file}, samples={self._current_samples_file}")
+    
+    def save_result_incrementally(self, result_dict: Dict) -> None:
+        """
+        Save a single validation result incrementally to CSV.
+        
+        Args:
+            result_dict: Dictionary containing validation result data
+        """
+        if self._results_writer is None and self._results_csv_file is not None:
+            # Initialize CSV writer with headers on first write
+            fieldnames = result_dict.keys()
+            self._results_writer = csv.DictWriter(self._results_csv_file, fieldnames=fieldnames)
+            self._results_writer.writeheader()
+        
+        if self._results_writer is not None:
+            self._results_writer.writerow(result_dict)
+            self._results_csv_file.flush()  # Ensure data is written immediately
+    
+    def save_sample_incrementally(self, sample_dict: Dict) -> None:
+        """
+        Save a single test sample incrementally to CSV.
+        
+        Args:
+            sample_dict: Dictionary containing test sample data
+        """
+        if self._samples_writer is None and self._samples_csv_file is not None:
+            # Initialize CSV writer with headers on first write
+            fieldnames = sample_dict.keys()
+            self._samples_writer = csv.DictWriter(self._samples_csv_file, fieldnames=fieldnames)
+            self._samples_writer.writeheader()
+        
+        if self._samples_writer is not None:
+            self._samples_writer.writerow(sample_dict)
+            self._samples_csv_file.flush()  # Ensure data is written immediately
+    
+    def finalize_incremental_storage(self) -> Dict[str, Path]:
+        """
+        Finalize incremental storage by closing files and returning paths.
+        
+        Returns:
+            Dict[str, Path]: Dictionary with paths to saved files
+        """
+        output_paths = {}
+        
+        if self._results_csv_file is not None:
+            self._results_csv_file.close()
+            output_paths['detailed_results'] = self._current_results_file
+            self.logger.info(f"Finalized results file: {self._current_results_file}")
+        
+        if self._samples_csv_file is not None:
+            self._samples_csv_file.close()
+            output_paths['test_samples'] = self._current_samples_file
+            self.logger.info(f"Finalized samples file: {self._current_samples_file}")
+        
+        # Reset state
+        self._current_results_file = None
+        self._current_samples_file = None
+        self._results_writer = None
+        self._samples_writer = None
+        self._results_csv_file = None
+        self._samples_csv_file = None
+        
+        return output_paths
     
     def save_detailed_results(self, detailed_results: List[Dict], timestamp: str) -> Path:
         """

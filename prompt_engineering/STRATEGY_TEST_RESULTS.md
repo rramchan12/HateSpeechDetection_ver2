@@ -2,162 +2,276 @@
 
 ## Overview
 
-This document contains the latest test results for all four prompt strategies evaluated against the GPT-OSS-20B model using our canned test samples and unified hate speech dataset.
+This document contains test results and analysis for all four prompt strategies evaluated against Azure AI models using our comprehensive dataset options including canned samples and the unified hate speech dataset with incremental storage and runId-based output organization.
 
 ## Test Configuration
 
-- **Model**: GPT-OSS-20B via Azure AI Inference
-- **Dataset Options**: 
-  - Canned samples (5 curated examples)
-  - Unified dataset (12,589+ filtered samples)
-- **Strategies Tested**: Baseline, Persona, Policy, Combined
+- **Model Options**: GPT-OSS-20B (default), GPT-5, and other YAML-configured models
+- **Dataset Options**:
+  - Canned basic samples (5 curated examples): `canned_basic_all`
+  - Canned diverse samples (100 stratified examples): `canned_100_all`  
+  - Unified dataset (12,589+ filtered samples): `unified`
+- **Strategies Tested**: Baseline, Policy, Persona, Combined
 - **Evaluation Metrics**: Accuracy, Precision, Recall, F1-Score, Confusion Matrix, Response Time
 - **Output Format**: JSON with rationale explanations
+- **Storage**: Incremental CSV writing with runId-based folder organization
+- **Sample Size Control**: Configurable sampling for all data sources
 
-## Latest Test Run Results (Canned Dataset)
+## Available Data Sources
 
-### Test Samples Used
+### Canned Datasets
 
-1. **Sample 1** (Label: hate)
+#### canned_basic_all (5 samples)
+1. **Sample 1** (Label: hate, Target: LGBTQ)
    - Text: "LGBTQ people are destroying traditional values and shouldn't be allowed near children"
-   - Target Group: LGBTQ
    - Persona Tag: lgbtq
 
-2. **Sample 2** (Label: normal)  
+2. **Sample 2** (Label: normal, Target: General)
    - Text: "I support equal rights for all people regardless of their background"
-   - Target Group: General
    - Persona Tag: general
 
-3. **Sample 3** (Label: hate)
+3. **Sample 3** (Label: hate, Target: Mexican)
    - Text: "Mexicans are taking all our jobs and ruining this country"
-   - Target Group: Mexican
    - Persona Tag: hispanic
 
-4. **Sample 4** (Label: normal)
+4. **Sample 4** (Label: normal, Target: General)
    - Text: "Learning about different cultures helps us become more understanding"
-   - Target Group: General
    - Persona Tag: general
 
-5. **Sample 5** (Label: hate)
+5. **Sample 5** (Label: hate, Target: Middle East)
    - Text: "Middle Eastern people are all terrorists and can't be trusted"
-   - Target Group: Middle East
    - Persona Tag: middle_eastern
 
-### Strategy Performance Summary (Latest Run: 2025-09-18)
+#### canned_100_all (100 samples)
+- Stratified sampling across all target groups (LGBTQ, Mexican, Middle East)
+- Balanced hate/normal distribution
+- Diverse persona tags and sources
+- Extracted from unified dataset for representative testing
 
-| Strategy | Accuracy | Precision | Recall | F1-Score | Avg Response Time |
-|----------|----------|-----------|--------|----------|------------------|
-| Baseline | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
-| Persona | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
-| Policy | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
-| Combined | 100% | 1.000 | 1.000 | 1.000 | ~1.3s |
+### Unified Dataset
+- Full unified test dataset with 12,589+ samples
+- Filtered to LGBTQ, Mexican, and Middle East target groups
+- Comprehensive coverage with configurable sampling
+- Memory-efficient processing with incremental storage
 
-**Note**: Perfect scores on canned dataset indicate high performance on clear-cut examples. More comprehensive evaluation needed with larger unified dataset samples.
+## Current Framework Capabilities
 
-### Individual Prediction Results
+### Multi-Model Support
+```bash
+# Use default GPT-OSS-20B
+python prompt_runner.py --data-source canned_basic_all --strategies all
 
-#### Baseline Strategy
-- Sample 1: TBD (Expected: hate)
-- Sample 2: TBD (Expected: normal)
-- Sample 3: TBD (Expected: hate)
-- Sample 4: TBD (Expected: normal)
-- Sample 5: TBD (Expected: hate)
+# Switch to GPT-5
+python prompt_runner.py --model gpt-5 --data-source unified --strategies baseline --sample-size 25
+```
 
-#### Persona Strategy  
-- Sample 1: TBD (Expected: hate)
-- Sample 2: TBD (Expected: normal)
-- Sample 3: TBD (Expected: hate)
-- Sample 4: TBD (Expected: normal)
-- Sample 5: TBD (Expected: hate)
+### Flexible Data Source Selection
+```bash
+# Basic canned samples (5 total)
+python prompt_runner.py --data-source canned_basic_all --strategies all
 
-#### Policy Strategy
-- Sample 1: TBD (Expected: hate)
-- Sample 2: TBD (Expected: normal)
-- Sample 3: TBD (Expected: hate)
-- Sample 4: TBD (Expected: normal)
-- Sample 5: TBD (Expected: hate)
+# Diverse canned samples with sampling
+python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10
 
-#### Combined Strategy
-- Sample 1: TBD (Expected: hate)
-- Sample 2: TBD (Expected: normal)
-- Sample 3: TBD (Expected: hate)
-- Sample 4: TBD (Expected: normal)
-- Sample 5: TBD (Expected: hate)
+# Unified dataset with custom sampling
+python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
+```
 
-## Analysis
+### Metrics Recalculation
+```bash
+# Recalculate metrics from previous run results
+python prompt_runner.py --metrics-only --run-id run_20250920_015821
+```
 
-### Key Findings
-- Analysis will be updated after next test run
-- Best performing strategy: TBD
-- Most challenging samples: TBD
-- Response time insights: TBD
-- Rationale quality: TBD
+## Strategy Performance Framework
 
-### Strategy Comparison
-- **Baseline**: Direct classification approach - TBD performance
-- **Persona**: Target group identity and bias awareness - TBD performance
-- **Policy**: Platform community standards and definitions - TBD performance
-- **Combined**: Fusion of persona and policy strategies - TBD performance
+### Strategy Descriptions
 
-## Output Files Generated
+#### 1. Baseline Strategy
+- **Approach**: Direct hate speech classification without specialized prompting
+- **System Prompt**: Basic content moderation assistant role
+- **Parameters**: Standard temperature (0.1), max_tokens (512)
+- **Expected Performance**: Good baseline accuracy, less nuanced understanding
 
-All test runs generate timestamped files in `outputs/`:
+#### 2. Policy Strategy  
+- **Approach**: Platform guidelines-based content moderation
+- **System Prompt**: Incorporates community standards and hate speech definitions
+- **Parameters**: Optimized for policy compliance (temperature 0.1)
+- **Expected Performance**: Strong policy adherence, clear rule-based decisions
 
-1. **Detailed Results**: `strategy_unified_results_TIMESTAMP.csv`
-   - Individual sample results for each strategy
-   - Columns: strategy, sample_id, text, true_label, predicted_label, response_time, rationale
+#### 3. Persona Strategy
+- **Approach**: Multi-perspective evaluation with target group bias awareness
+- **System Prompt**: Incorporates identity and bias considerations
+- **Parameters**: Balanced for nuanced understanding (temperature 0.1)
+- **Expected Performance**: Enhanced bias detection, contextual awareness
 
-2. **Performance Metrics**: `performance_metrics_TIMESTAMP.csv`
-   - Strategy performance comparison with confusion matrix data
-   - Columns: strategy, accuracy, precision, recall, f1_score, true_positive, true_negative, false_positive, false_negative
+#### 4. Combined Strategy
+- **Approach**: Fusion of policy and persona strategies
+- **System Prompt**: Comprehensive bias-aware policy-based classification
+- **Parameters**: Optimized for comprehensive analysis (temperature 0.1)
+- **Expected Performance**: Best overall performance, balanced approach
 
-3. **Test Samples**: `test_samples_TIMESTAMP.csv`
-   - Test samples used with unified format
-   - Columns: text, label_binary, target_group_norm, persona_tag, source_dataset
+## Output File Organization
 
-4. **Human-Readable Report**: `evaluation_report_TIMESTAMP.txt`
-   - Test samples with true labels
-   - Individual prediction results with clear indicators
-   - Strategy performance summary and analysis
+All test runs generate files in timestamped runId directories (`outputs/run_YYYYMMDD_HHMMSS/`):
+
+### 1. Validation Results (`validation_results.csv`)
+Individual sample results for each strategy:
+- Columns: `strategy`, `sample_id`, `text`, `true_label`, `predicted_label`, `response_time`, `rationale`
+- Incremental writing during validation for memory efficiency
+- Complete audit trail of all predictions
+
+### 2. Performance Metrics (`performance_metrics.csv`)
+Strategy performance comparison with detailed metrics:
+- Columns: `strategy`, `accuracy`, `precision`, `recall`, `f1_score`, `true_positive`, `true_negative`, `false_positive`, `false_negative`
+- Calculated from stored results, not in-memory data
+- Ready for analysis and visualization
+
+### 3. Test Samples (`test_samples.csv`)
+Test samples used in unified format:
+- Columns: `text`, `label_binary`, `target_group_norm`, `persona_tag`, `source_dataset`
+- Preserves original dataset structure for traceability
+- Enables sample-specific analysis
+
+### 4. Evaluation Report (`evaluation_report.txt`)
+Human-readable summary with:
+- Test configuration and parameters
+- Individual prediction results with indicators
+- Strategy performance summary and analysis
+- Response time statistics and patterns
 
 ## Running Strategy Tests
 
-To generate updated results and populate this document:
+### Quick Testing Commands
 
 ```bash
-# Run comprehensive strategy testing with canned samples
-python prompt_runner.py --dataset-type canned --num-samples all --strategy all
+# Test all strategies with basic canned samples
+python prompt_runner.py --data-source canned_basic_all --strategies all
 
-# Run with unified dataset for larger scale testing
-python prompt_runner.py --dataset-type unified --num-samples 25 --strategy all
+# Test specific strategies with diverse samples and sampling
+python prompt_runner.py --data-source canned_100_all --strategies baseline policy --sample-size 5
 
-# Test single strategy quickly with canned data
-python prompt_runner.py --dataset-type canned --num-samples 2 --strategy baseline
+# Comprehensive evaluation with unified dataset
+python prompt_runner.py --data-source unified --strategies all --sample-size 100
 
-# Test specific strategies on unified dataset
-python prompt_runner.py --dataset-type unified --num-samples 50 --strategy policy combined
-
-# Results will be saved to outputs/ and can be used to update this document
+# Test single strategy quickly
+python prompt_runner.py --data-source canned_basic_all --strategies baseline
 ```
 
-## CLI Commands Summary
+### Connection and Metrics Testing
 
-- `python prompt_runner.py --dataset-type canned --num-samples [N|all] --strategy [strategy|all]`: Test with curated samples
-- `python prompt_runner.py --dataset-type unified --num-samples [N|all] --strategy [strategy|all]`: Test with full dataset  
-- **Strategies**: `baseline`, `policy`, `persona`, `combined`, `all`
-- **Output Location**: All results saved to `outputs/` directory with timestamps
-- `python runner.py --test-strategy all`: Comprehensive evaluation with metrics
-- `python runner.py`: Default comprehensive evaluation (20 samples)
+```bash
+# Test Azure AI connection
+python prompt_runner.py --test-connection
 
-## Next Steps
+# Recalculate metrics from existing results
+python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
-1. Run `python runner.py --test-strategy all` to generate updated results
-2. Analyze performance patterns across different target groups
-3. Investigate any prediction inconsistencies and rationale quality
-4. Consider fine-tuning prompt templates based on results
-5. Expand test sample size for more robust evaluation
-6. Compare rationale quality across strategies
+# Debug mode for detailed logging
+python prompt_runner.py --debug --data-source canned_basic_all --strategies all
+```
+
+### Advanced Usage Examples
+
+```bash
+# Reproducible sampling with custom seed
+python prompt_runner.py --data-source unified --sample-size 25 --random-seed 42 --strategies all
+
+# Multi-model comparison
+python prompt_runner.py --model gpt-oss-20b --data-source canned_100_all --strategies all --sample-size 10
+python prompt_runner.py --model gpt-5 --data-source canned_100_all --strategies all --sample-size 10
+```
+
+## Performance Analysis Framework
+
+### Key Metrics to Track
+
+1. **Accuracy**: Overall correctness across all samples
+2. **Precision**: True positive rate (how many predicted hate are actually hate)
+3. **Recall**: Sensitivity (how many actual hate cases are caught)
+4. **F1-Score**: Harmonic mean of precision and recall
+5. **Response Time**: Average time per prediction
+6. **Rationale Quality**: Consistency and clarity of explanations
+
+### Analysis Dimensions
+
+1. **Strategy Comparison**: Relative performance across approaches
+2. **Target Group Analysis**: Performance variation by identity group
+3. **Sample Complexity**: Easy vs. challenging case performance
+4. **Response Time Patterns**: Efficiency across strategies
+5. **Rationale Consistency**: Quality of model explanations
+
+## Expected Usage Patterns
+
+### Development and Testing
+```bash
+# Quick validation during development
+python prompt_runner.py --data-source canned_basic_all --strategies baseline
+
+# Strategy comparison testing
+python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10
+```
+
+### Comprehensive Evaluation
+```bash
+# Full strategy evaluation
+python prompt_runner.py --data-source unified --strategies all --sample-size 200
+
+# Model comparison testing
+python prompt_runner.py --model gpt-5 --data-source unified --strategies all --sample-size 100
+```
+
+### Performance Monitoring
+```bash
+# Metrics recalculation for analysis
+python prompt_runner.py --metrics-only --run-id [specific_run_id]
+
+# Baseline performance tracking
+python prompt_runner.py --data-source canned_100_all --strategies baseline --sample-size 25
+```
+
+## Architecture Benefits for Testing
+
+### Incremental Storage
+- Memory-efficient processing of large datasets
+- Real-time result availability during long runs
+- Robust handling of interrupted processes
+
+### runId Organization
+- Clear separation of test runs
+- Easy comparison across different configurations
+- Audit trail for all experiments
+
+### Flexible Sampling
+- Quick testing with small samples
+- Comprehensive evaluation with large samples
+- Reproducible results with seed control
+
+### Multi-Model Support
+- Easy comparison across different models
+- YAML-based configuration management
+- Environment variable support for deployment
+
+## Next Steps for Testing
+
+1. **Baseline Establishment**: Run comprehensive tests with all strategies on `canned_100_all`
+2. **Large-Scale Validation**: Execute unified dataset testing with 500+ samples
+3. **Performance Analysis**: Compare strategies across different target groups
+4. **Model Comparison**: Test GPT-5 vs GPT-OSS-20B performance
+5. **Rationale Analysis**: Evaluate explanation quality across strategies
+6. **Optimization**: Fine-tune prompt templates based on results
+
+## Updating This Document
+
+To populate this document with actual results:
+
+1. Run strategy tests with desired configuration
+2. Analyze output files in the generated runId folder
+3. Extract key metrics and findings from `performance_metrics.csv`
+4. Review individual predictions in `validation_results.csv`
+5. Summarize insights from `evaluation_report.txt`
+6. Update this document with concrete results and analysis
 
 ---
 
-*This document will be updated automatically with actual results after the next test run*
+*This document serves as a template and will be updated with actual test results as comprehensive evaluations are completed.*

@@ -252,6 +252,78 @@ class UnifiedDatasetLoader:
         self.logger.info("Dataset cache cleared")
 
 
+def load_dataset_by_filename(canned_filename: str, num_samples: Union[int, str] = "all", 
+                           random_seed: Optional[int] = None) -> List[Dict[str, Any]]:
+    """
+    Load dataset samples from a specific canned file by filename with optional sampling.
+    
+    Args:
+        canned_filename (str): Name of the canned file (without .json extension)
+        num_samples (Union[int, str]): Number of samples to return ("all" or integer)
+        random_seed (Optional[int]): Random seed for reproducible sampling
+        
+    Returns:
+        List[Dict[str, Any]]: List of sample dictionaries
+        
+    Raises:
+        FileNotFoundError: If the specified canned file doesn't exist
+        ValueError: If num_samples is invalid
+        
+    Example:
+        >>> samples = load_dataset_by_filename("canned_basic_all")
+        >>> samples = load_dataset_by_filename("canned_100_all", 10)
+        >>> samples = load_dataset_by_filename("canned_100_all", 50, random_seed=42)
+    """
+    import json
+    import random
+    from pathlib import Path
+    
+    # Get base path and construct file path
+    base_path = Path(__file__).parent
+    file_path = base_path / "data_samples" / f"{canned_filename}.json"
+    
+    if not file_path.exists():
+        raise FileNotFoundError(f"Canned file not found: {file_path}")
+    
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            if isinstance(data, dict) and 'samples' in data:
+                samples = data['samples']
+            elif isinstance(data, list):
+                samples = data
+            else:
+                raise ValueError(f"Invalid format in {canned_filename}.json: expected list or dict with 'samples' key")
+        
+        # Handle sample filtering
+        if isinstance(num_samples, str):
+            if num_samples.lower() == "all":
+                return samples
+            else:
+                raise ValueError(f"Invalid num_samples string: {num_samples}. Must be 'all' or an integer")
+        
+        if isinstance(num_samples, int):
+            if num_samples <= 0:
+                raise ValueError("num_samples must be positive")
+            
+            if num_samples >= len(samples):
+                return samples
+            
+            # Set random seed for reproducible results
+            if random_seed is not None:
+                random.seed(random_seed)
+            
+            # Return random sample
+            return random.sample(samples, num_samples)
+        
+        raise ValueError(f"Invalid num_samples type: {type(num_samples)}. Must be int or 'all'")
+        
+    except json.JSONDecodeError as e:
+        raise json.JSONDecodeError(f"Invalid JSON in {canned_filename}.json: {e}")
+    except Exception as e:
+        raise RuntimeError(f"Error loading {canned_filename}.json: {e}")
+
+
 def load_dataset(dataset_type: Union[str, DatasetType], 
                 num_samples: Union[int, str] = "all",
                 random_seed: Optional[int] = None) -> List[Dict[str, Any]]:
