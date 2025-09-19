@@ -1,6 +1,17 @@
-# Hate Speech Detection: HateXplain + ToxiGen Unified Dataset
+# Hate Speech Detection: Production-Ready Framework with Unified Dataset
 
-A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing, validation, and **prompt engineering capabilities for GPT-OSS-20B**.
+A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets i## 🚀 Prompt Engineering & Validation Framework
+
+The project includes a **production-ready prompt validation framework** for Azure AI models with advanced capabilities:
+
+### Framework Highlights
+
+- **🎯 Multi-Model Support**: Switch between GPT-OSS-20B, GPT-5, and custom models via YAML configuration
+- **📊 Flexible Data Sources**: Unified dataset sampling + curated canned datasets (`canned_basic_all`, `canned_100_all`)
+- **⚡ Incremental Storage**: Memory-efficient processing with real-time CSV writing
+- **📁 runId Organization**: Timestamped output folders (`outputs/run_YYYYMMDD_HHMMSS/`)
+- **🔧 Sample Size Control**: Configurable sampling that works with all data sources
+- **📈 Robust Metrics**: Comprehensive evaluation calculated from stored results, not memory a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing, validation, and **a production-ready prompt engineering framework for Azure AI models**.
 
 ## 🎯 Project Overview
 
@@ -11,7 +22,7 @@ This project provides:
 - **Robust Pipeline**: End-to-end data collection, processing, and unification
 - **Comprehensive Testing**: 36 unit tests with 63%+ coverage for core unification logic
 - **Persona Preservation**: Original target group identities preserved as persona tags
-- **Prompt Engineering**: Professional validation system for GPT-OSS-20B with multiple strategies
+- **Production Prompt Framework**: Multi-model Azure AI validation system with incremental storage, YAML configuration, and runId-based organization
 
 ## 📁 Project Structure
 
@@ -19,54 +30,34 @@ This project provides:
 HateSpeechDetection_ver2/
 ├── data/
 │   ├── hatexplain/           # HateXplain raw dataset
-│   │   ├── dataset.json
-│   │   ├── post_id_divisions.json
-│   │   └── classes*.npy
 │   ├── toxigen/              # ToxiGen raw dataset  
-│   │   ├── train.parquet
-│   │   ├── annotated.parquet
-│   │   └── annotations.parquet
 │   └── processed/            # Processed & unified data
-│       ├── hatexplain/       # Processed HateXplain
-│       ├── toxigen/          # Processed ToxiGen
-│       └── unified/          # Final unified dataset
-│           ├── unified_train.json
-│           ├── unified_val.json
-│           ├── unified_test.json
-│           └── unified_dataset_stats.json
-├── data_collection/          # Dataset downloaders
-│   ├── hatexplain_downloader.py
-│   ├── toxigen_downloader.py
-│   ├── hatexplain_data_presence_validator.py
-│   └── toxigen_data_presence_validator.py
+│       └── unified/          # Final unified dataset (64,321 entries)
+├── data_collection/          # Dataset downloaders and validators
 ├── data_preparation/         # Data processing pipeline
-│   ├── data_preparation_hatexplain.py
-│   ├── data_preparation_toxigen.py
-│   └── data_unification.py
-├── tests/                    # Comprehensive test suite
-│   ├── test_data_unification.py    # 36 unit tests for unification logic
-│   ├── test_hatexplain_downloader.py
-│   ├── test_toxigen_data_preparation.py
-│   ├── test_hatexplain_data_presence.py
-│   ├── test_toxigen_data_presence.py
-│   └── test_toxigen_downloader.py
+├── tests/                    # Comprehensive test suite (36 unit tests)
 ├── eda/                      # Exploratory Data Analysis
-│   ├── unified_dataset_eda.ipynb    # Comprehensive EDA notebook
-│   └── unified_dataset_eda.py       # EDA script version
-├── prompt_engineering/       # GPT-OSS-20B prompt validation system
-│   ├── prompts_validator.py          # Core prompt validation logic
+│   └── unified_dataset_eda.ipynb    # Comprehensive EDA notebook
+├── prompt_engineering/       # 🎯 Production-Ready Prompt Validation Framework
+│   ├── prompt_runner.py              # Main CLI orchestrator (single entry point)
 │   ├── strategy_templates_loader.py  # Strategy template management
-│   ├── evaluation_metrics_calc.py    # Metrics calculation and reporting
-│   ├── prompt_runner.py              # CLI interface for validation
-│   ├── data_samples/                 # Curated test samples
-│   ├── prompt_templates/             # Strategy templates (policy, persona, etc.)
-│   ├── outputs/                      # Validation results and reports
-│   └── README.md                     # Detailed prompt engineering documentation
+│   ├── evaluation_metrics_calc.py    # Metrics calculation from stored results
+│   ├── persistence_helper.py         # runId-based output organization
+│   ├── azureai_mi_connector_wrapper.py # YAML-based multi-model Azure AI connection
+│   ├── unified_dataset_loader.py     # Flexible data loading with sampling
+│   ├── model_connection.yaml         # Multi-model configuration
+│   ├── prompt_templates/             # Strategy templates (JSON configurable)
+│   ├── data_samples/                 # Curated test datasets
+│   │   ├── canned_basic_all.json     # 5 basic test samples
+│   │   └── canned_100_all.json       # 100 diverse stratified samples
+│   ├── outputs/                      # runId-organized validation results
+│   ├── README.md                     # 📖 Detailed framework documentation
+│   ├── DEBUG.md                      # 🔧 Debugging guide
+│   └── STRATEGY_TEST_RESULTS.md      # 📊 Test results and analysis
 ├── requirements.txt          # Project dependencies
 ├── pyproject.toml           # Project configuration
 ├── run_tests.py             # Test runner
-├── README.md                # This file
-└── UNIFICATION_GUIDE.md     # Detailed unification documentation
+└── README.md                # This file
 ```
 
 ## 🚀 Quick Start
@@ -108,25 +99,44 @@ python -m data_preparation.data_unification
 
 ### 5. Prompt Engineering & Validation
 
-The project includes a comprehensive prompt validation system for GPT-OSS-20B:
+The project includes a **production-ready prompt validation framework** for Azure AI models with comprehensive features:
 
 ```bash
 # Navigate to prompt engineering directory
 cd prompt_engineering
 
-# Test connection to GPT-OSS-20B
+# Test connection to Azure AI models
 python prompt_runner.py --test-connection
 
-# Run validation with different strategies
-python prompt_runner.py --dataset-type canned --strategy all
-python prompt_runner.py --dataset-type unified --num-samples 100 --strategy policy persona
+# Quick validation with curated samples
+python prompt_runner.py --data-source canned_basic_all --strategies all
+
+# Comprehensive evaluation with unified dataset
+python prompt_runner.py --data-source unified --sample-size 100 --strategies all
+
+# Recalculate metrics from previous run
+python prompt_runner.py --metrics-only --run-id run_20250920_015821
 ```
 
-**See `prompt_engineering/README.md` for detailed documentation on:**
-- Strategy configuration (Policy, Persona, Combined, Baseline)
-- Dataset options (canned samples vs. full unified dataset)
-- Metrics analysis and reporting
-- Azure AI integration and debugging
+**📖 For comprehensive documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md)** which covers:
+
+- **Multi-Model Support**: YAML-based configuration for GPT-OSS-20B, GPT-5, and custom models
+- **Flexible Data Sources**: Unified dataset sampling + multiple canned datasets by name
+- **Strategy Configuration**: Four comprehensive approaches (Policy, Persona, Combined, Baseline)
+- **Incremental Storage**: Memory-efficient processing with real-time result saving
+- **runId Organization**: Timestamped output folders for easy comparison and analysis
+- **Sample Size Control**: Configurable sampling that works with all data sources
+- **Azure AI Integration**: Environment variable + YAML configuration support
+- **Robust Metrics**: Comprehensive evaluation calculated from stored results
+- **Debugging Guide**: [`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md) for troubleshooting
+- **Test Results**: [`prompt_engineering/STRATEGY_TEST_RESULTS.md`](prompt_engineering/STRATEGY_TEST_RESULTS.md) for analysis framework
+
+**🎯 Key Framework Features:**
+- **Single Orchestrator**: `prompt_runner.py` as the only entry point
+- **YAML Configuration**: Multi-model support with environment variable substitution
+- **Incremental Processing**: Real-time CSV writing for memory efficiency
+- **Sample Size Flexibility**: Works with unified dataset and all canned files
+- **Metrics Recalculation**: Operate on stored results, not in-memory data
 
 This creates the unified dataset with **64,321 entries** across 3 target groups:
 
@@ -194,19 +204,36 @@ The project includes a comprehensive **GPT-OSS-20B prompt validation system** fo
 - **Production Ready**: Robust error handling, logging, and output management
 - **CLI Interface**: Simple command-line tools for validation workflows
 
-### Quick Validation Example
+### Quick Start Examples
 
 ```bash
 cd prompt_engineering
 
-# Test all strategies with canned samples
-python prompt_runner.py --dataset-type canned --strategy all
+# Test Azure AI connection
+python prompt_runner.py --test-connection
 
-# Large-scale validation with unified dataset
-python prompt_runner.py --dataset-type unified --num-samples 500 --strategy combined
+# Quick validation with basic samples
+python prompt_runner.py --data-source canned_basic_all --strategies all
+
+# Comprehensive evaluation with sampling
+python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10
+
+# Large-scale unified dataset testing
+python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
+
+# Recalculate metrics from previous run
+python prompt_runner.py --metrics-only --run-id run_20250920_015821
 ```
 
-**For detailed documentation**, see `prompt_engineering/README.md`
+### Architecture Features
+
+- **Single Entry Point**: All functionality through `prompt_runner.py`
+- **YAML Configuration**: Multi-model setup in `model_connection.yaml`
+- **Modular Design**: Separate components for templates, metrics, persistence, and connection
+- **Error Handling**: Robust connection testing and graceful failure handling
+- **Memory Efficiency**: Incremental result storage during validation
+
+**📖 For comprehensive documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md)**
 
 ## �🧪 Testing & Validation
 
@@ -386,8 +413,24 @@ Extend the data processors:
 
 ## 📚 Additional Documentation
 
+- **[`prompt_engineering/README.md`](prompt_engineering/README.md)** - **Production prompt validation framework documentation**
+  - Multi-model Azure AI configuration and usage
+  - YAML-based model setup with environment variables
+  - Comprehensive CLI reference and examples
+  - Incremental storage and runId organization
+  - Strategy configuration (Policy, Persona, Combined, Baseline)
+
+- **[`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)** - **Debugging guide for prompt validation framework**
+  - VS Code debugging setup and workflow
+  - Component-specific troubleshooting guidance
+  - Common error patterns and solutions
+
+- **[`prompt_engineering/STRATEGY_TEST_RESULTS.md`](prompt_engineering/STRATEGY_TEST_RESULTS.md)** - **Test results and analysis framework**
+  - Strategy performance evaluation templates
+  - Metrics analysis and comparison guidelines
+  - Usage patterns and best practices
+
 - **`UNIFICATION_GUIDE.md`** - Detailed unification process and schema documentation
-- **`prompt_engineering/README.md`** - Comprehensive prompt engineering and validation guide
 - **`eda/unified_dataset_eda.ipynb`** - Exploratory data analysis notebook
 - **`htmlcov/index.html`** - Test coverage reports (generated after running tests)
 - **`data/processed/unified/unified_dataset_stats.json`** - Dataset statistics and distributions
