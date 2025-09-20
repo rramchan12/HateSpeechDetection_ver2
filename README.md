@@ -1,6 +1,8 @@
 # Hate Speech Detection: Production-Ready Framework with Unified Dataset
 
-A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets i## 🚀 Prompt Engineering & Validation Framework
+A comprehensive hate speech detection project that unifies **HateXplain** and **ToxiGen** datasets into a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing, validation, and **a production-ready prompt engineering framework for Azure AI models**.
+
+## 🚀 Prompt Engineering & Validation Framework
 
 The project includes a **production-ready prompt validation framework** for Azure AI models with advanced capabilities:
 
@@ -8,10 +10,15 @@ The project includes a **production-ready prompt validation framework** for Azur
 
 - **🎯 Multi-Model Support**: Switch between GPT-OSS-20B, GPT-5, and custom models via YAML configuration
 - **📊 Flexible Data Sources**: Unified dataset sampling + curated canned datasets (`canned_basic_all`, `canned_100_all`)
-- **⚡ Incremental Storage**: Memory-efficient processing with real-time CSV writing
+- **⚡ Concurrent Processing**: Multi-threaded execution with configurable worker pools and batch sizes
+- **🔄 Rate Limiting & Retry Logic**: Intelligent retry with exponential backoff and rate limit detection  
+- **📁 File Logging**: Complete audit trail with logs written to runID folders
+- **💾 Incremental Storage**: Memory-efficient processing with real-time CSV writing
 - **📁 runId Organization**: Timestamped output folders (`outputs/run_YYYYMMDD_HHMMSS/`)
 - **🔧 Sample Size Control**: Configurable sampling that works with all data sources
-- **📈 Robust Metrics**: Comprehensive evaluation calculated from stored results, not memory a single, consistent schema optimized for training robust hate speech detection models. The project focuses specifically on **LGBTQ**, **Mexican**, and **Middle East** target groups with comprehensive testing, validation, and **a production-ready prompt engineering framework for Azure AI models**.
+- **📈 Robust Metrics**: Comprehensive evaluation calculated from stored results, not memory
+- **🎨 Custom Prompt Templates**: CLI support for selecting different prompt template files
+- **📊 Rich Evaluation Reports**: Detailed reports with model metadata, command line, and execution context
 
 ## 🎯 Project Overview
 
@@ -111,32 +118,46 @@ python prompt_runner.py --test-connection
 # Quick validation with curated samples
 python prompt_runner.py --data-source canned_basic_all --strategies all
 
-# Comprehensive evaluation with unified dataset
-python prompt_runner.py --data-source unified --sample-size 100 --strategies all
+# Comprehensive evaluation with unified dataset and concurrent processing
+python prompt_runner.py --data-source unified --sample-size 100 --strategies all --max-workers 10 --batch-size 20
+
+# Custom prompt template with specific strategies
+python prompt_runner.py --prompt-template-file experimental.json --data-source canned_100_all --strategies policy persona
 
 # Recalculate metrics from previous run
 python prompt_runner.py --metrics-only --run-id run_20250920_015821
+
+# High-performance concurrent processing for large datasets
+python prompt_runner.py --data-source unified --sample-size 500 --strategies all --debug
 ```
 
 **📖 For comprehensive documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md)** which covers:
 
 - **Multi-Model Support**: YAML-based configuration for GPT-OSS-20B, GPT-5, and custom models
+- **Concurrent Processing**: Multi-threaded execution with configurable worker pools and batch sizes
 - **Flexible Data Sources**: Unified dataset sampling + multiple canned datasets by name
 - **Strategy Configuration**: Four comprehensive approaches (Policy, Persona, Combined, Baseline)
+- **Rate Limiting & Retry Logic**: Intelligent retry with exponential backoff and rate limit detection
+- **File Logging**: Complete audit trail with logs written to runID folders
 - **Incremental Storage**: Memory-efficient processing with real-time result saving
 - **runId Organization**: Timestamped output folders for easy comparison and analysis
 - **Sample Size Control**: Configurable sampling that works with all data sources
+- **Custom Prompt Templates**: CLI support for selecting different prompt template files
+- **Rich Evaluation Reports**: Detailed reports with model metadata, command line, and execution context
 - **Azure AI Integration**: Environment variable + YAML configuration support
 - **Robust Metrics**: Comprehensive evaluation calculated from stored results
 - **Debugging Guide**: [`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md) for troubleshooting
 - **Test Results**: [`prompt_engineering/STRATEGY_TEST_RESULTS.md`](prompt_engineering/STRATEGY_TEST_RESULTS.md) for analysis framework
 
 **🎯 Key Framework Features:**
+
 - **Single Orchestrator**: `prompt_runner.py` as the only entry point
 - **YAML Configuration**: Multi-model support with environment variable substitution
+- **Concurrent Processing**: Multi-threaded execution with intelligent rate limiting
 - **Incremental Processing**: Real-time CSV writing for memory efficiency
 - **Sample Size Flexibility**: Works with unified dataset and all canned files
 - **Metrics Recalculation**: Operate on stored results, not in-memory data
+- **Performance Monitoring**: Real-time progress tracking and Azure AI rate limit monitoring
 
 This creates the unified dataset with **64,321 entries** across 3 target groups:
 
@@ -198,11 +219,17 @@ The project includes a comprehensive **GPT-OSS-20B prompt validation system** fo
 
 ### Key Features
 
-- **Flexible Dataset Support**: Test with curated samples or full unified dataset
+- **Concurrent Processing**: Multi-threaded execution with configurable worker pools and batch sizes
+- **Rate Limiting Intelligence**: Exponential backoff with retry logic and rate limit detection
+- **File Logging**: Complete audit trail with logs written to runID folders for each execution
+- **Flexible Dataset Support**: Test with curated samples or full unified dataset with configurable sampling
+- **Custom Prompt Templates**: CLI support for selecting different prompt template files
+- **Rich Evaluation Reports**: Detailed reports with model metadata, command line, and execution context
 - **Comprehensive Metrics**: Accuracy, precision, recall, F1-score with detailed reporting
-- **Azure AI Integration**: Seamless connection to GPT-OSS-20B via Azure AI endpoints
+- **Azure AI Integration**: Seamless connection to GPT-OSS-20B and GPT-5 via Azure AI endpoints
 - **Production Ready**: Robust error handling, logging, and output management
-- **CLI Interface**: Simple command-line tools for validation workflows
+- **Memory Efficiency**: Incremental result storage for large dataset processing
+- **CLI Interface**: Comprehensive command-line tools for validation workflows
 
 ### Quick Start Examples
 
@@ -215,11 +242,14 @@ python prompt_runner.py --test-connection
 # Quick validation with basic samples
 python prompt_runner.py --data-source canned_basic_all --strategies all
 
-# Comprehensive evaluation with sampling
-python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10
+# Comprehensive evaluation with concurrent processing
+python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10 --max-workers 10
 
-# Large-scale unified dataset testing
-python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
+# Large-scale unified dataset testing with performance monitoring
+python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona --debug
+
+# Custom prompt template testing
+python prompt_runner.py --prompt-template-file experimental.json --data-source canned_basic_all --strategies baseline policy
 
 # Recalculate metrics from previous run
 python prompt_runner.py --metrics-only --run-id run_20250920_015821
@@ -230,8 +260,10 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 - **Single Entry Point**: All functionality through `prompt_runner.py`
 - **YAML Configuration**: Multi-model setup in `model_connection.yaml`
 - **Modular Design**: Separate components for templates, metrics, persistence, and connection
+- **Concurrent Processing**: Multi-threaded execution with intelligent batching and rate limiting
 - **Error Handling**: Robust connection testing and graceful failure handling
 - **Memory Efficiency**: Incremental result storage during validation
+- **File Logging**: Complete execution logs with Azure AI monitoring in runID folders
 
 **📖 For comprehensive documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md)**
 
@@ -368,6 +400,26 @@ After processing and unification:
 
 ## 🔧 Development & Extension
 
+### Recent Framework Improvements (September 2025)
+
+**🚀 Performance & Concurrency:**
+- Multi-threaded processing with configurable worker pools (default: 5 workers)
+- Intelligent batching for optimal throughput (default: 10 samples per batch)
+- Real-time progress monitoring and performance metrics
+- Adaptive rate limiting with exponential backoff and intelligent retry logic
+
+**📁 File Logging & Audit Trail:**
+- Complete execution logs written to runID folders
+- Azure AI request/response monitoring with rate limit headers
+- Detailed error handling and retry logic status
+- Clean console output with only runID for CI/CD integration
+
+**🎨 Enhanced User Experience:**
+- Custom prompt template file selection via CLI (`--prompt-template-file`)
+- Rich evaluation reports with model metadata, command line, and execution context
+- Sample size control for all data sources (unified and canned datasets)
+- Comprehensive debug logging with file output
+
 ### Adding New Target Groups
 
 1. Update `VALID_TARGET_GROUPS` in `data_unification.py`
@@ -405,30 +457,41 @@ Extend the data processors:
 
 **Prompt Engineering Libraries:**
 
-- `azure-ai-inference` - Azure AI model integration
+- `azure-ai-inference` - Azure AI model integration with rate limiting support
 - `python-dotenv` - Environment variable management
+- `PyYAML` - YAML configuration file parsing for multi-model setup
 - `scikit-learn` - Machine learning metrics and evaluation
+- `concurrent.futures` - Multi-threaded concurrent processing support
 
 **See `requirements.txt` for complete dependency list with versions.**
 
 ## 📚 Additional Documentation
 
+**📖 Prompt Engineering Framework Documentation:**
+
 - **[`prompt_engineering/README.md`](prompt_engineering/README.md)** - **Production prompt validation framework documentation**
-  - Multi-model Azure AI configuration and usage
-  - YAML-based model setup with environment variables
-  - Comprehensive CLI reference and examples
-  - Incremental storage and runId organization
-  - Strategy configuration (Policy, Persona, Combined, Baseline)
+  - Multi-model Azure AI configuration and usage with YAML support
+  - Concurrent processing with configurable worker pools and batch sizes
+  - Rate limiting intelligence with exponential backoff and retry logic
+  - File logging with complete audit trails in runID folders
+  - Comprehensive CLI reference and examples with performance tuning
+  - Incremental storage and runId organization for memory efficiency
+  - Strategy configuration (Policy, Persona, Combined, Baseline) with custom template support
+  - Rich evaluation reports with metadata integration
 
 - **[`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)** - **Debugging guide for prompt validation framework**
   - VS Code debugging setup and workflow
   - Component-specific troubleshooting guidance
   - Common error patterns and solutions
+  - Performance monitoring and rate limiting diagnostics
 
 - **[`prompt_engineering/STRATEGY_TEST_RESULTS.md`](prompt_engineering/STRATEGY_TEST_RESULTS.md)** - **Test results and analysis framework**
-  - Strategy performance evaluation templates
+  - Strategy performance evaluation templates with concurrent processing results
   - Metrics analysis and comparison guidelines
-  - Usage patterns and best practices
+  - Usage patterns and best practices for production deployments
+  - Performance benchmarking and optimization recommendations
+
+**📊 Dataset & Project Documentation:**
 
 - **`UNIFICATION_GUIDE.md`** - Detailed unification process and schema documentation
 - **`eda/unified_dataset_eda.ipynb`** - Exploratory data analysis notebook
