@@ -10,11 +10,16 @@ This framework provides:
 - **Flexible Data Sources**: Support for unified dataset sampling and specific canned datasets by name
 - **YAML Configuration**: Centralized model configuration with environment variable support  
 - **Strategy Testing**: Four comprehensive prompt strategies (Baseline, Policy, Persona, Combined)
+- **Concurrent Processing**: Multi-threaded execution with configurable batch sizes and worker limits
 - **Incremental Storage**: Memory-efficient processing with real-time result saving
 - **Performance Analytics**: Detailed accuracy, timing, and response analysis with runId-based organization
+- **Rate Limiting & Retry Logic**: Intelligent retry with exponential backoff and rate limit detection
+- **File Logging**: Complete audit trail with logs written to runID folders
 - **Connection Testing**: Validate Azure AI endpoint connectivity before runs
 - **Sample Size Control**: Configurable sampling for all data sources (unified and canned)
 - **Robust Metrics**: Comprehensive evaluation metrics calculated from stored results
+- **Custom Prompt Templates**: CLI support for selecting different prompt template files
+- **Rich Evaluation Reports**: Detailed reports with model metadata, command line, and execution context
 - **Clean Output**: Professional logging and reporting with organized file structure
 - **Modular Design**: Separate components for easy extension and customization
 
@@ -40,6 +45,12 @@ python prompt_runner.py --test-connection
 
 # Recalculate metrics from previous run
 python prompt_runner.py --metrics-only --run-id run_20250920_015821
+
+# Use custom prompt template file
+python prompt_runner.py --prompt-template-file custom_prompts.json --strategies baseline policy
+
+# Concurrent processing with custom settings
+python prompt_runner.py --data-source unified --sample-size 100 --strategies all --max-workers 10 --batch-size 20
 ```
 
 ## Data Sources
@@ -241,11 +252,17 @@ python prompt_runner.py --data-source unified --strategies policy persona --samp
 # Use different model configuration
 python prompt_runner.py --model gpt-5 --data-source unified --strategies baseline
 
-# Enable debug logging
+# Enable debug logging with file output in runID folder
 python prompt_runner.py --debug --data-source canned_basic_all --strategies baseline
 
 # Custom random seed for reproducible sampling
 python prompt_runner.py --data-source unified --sample-size 20 --random-seed 42 --strategies all
+
+# High-performance concurrent processing
+python prompt_runner.py --data-source unified --sample-size 500 --strategies all --max-workers 15 --batch-size 25
+
+# Custom prompt template with sequential processing
+python prompt_runner.py --prompt-template-file experimental.json --data-source canned_100_all --strategies policy --sequential
 ```
 
 ### **CLI Arguments**
@@ -254,30 +271,43 @@ python prompt_runner.py --data-source unified --sample-size 20 --random-seed 42 
 - `--strategies`: Select strategies (`baseline`, `policy`, `persona`, `combined`, `all`)
 - `--sample-size`: Number of samples to process (optional, uses full dataset if omitted)
 - `--model`: Model configuration to use (default: `gpt-oss-20b`)
+- `--prompt-template-file`: Prompt template file to use (default: `all_combined.json`)
 - `--test-connection`: Test Azure AI endpoint connectivity
 - `--metrics-only`: Recalculate metrics from existing results
 - `--run-id`: Specify runId for metrics recalculation
 - `--random-seed`: Seed for reproducible sampling (default: 42)
 - `--debug`: Enable detailed debug logging
+- `--max-workers`: Maximum concurrent threads for processing (default: 5)
+- `--batch-size`: Number of samples per batch in concurrent processing (default: 10)
+- `--sequential`: Force sequential processing instead of concurrent (slower but more reliable)
 
 ### **Output Files**
 
 All test runs generate files in timestamped runId directories (`outputs/run_YYYYMMDD_HHMMSS/`):
 
-1. **`validation_results.csv`**
+1. **`validation_results.csv`** (or `strategy_unified_results_[timestamp].csv`)
    - Individual sample results for each strategy
    - Columns: strategy, sample_id, text, true_label, predicted_label, response_time, rationale
 
-2. **`test_samples.csv`**
+2. **`test_samples_[timestamp].csv`**
    - Test samples used for validation
    - Columns: text, label_binary, target_group_norm, persona_tag, source_dataset
 
-3. **`performance_metrics.csv`**
+3. **`performance_metrics_[timestamp].csv`**
    - Combined accuracy scores and confusion matrices for all strategies
    - Contains: strategy, accuracy, precision, recall, f1_score, true_positive, true_negative, false_positive, false_negative
 
-4. **`evaluation_report.txt`**
+4. **`evaluation_report_[timestamp].txt`**
    - Human-readable summary report with test samples and strategy performance analysis
+   - Includes model metadata, prompt template file, data source, and command line used
+   - Shows important sample predictions with clear indicators
+   - Comprehensive execution details and performance metrics
+
+5. **`validation_log_[timestamp].log`**
+   - Complete execution log with debug information
+   - Rate limiting monitoring and performance metrics
+   - Azure AI request/response details and timing
+   - Error handling and retry logic status
 
 ## Project Structure
 
@@ -305,19 +335,34 @@ prompt_engineering/
 
 ### **Modular Design**
 
-- **PromptRunner**: Main orchestrator, handles CLI and coordinates all components
-- **StrategyTemplatesLoader**: Encapsulates all strategy template logic and prompt extraction
+- **PromptRunner**: Main orchestrator, handles CLI and coordinates all components with concurrent processing
+- **StrategyTemplatesLoader**: Encapsulates all strategy template logic and prompt extraction with custom file support
 - **UnifiedDatasetLoader**: Flexible data loading with sample size support for all sources
-- **AzureAIConnector**: YAML-based model configuration with environment variable support
-- **PersistenceHelper**: Handles file I/O and output organization in runId folders
-- **EvaluationMetricsCalc**: Dedicated metrics calculation from stored results
+- **AzureAIConnector**: YAML-based model configuration with environment variable support and custom logging
+- **PersistenceHelper**: Handles file I/O and output organization in runId folders with incremental storage
+- **EvaluationMetricsCalc**: Dedicated metrics calculation from stored results with rich reporting
+
+### **Concurrent Processing & Performance**
+
+- Multi-threaded execution with configurable worker pools and batch sizes
+- Intelligent rate limiting with exponential backoff and retry logic
+- Real-time progress monitoring and performance metrics
+- Memory-efficient incremental storage for large datasets
+- Adaptive throttling detection and response time monitoring
 
 ### **Incremental Storage**
 
 - Results are written incrementally during validation to avoid memory issues
 - Each sample result is immediately saved to CSV
 - Metrics are calculated from stored results, not in-memory data
-- Memory-efficient for large dataset processing
+- Memory-efficient for large dataset processing with thousands of samples
+
+### **File Logging & Audit Trail**
+
+- Complete execution logs written to runID folders
+- Rate limit header monitoring and Azure AI request tracking
+- Detailed error handling and retry logic status
+- No console output except runID for clean CI/CD integration
 
 ### **Robust Error Handling**
 
@@ -421,7 +466,21 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
 ## Recent Improvements
 
-### **Incremental Storage and Memory Efficiency (September 2025)**
+### **Performance & Concurrency (September 2025)**
+
+- **Concurrent Processing**: Multi-threaded execution with configurable worker pools and batch sizes
+- **Rate Limiting**: Intelligent retry with exponential backoff and rate limit detection
+- **Performance Monitoring**: Real-time progress tracking and response time analysis
+- **Adaptive Throttling**: Automatic detection and handling of API rate limits
+
+### **Logging & Audit Trail**
+
+- **RunID-based Logging**: All logs written to timestamped runID folders
+- **Azure AI Monitoring**: Rate limit headers and request/response tracking
+- **Clean Console Output**: Only runID printed to console for CI/CD integration
+- **Complete Audit Trail**: Full execution logs with detailed error handling
+
+### **Incremental Storage and Memory Efficiency**
 
 - **Incremental CSV Writing**: Results saved during validation, not at the end
 - **Memory Optimization**: No in-memory accumulation of large result sets
@@ -434,6 +493,14 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 - **Canned Dataset Selection**: Pick specific canned files by name
 - **Strategy Selection**: Use `--strategies all` to execute all strategies
 - **Metrics Recalculation**: Operate on stored results with `--metrics-only` and `--run-id`
+- **Custom Prompt Templates**: CLI argument for selecting different template files
+
+### **Rich Evaluation Reports**
+
+- **Metadata Integration**: Model name, prompt template file, data source, and command line included
+- **Concise Sample Display**: Only important predictions shown for readability
+- **Execution Context**: Complete configuration and performance details
+- **Professional Formatting**: Clean, structured output for analysis and documentation
 
 ### **Architecture Refactoring**
 

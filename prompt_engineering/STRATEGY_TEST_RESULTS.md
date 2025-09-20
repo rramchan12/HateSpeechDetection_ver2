@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document contains test results and analysis for all four prompt strategies evaluated against Azure AI models using our comprehensive dataset options including canned samples and the unified hate speech dataset with incremental storage and runId-based output organization.
+This document contains test results and analysis for all four prompt strategies evaluated against Azure AI models using our comprehensive dataset options including canned samples and the unified hate speech dataset with incremental storage, concurrent processing, and runId-based output organization.
 
 ## Test Configuration
 
@@ -16,6 +16,8 @@ This document contains test results and analysis for all four prompt strategies 
 - **Output Format**: JSON with rationale explanations
 - **Storage**: Incremental CSV writing with runId-based folder organization
 - **Sample Size Control**: Configurable sampling for all data sources
+- **Performance Features**: Concurrent processing, rate limiting, intelligent retry logic
+- **File Logging**: Complete audit trail in runID folders with Azure AI monitoring
 
 ## Available Data Sources
 
@@ -56,7 +58,21 @@ This document contains test results and analysis for all four prompt strategies 
 
 ## Current Framework Capabilities
 
-### Multi-Model Support
+### **Performance & Concurrency Features**
+
+```bash
+# High-performance concurrent processing (default)
+python prompt_runner.py --data-source unified --sample-size 100 --strategies all --max-workers 10 --batch-size 20
+
+# Sequential processing for reliability
+python prompt_runner.py --data-source canned_100_all --strategies all --sequential
+
+# Rate limiting and retry monitoring
+python prompt_runner.py --debug --data-source unified --sample-size 50 --strategies baseline
+```
+
+### **Multi-Model Support**
+
 ```bash
 # Use default GPT-OSS-20B
 python prompt_runner.py --data-source canned_basic_all --strategies all
@@ -65,7 +81,8 @@ python prompt_runner.py --data-source canned_basic_all --strategies all
 python prompt_runner.py --model gpt-5 --data-source unified --strategies baseline --sample-size 25
 ```
 
-### Flexible Data Source Selection
+### **Flexible Data Source Selection**
+
 ```bash
 # Basic canned samples (5 total)
 python prompt_runner.py --data-source canned_basic_all --strategies all
@@ -77,7 +94,18 @@ python prompt_runner.py --data-source canned_100_all --strategies all --sample-s
 python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
 ```
 
-### Metrics Recalculation
+### **Custom Prompt Templates**
+
+```bash
+# Use custom prompt template file
+python prompt_runner.py --prompt-template-file experimental.json --data-source canned_basic_all --strategies baseline policy
+
+# Switch template files for testing
+python prompt_runner.py --prompt-template-file v2_prompts.json --data-source unified --sample-size 25 --strategies all
+```
+
+### **Metrics Recalculation**
+
 ```bash
 # Recalculate metrics from previous run results
 python prompt_runner.py --metrics-only --run-id run_20250920_015821
@@ -115,30 +143,50 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
 All test runs generate files in timestamped runId directories (`outputs/run_YYYYMMDD_HHMMSS/`):
 
-### 1. Validation Results (`validation_results.csv`)
+### 1. Validation Results (`strategy_unified_results_[timestamp].csv`)
+
 Individual sample results for each strategy:
+
 - Columns: `strategy`, `sample_id`, `text`, `true_label`, `predicted_label`, `response_time`, `rationale`
 - Incremental writing during validation for memory efficiency
 - Complete audit trail of all predictions
 
-### 2. Performance Metrics (`performance_metrics.csv`)
+### 2. Performance Metrics (`performance_metrics_[timestamp].csv`)
+
 Strategy performance comparison with detailed metrics:
+
 - Columns: `strategy`, `accuracy`, `precision`, `recall`, `f1_score`, `true_positive`, `true_negative`, `false_positive`, `false_negative`
 - Calculated from stored results, not in-memory data
 - Ready for analysis and visualization
 
-### 3. Test Samples (`test_samples.csv`)
+### 3. Test Samples (`test_samples_[timestamp].csv`)
+
 Test samples used in unified format:
+
 - Columns: `text`, `label_binary`, `target_group_norm`, `persona_tag`, `source_dataset`
 - Preserves original dataset structure for traceability
 - Enables sample-specific analysis
 
-### 4. Evaluation Report (`evaluation_report.txt`)
+### 4. Evaluation Report (`evaluation_report_[timestamp].txt`)
+
 Human-readable summary with:
+
 - Test configuration and parameters
-- Individual prediction results with indicators
+- Model metadata (name, prompt template file, data source, command line)
+- Individual prediction results with indicators (selective important samples)
 - Strategy performance summary and analysis
 - Response time statistics and patterns
+- Complete execution context
+
+### 5. Validation Log (`validation_log_[timestamp].log`)
+
+Complete execution audit trail:
+
+- Azure AI request/response monitoring with rate limit headers
+- Concurrent processing performance metrics
+- Retry logic and error handling status
+- Detailed timing and throughput analysis
+- Critical error logging with stack traces
 
 ## Running Strategy Tests
 
@@ -232,22 +280,40 @@ python prompt_runner.py --data-source canned_100_all --strategies baseline --sam
 
 ## Architecture Benefits for Testing
 
-### Incremental Storage
+### **Concurrent Processing & Performance**
+
+- Multi-threaded execution with configurable worker pools (default: 5 workers)
+- Intelligent batching for optimal throughput (default: 10 samples per batch)
+- Real-time progress monitoring and performance metrics
+- Adaptive rate limiting with exponential backoff and intelligent retry logic
+
+### **File Logging & Audit Trail**
+
+- Complete execution logs written to runID folders
+- Azure AI request/response monitoring with rate limit headers
+- Detailed error handling and retry logic status
+- No console output except runID for clean CI/CD integration
+
+### **Incremental Storage**
+
 - Memory-efficient processing of large datasets
 - Real-time result availability during long runs
 - Robust handling of interrupted processes
 
-### runId Organization
+### **runId Organization**
+
 - Clear separation of test runs
 - Easy comparison across different configurations
 - Audit trail for all experiments
 
-### Flexible Sampling
+### **Flexible Sampling**
+
 - Quick testing with small samples
 - Comprehensive evaluation with large samples
 - Reproducible results with seed control
 
-### Multi-Model Support
+### **Model Configuration Support**
+
 - Easy comparison across different models
 - YAML-based configuration management
 - Environment variable support for deployment

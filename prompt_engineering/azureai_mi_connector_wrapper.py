@@ -23,6 +23,7 @@ from typing import Dict, List, Optional, Any, Union
 from azure.ai.inference import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
 from azure.core.credentials import AzureKeyCredential
+from azure.core.pipeline.policies import HttpLoggingPolicy
 
 
 class ModelConfigLoader:
@@ -153,11 +154,27 @@ class AzureAIConnector:
             return
         
         try:
+            # Configure logging policy to show rate limit headers
+            logging_policy = HttpLoggingPolicy()
+            # Allow rate limiting and token usage headers to be shown in logs
+            logging_policy.allowed_header_names.update([
+                'x-ratelimit-remaining-requests',
+                'x-ratelimit-remaining-tokens', 
+                'x-ratelimit-limit-requests',
+                'x-ratelimit-limit-tokens',
+                'prompt_token_len',
+                'sampling_token_len',
+                'apim-request-id',
+                'x-ms-region'
+            ])
+            
             self.client = ChatCompletionsClient(
                 endpoint=self.endpoint,
-                credential=AzureKeyCredential(self.key)
+                credential=AzureKeyCredential(self.key),
+                logging_policy=logging_policy
             )
             self.logger.info(f"Azure AI client initialized for '{self.model_id}' with endpoint: {self.endpoint}")
+            self.logger.debug("Configured logging policy to show rate limit headers")
         except Exception as e:
             self.logger.error(f"Failed to initialize Azure AI client for '{self.model_id}': {e}")
     

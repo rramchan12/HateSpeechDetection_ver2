@@ -148,8 +148,9 @@ class EvaluationMetrics:
             raise ValueError(f"Mismatched lengths: y_true={len(y_true)}, y_pred={len(y_pred)}")
         
         try:
-            # Filter out None predictions and corresponding true labels
-            filtered_pairs = [(true, pred) for true, pred in zip(y_true, y_pred) if pred is not None]
+            # Filter out None and "unknown" predictions and corresponding true labels
+            filtered_pairs = [(true, pred) for true, pred in zip(y_true, y_pred) 
+                             if pred is not None and pred != "unknown"]
             
             if not filtered_pairs:
                 # If all predictions are None, return zero metrics
@@ -176,7 +177,10 @@ class EvaluationMetrics:
             
             # Create confusion matrix
             cm = confusion_matrix(filtered_y_true, filtered_y_pred, labels=['hate', 'normal'])
-            tn, fp, fn, tp = cm.ravel() if cm.size == 4 else [0, 0, 0, 0]
+            # Confusion matrix structure for labels=['hate', 'normal']:
+            # [[tp, fn],   <- hate true: tp predicted hate, fn predicted normal
+            #  [fp, tn]]   <- normal true: fp predicted hate, tn predicted normal
+            tp, fn, fp, tn = cm.ravel() if cm.size == 4 else [0, 0, 0, 0]
             
             return PerformanceMetrics(
                 strategy=strategy_name,
@@ -222,8 +226,9 @@ class EvaluationMetrics:
             if not results:
                 continue
                 
-            # Extract predictions and true labels
-            y_true = [sample['label_binary'] for sample in samples[:len(results)]]
+            # Extract predictions and true labels from the results themselves
+            # (don't use samples array as it might not be in the same order)
+            y_true = [result.true_label for result in results]
             y_pred = [result.predicted_label for result in results]
             
             # Calculate comprehensive metrics
@@ -233,13 +238,21 @@ class EvaluationMetrics:
         return performance_metrics
     
     def generate_performance_report_lines(self, performance_metrics: List[PerformanceMetrics], 
-                                        samples: List[Dict]) -> List[str]:
+                                        samples: List[Dict], 
+                                        model_name: str = "Unknown", 
+                                        prompt_template_file: str = "Unknown",
+                                        data_source: str = "Unknown",
+                                        command_line: str = "Unknown") -> List[str]:
         """
         Generate human-readable performance report lines.
         
         Args:
             performance_metrics (List[PerformanceMetrics]): Calculated performance metrics
             samples (List[Dict]): Original test samples
+            model_name (str): Name of the model used for evaluation
+            prompt_template_file (str): Name of the prompt template file used
+            data_source (str): Name of the data source/file used
+            command_line (str): Command line that was used to run the evaluation
             
         Returns:
             List[str]: List of report lines for text output
@@ -252,17 +265,51 @@ class EvaluationMetrics:
         report_lines.append("HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT")
         report_lines.append("=" * 60)
         report_lines.append(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        report_lines.append(f"Model: {model_name}")
+        report_lines.append(f"Prompt Template File: {prompt_template_file}")
+        report_lines.append(f"Data Source: {data_source}")
         report_lines.append(f"Total samples tested: {len(samples)}")
         report_lines.append("")
-        
-        # Add test samples to report
-        report_lines.append("TEST SAMPLES:")
+        report_lines.append("EXECUTION DETAILS:")
         report_lines.append("-" * 20)
-        for i, sample in enumerate(samples, 1):
+        report_lines.append(f"Command Line: {command_line}")
+        report_lines.append("")
+        
+        # Add sample test samples to report (show only a few important ones)
+        report_lines.append("SAMPLE TEST DATA:")
+        report_lines.append("-" * 20)
+        
+        # Show first 3 samples
+        for i in range(min(3, len(samples))):
+            sample = samples[i]
             text_preview = sample['text'][:100] + ('...' if len(sample['text']) > 100 else '')
-            report_lines.append(f"{i}. Text: {text_preview}")
+            report_lines.append(f"{i+1}. Text: {text_preview}")
             report_lines.append(f"   Label: {sample['label_binary']}")
             report_lines.append("")
+        
+        # Show a few samples from the middle if we have more than 10 samples
+        if len(samples) > 10:
+            report_lines.append("... (middle samples) ...")
+            mid_start = len(samples) // 2 - 1
+            for i in range(mid_start, min(mid_start + 2, len(samples))):
+                sample = samples[i]
+                text_preview = sample['text'][:100] + ('...' if len(sample['text']) > 100 else '')
+                report_lines.append(f"{i+1}. Text: {text_preview}")
+                report_lines.append(f"   Label: {sample['label_binary']}")
+                report_lines.append("")
+        
+        # Show last 2 samples if we have more than 5 samples
+        if len(samples) > 5:
+            report_lines.append("... (final samples) ...")
+            for i in range(max(len(samples) - 2, 3), len(samples)):
+                sample = samples[i]
+                text_preview = sample['text'][:100] + ('...' if len(sample['text']) > 100 else '')
+                report_lines.append(f"{i+1}. Text: {text_preview}")
+                report_lines.append(f"   Label: {sample['label_binary']}")
+                report_lines.append("")
+        
+        report_lines.append(f"[Showing sample of {min(7, len(samples))} out of {len(samples)} total test samples]")
+        report_lines.append("")
         
         # Add strategy performance
         report_lines.append("\nSTRATEGY PERFORMANCE:")
@@ -310,13 +357,21 @@ class EvaluationMetrics:
         """Legacy method - use calculate_basic_metrics instead"""
         return self.calculate_basic_metrics(predictions, true_labels)
     
-    def calculate_metrics_from_runid(self, runid: str, output_dir: str = "outputs") -> Dict[str, any]:
+    def calculate_metrics_from_runid(self, runid: str, output_dir: str = "outputs",
+                                    model_name: str = "Unknown", 
+                                    prompt_template_file: str = "Unknown",
+                                    data_source: str = "Unknown",
+                                    command_line: str = "Unknown") -> Dict[str, any]:
         """
         Calculate comprehensive metrics from stored results in a runId folder.
         
         Args:
             runid: Run identifier (e.g., "run_20250920_003815")
             output_dir: Base output directory containing run folders
+            model_name: Name of the model used
+            prompt_template_file: Name of the prompt template file used
+            data_source: Name of the data source used
+            command_line: Command line that was used
             
         Returns:
             Dict[str, Path]: Dictionary mapping output type to file path
@@ -378,7 +433,9 @@ class EvaluationMetrics:
             performance_data = self.performance_metrics_to_dict_list(performance_metrics)
             
             # Generate human-readable report
-            report_lines = self.generate_performance_report_lines(performance_metrics, samples)
+            report_lines = self.generate_performance_report_lines(performance_metrics, samples,
+                                                                model_name, prompt_template_file, 
+                                                                data_source, command_line)
             
             # Generate timestamp for output files
             from datetime import datetime
@@ -422,3 +479,27 @@ def create_evaluation_metrics() -> EvaluationMetrics:
         EvaluationMetrics: Configured evaluation metrics instance
     """
     return EvaluationMetrics()
+
+
+def calculate_metrics_from_runid(runid: str, output_dir: str = "outputs", 
+                                model_name: str = "Unknown", 
+                                prompt_template_file: str = "Unknown",
+                                data_source: str = "Unknown",
+                                command_line: str = "Unknown") -> Dict[str, any]:
+    """
+    Standalone function to calculate metrics from a saved runid folder.
+    
+    Args:
+        runid: The run identifier (timestamp)
+        output_dir: The base output directory
+        model_name: Name of the model used
+        prompt_template_file: Name of the prompt template file used
+        data_source: Name of the data source used
+        command_line: Command line that was used
+        
+    Returns:
+        Dict containing metrics results
+    """
+    evaluator = create_evaluation_metrics()
+    return evaluator.calculate_metrics_from_runid(runid, output_dir, model_name, 
+                                                 prompt_template_file, data_source, command_line)
