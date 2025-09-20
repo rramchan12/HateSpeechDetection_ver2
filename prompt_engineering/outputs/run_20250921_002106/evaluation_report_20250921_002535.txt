@@ -1,0 +1,70 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-09-21 00:25:35
+Model: gpt-oss-20b
+Prompt Template File: simple_v4.json
+Data Source: canned_100_all
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_all --strategies all --sample-size 100 --output-dir outputs --max-workers 15 --batch-size 8 --prompt-template-file simple_v4.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure t...
+   Label: normal
+
+2. Text: build great wall made by prison or shitskin labor using kilms dig out moats filled with gators or fl...
+   Label: normal
+
+3. Text: as much as i appreciate a format of open discussion i really just want a facebook that i can say bea...
+   Label: normal
+
+... (middle samples) ...
+50. Text: there is no evidence that the sexual orientation of an adult is determined by any aspect of the envi...
+   Label: normal
+
+51. Text: molly - the _____ advocacy research group in toronto reports that from 1996 to 2002 the physical ass...
+   Label: normal
+
+... (final samples) ...
+99. Text: arab women are so oppressed, they can't leave the household without the permission of a man
+   Label: hate
+
+100. Text: your ex-husband is living with another man
+   Label: normal
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE Strategy:
+  Accuracy:  0.616
+  Precision: 0.429
+  Recall:    0.455
+  F1-Score:  0.441
+  Confusion Matrix: TP=15, TN=46, FP=20, FN=18
+
+POLICY Strategy:
+  Accuracy:  0.586
+  Precision: 0.389
+  Recall:    0.424
+  F1-Score:  0.406
+  Confusion Matrix: TP=14, TN=44, FP=22, FN=19
+
+PERSONA Strategy:
+  Accuracy:  0.561
+  Precision: 0.238
+  Recall:    0.156
+  F1-Score:  0.189
+  Confusion Matrix: TP=5, TN=50, FP=16, FN=27
+
+COMBINED Strategy:
+  Accuracy:  0.566
+  Precision: 0.273
+  Recall:    0.182
+  F1-Score:  0.218
+  Confusion Matrix: TP=6, TN=50, FP=16, FN=27

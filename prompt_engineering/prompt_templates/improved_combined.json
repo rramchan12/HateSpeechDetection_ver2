@@ -1,0 +1,60 @@
+{
+  "strategies": {
+    "baseline": {
+      "name": "baseline",
+      "description": "Simple baseline classification without sophisticated context",
+      "system_prompt": "You are a basic content classifier. Classify social media posts as 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nUse simple judgment - if text seems mean or attacking people, classify as 'hate'.",
+      "user_template": "Is this text 'hate' or 'normal'?\n\nText: \"{text}\"\n\nRespond in JSON: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 256,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "policy": {
+      "name": "policy",
+      "description": "Comprehensive policy-based content moderation",
+      "system_prompt": "You are a content moderation assistant applying comprehensive hate speech policies.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text violates hate speech policy\n- Use EXACTLY 'normal' if the text does not violate hate speech policy\n- Be thorough but not overly conservative - err on the side of user safety\n- Always provide rationale explaining your policy-based decision",
+      "user_template": "COMPREHENSIVE HATE SPEECH POLICY: Content is considered hate speech if it:\n1. Attacks, threatens, or demeans individuals or groups based on protected characteristics (race, ethnicity, religion, gender, sexual orientation, nationality, disability)\n2. Promotes violence or discrimination against protected groups\n3. Uses dehumanizing language or slurs targeting protected characteristics\n4. Spreads harmful stereotypes that could incite hostility\n5. Calls for exclusion, segregation, or harm of protected groups\n\nAnalyze this text for policy violations:\n\nText: \"{text}\"\n\nDoes this text violate our hate speech policy? Classify as:\n- hate (if text violates any part of the policy above)\n- normal (if text does not violate the policy)\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[explain which policy rule applies or why it's acceptable]\"}}",
+      "parameters": {
+        "max_tokens": 768,
+        "temperature": 0.15,
+        "top_p": 0.9,
+        "frequency_penalty": 0.1,
+        "presence_penalty": 0.1,
+        "response_format": "json_object"
+      }
+    },
+    "persona": {
+      "name": "persona",
+      "description": "Multi-perspective analysis from diverse viewpoints",
+      "system_prompt": "You are a content moderation assistant evaluating posts from multiple diverse perspectives to catch hate speech that might be missed from a single viewpoint.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if ANY perspective finds the content hateful or harmful\n- Use EXACTLY 'normal' only if ALL perspectives agree it's acceptable\n- Consider the most vulnerable perspective - prioritize user safety\n- Provide rationale explaining which perspective(s) influenced your decision",
+      "user_template": "Evaluate this text from multiple diverse perspectives:\n\n🔍 Perspective 1 (LGBTQ+ community member): How would this affect someone who is gay, lesbian, or transgender?\n🔍 Perspective 2 (Hispanic/Latino community member): How would this impact someone of Mexican or Latin American heritage?\n🔍 Perspective 3 (Middle Eastern/Arab community member): How would this affect someone from the Middle East or of Arab heritage?\n🔍 Perspective 4 (General vulnerable groups): How might this impact other marginalized communities?\n\nText: \"{text}\"\n\nConsidering ALL perspectives above, classify as:\n- hate (if ANY perspective finds this harmful, offensive, or hateful)\n- normal (if ALL perspectives agree this is acceptable)\n\nPrioritize safety of vulnerable communities.\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[explain which perspective(s) found this problematic or why all found it acceptable]\"}}",
+      "parameters": {
+        "max_tokens": 768,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined": {
+      "name": "combined",
+      "description": "Aggressive hate detection combining policy and perspective analysis",
+      "system_prompt": "You are an expert content moderation assistant designed to catch hate speech using both policy analysis and multiple perspectives. Your primary goal is USER SAFETY through accurate hate speech detection.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nDECISION LOGIC - Classify as 'hate' if ANY of these conditions are met:\n1. Text violates hate speech policy (attacks based on protected characteristics)\n2. ANY community perspective finds it harmful or offensive\n3. Text contains dehumanizing language, slurs, or discriminatory content\n\nClassify as 'normal' ONLY if ALL conditions are met:\n1. Text passes policy check AND\n2. ALL perspectives agree it's acceptable AND  \n3. No harmful implications for any community\n\nWhen evaluating, prioritize detecting hate speech over avoiding false positives.",
+      "user_template": "Analyze this text for hate speech using BOTH policy and community perspectives:\n\nTEXT: \"{text}\"\n\nQUICK CHECKS:\n• Policy violation? (attacks on race, religion, gender, sexuality, nationality, etc.)\n• LGBTQ+ community impact? (harmful to gay, lesbian, trans individuals?)\n• Hispanic/Latino impact? (harmful to Mexican/Latin American communities?)\n• Middle Eastern/Arab impact? (harmful to these communities?)\n• Other marginalized groups? (any other harmful impact?)\n\nDECISION RULE: \nClassify as 'hate' if you answer YES to ANY check above.\nClassify as 'normal' only if you answer NO to ALL checks above.\n\nRemember: Missing hate speech harms vulnerable users. When uncertain, choose 'hate' to protect communities.\n\nRespond in JSON: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[explain which check(s) indicated hate or why all checks passed]\"}}",
+      "parameters": {
+        "max_tokens": 768,
+        "temperature": 0.05,
+        "top_p": 0.9,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-09-20 23:49:57
+Model: gpt-oss-20b
+Prompt Template File: improved_combined.json
+Data Source: canned_100_all
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_all --strategies all --sample-size 100 --output-dir outputs --max-workers 15 --batch-size 8 --prompt-template-file improved_combined.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure t...
+   Label: normal
+
+2. Text: build great wall made by prison or shitskin labor using kilms dig out moats filled with gators or fl...
+   Label: normal
+
+3. Text: as much as i appreciate a format of open discussion i really just want a facebook that i can say bea...
+   Label: normal
+
+... (middle samples) ...
+50. Text: there is no evidence that the sexual orientation of an adult is determined by any aspect of the envi...
+   Label: normal
+
+51. Text: molly - the _____ advocacy research group in toronto reports that from 1996 to 2002 the physical ass...
+   Label: normal
+
+... (final samples) ...
+99. Text: arab women are so oppressed, they can't leave the household without the permission of a man
+   Label: hate
+
+100. Text: your ex-husband is living with another man
+   Label: normal
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE Strategy:
+  Accuracy:  0.570
+  Precision: 0.353
+  Recall:    0.364
+  F1-Score:  0.358
+  Confusion Matrix: TP=12, TN=45, FP=22, FN=21
+
+POLICY Strategy:
+  Accuracy:  0.610
+  Precision: 0.375
+  Recall:    0.273
+  F1-Score:  0.316
+  Confusion Matrix: TP=9, TN=52, FP=15, FN=24
+
+PERSONA Strategy:
+  Accuracy:  0.557
+  Precision: 0.250
+  Recall:    0.152
+  F1-Score:  0.189
+  Confusion Matrix: TP=5, TN=49, FP=15, FN=28
+
+COMBINED Strategy:
+  Accuracy:  0.612
+  Precision: 0.400
+  Recall:    0.375
+  F1-Score:  0.387
+  Confusion Matrix: TP=12, TN=48, FP=18, FN=20

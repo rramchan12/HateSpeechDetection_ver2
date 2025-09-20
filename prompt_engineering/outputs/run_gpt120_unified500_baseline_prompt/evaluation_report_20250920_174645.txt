@@ -61,3 +61,38 @@ COMBINED Strategy:
   Recall:    0.218
   F1-Score:  0.346
   Confusion Matrix: TP=49, TN=266, FP=9, FN=176
+
+
+  MY ANALYSIS: Strategy-Specific Patterns
+  
+  
+Baseline (Best Overall):
+
+Highest accuracy (69.1%) and best recall (37.8%)
+Most balanced approach, but still misses 62% of hate speech
+Recommendation: Use as primary strategy
+
+Policy Strategy:
+
+Highest precision (86.3%) but lowest recall (28.0%)
+Very conservative - only flags clear policy violations
+Issue: Too restrictive, misses subtle hate speech
+
+
+Persona Strategy:
+
+Middle performance across all metrics
+Slightly better recall than Policy but still poor
+Issue: Identity-aware features not effectively utilized
+
+Combined Strategy (Worst):
+
+Lowest accuracy (63.0%) and recall (21.8%)
+Critical flaw: Combining strategies made performance worse
+Issue: Over-conservative, missing nearly 4 out of 5 hate cases
+
+Production Deployment Concerns
+Unacceptable False Negative Rate
+78% of hate speech goes undetected with Combined strategy
+62% missed even with best strategy (Baseline)
+Risk: Harmful content reaches users unfiltered

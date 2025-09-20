@@ -1,0 +1,70 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-09-21 01:03:03
+Model: gpt-oss-20b
+Prompt Template File: hybrid_v6.json
+Data Source: canned_100_all
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_all --strategies all --sample-size 100 --prompt-template-file hybrid_v6.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure t...
+   Label: normal
+
+2. Text: build great wall made by prison or shitskin labor using kilms dig out moats filled with gators or fl...
+   Label: normal
+
+3. Text: as much as i appreciate a format of open discussion i really just want a facebook that i can say bea...
+   Label: normal
+
+... (middle samples) ...
+50. Text: there is no evidence that the sexual orientation of an adult is determined by any aspect of the envi...
+   Label: normal
+
+51. Text: molly - the _____ advocacy research group in toronto reports that from 1996 to 2002 the physical ass...
+   Label: normal
+
+... (final samples) ...
+99. Text: arab women are so oppressed, they can't leave the household without the permission of a man
+   Label: hate
+
+100. Text: your ex-husband is living with another man
+   Label: normal
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE Strategy:
+  Accuracy:  0.619
+  Precision: 0.429
+  Recall:    0.469
+  F1-Score:  0.448
+  Confusion Matrix: TP=15, TN=45, FP=20, FN=17
+
+POLICY Strategy:
+  Accuracy:  0.636
+  Precision: 0.452
+  Recall:    0.424
+  F1-Score:  0.438
+  Confusion Matrix: TP=14, TN=49, FP=17, FN=19
+
+PERSONA Strategy:
+  Accuracy:  0.629
+  Precision: 0.438
+  Recall:    0.438
+  F1-Score:  0.438
+  Confusion Matrix: TP=14, TN=47, FP=18, FN=18
+
+COMBINED Strategy:
+  Accuracy:  0.600
+  Precision: 0.370
+  Recall:    0.303
+  F1-Score:  0.333
+  Confusion Matrix: TP=10, TN=50, FP=17, FN=23
