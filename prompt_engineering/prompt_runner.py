@@ -561,11 +561,13 @@ class PromptRunner:
                 processed_count = 0
                 strategy_start_time = time.time()
                 
-                # Process in batches to control memory usage and connection pooling
-                for i in range(0, len(tasks), batch_size):
-                    batch_tasks = tasks[i:i + batch_size]
-                    
-                    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                # Process tasks with a SINGLE ThreadPoolExecutor for the entire strategy
+                # This prevents connection pool exhaustion from recreating executors
+                with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                    # Process in batches to control memory usage
+                    for i in range(0, len(tasks), batch_size):
+                        batch_tasks = tasks[i:i + batch_size]
+                        
                         # Submit all tasks in the batch
                         future_to_task = {
                             executor.submit(self.process_sample_concurrent, task): task 
@@ -573,26 +575,41 @@ class PromptRunner:
                         }
                         
                         # Collect results as they complete
+                        batch_results = []
                         for future in as_completed(future_to_task):
                             try:
                                 result_data = future.result()
-                                # Save result incrementally
-                                persistence.save_result_incrementally(result_data)
+                                batch_results.append(result_data)
                                 total_predictions += 1
                                 processed_count += 1
                                 
-                                # Log progress periodically
-                                if processed_count % 50 == 0:
-                                    elapsed = time.time() - strategy_start_time
-                                    rate = processed_count / elapsed if elapsed > 0 else 0
-                                    logger.info(f"Strategy {strategy_name}: {processed_count}/{len(samples)} samples processed ({rate:.1f}/sec)")
-                                
                             except Exception as e:
                                 logger.error(f"Error processing task in batch: {e}")
-                    
-                    # Add brief delay between batches to respect rate limits
-                    if i + batch_size < len(tasks):  # Not the last batch
-                        time.sleep(1.0)  # Fixed 1-second delay between batches
+                        
+                        # Save all batch results at once for better I/O efficiency
+                        for result_data in batch_results:
+                            persistence.save_result_incrementally(result_data)
+                        
+                        # Log progress periodically
+                        if processed_count % 50 == 0:
+                            elapsed = time.time() - strategy_start_time
+                            rate = processed_count / elapsed if elapsed > 0 else 0
+                            logger.info(f"Strategy {strategy_name}: {processed_count}/{len(samples)} samples processed ({rate:.1f}/sec)")
+                        
+                        # Adaptive delay between batches based on processing rate
+                        if i + batch_size < len(tasks):  # Not the last batch
+                            # Check if we're processing too fast (potential rate limiting)
+                            elapsed = time.time() - strategy_start_time
+                            current_rate = processed_count / elapsed if elapsed > 0 else 0
+                            
+                            # If processing very fast (>20/sec), add small delay to respect rate limits
+                            if current_rate > 20:
+                                adaptive_delay = 0.5
+                                logger.debug(f"High processing rate ({current_rate:.1f}/sec), adding {adaptive_delay}s delay")
+                                time.sleep(adaptive_delay)
+                            # Normal processing, minimal delay
+                            else:
+                                time.sleep(0.1)  # Minimal delay to prevent thundering herd
                 
                 strategy_elapsed = time.time() - strategy_start_time
                 strategy_rate = len(samples) / strategy_elapsed if strategy_elapsed > 0 else 0

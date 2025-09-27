@@ -38,5 +38,8 @@ default_model: "gpt-oss-20b"
 # Connection settings
 connection:
   timeout: 30
+  read_timeout: 45  # Allow longer for large responses
+  connection_timeout: 10  # Quick connection establishment
   retry_attempts: 3
   retry_delay: 1.0
+  max_connections: 20  # Connection pool size

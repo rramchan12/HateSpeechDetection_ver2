@@ -168,10 +168,16 @@ class AzureAIConnector:
                 'x-ms-region'
             ])
             
+            # Get connection settings from config
+            connection_config = self.config_loader.load_config().get('connection', {})
+            timeout = connection_config.get('timeout', 30)
+            
             self.client = ChatCompletionsClient(
                 endpoint=self.endpoint,
                 credential=AzureKeyCredential(self.key),
-                logging_policy=logging_policy
+                logging_policy=logging_policy,
+                connection_timeout=timeout,
+                read_timeout=timeout
             )
             self.logger.info(f"Azure AI client initialized for '{self.model_id}' with endpoint: {self.endpoint}")
             self.logger.debug("Configured logging policy to show rate limit headers")
