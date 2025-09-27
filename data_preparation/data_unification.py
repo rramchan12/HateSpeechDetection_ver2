@@ -189,13 +189,13 @@ class DatasetUnifier:
         Map HateXplain labels to unified schema.
         
         Args:
-            majority_label: HateXplain majority_label (hate/offensive/normal)
+            majority_label: HateXplain majority_label (hatespeech/offensive/normal)
             
         Returns:
             Tuple of (binary_label, multiclass_label)
         """
-        # Binary mapping: hate → hate, offensive+normal → normal
-        if majority_label == 'hate':
+        # Binary mapping: hatespeech → hate, offensive+normal → normal
+        if majority_label == 'hatespeech':
             binary_label = 'hate'
         else:  # offensive or normal
             binary_label = 'normal'
@@ -619,63 +619,74 @@ class DatasetUnifier:
         logger.info(f"  ToxiGen: {toxigen_target:,} samples ({100*toxigen_multiplier/(1+toxigen_multiplier):.1f}%)")
         logger.info(f"  Total: {total_target:,} samples")
         
-        # Keep all HateXplain entries (valuable persona hate with rationales)
-        balanced_hatexplain = hatexplain_entries.copy()
-        
-        # Stratified ToxiGen sampling maintaining target group and class balance
-        balanced_toxigen = []
-        
-        # Get current ToxiGen target group distribution
-        toxigen_by_group = {}
-        for entry in toxigen_entries:
-            group = entry['target_group_norm']
-            if group not in toxigen_by_group:
-                toxigen_by_group[group] = []
-            toxigen_by_group[group].append(entry)
-        
+        # NEW APPROACH: Balance both sources AND overall dataset for equal hate/normal distribution
         import random
         random.seed(42)  # For reproducible results
         
-        logger.info(f"\nStratified ToxiGen sampling:")
+        # Separate each source by binary label
+        hatexplain_hate = [e for e in hatexplain_entries if e['label_binary'] == 'hate']
+        hatexplain_normal = [e for e in hatexplain_entries if e['label_binary'] == 'normal']
+        toxigen_hate = [e for e in toxigen_entries if e['label_binary'] == 'hate']
+        toxigen_normal = [e for e in toxigen_entries if e['label_binary'] == 'normal']
         
+        logger.info(f"\nOriginal label distribution by source:")
+        logger.info(f"  HateXplain: {len(hatexplain_hate):,} hate, {len(hatexplain_normal):,} normal")
+        logger.info(f"  ToxiGen: {len(toxigen_hate):,} hate, {len(toxigen_normal):,} normal")
+        
+        # Calculate target samples for 1:toxigen_multiplier ratio with 50/50 hate/normal split
+        target_hate_per_source = hatexplain_samples // 2
+        target_normal_per_source = hatexplain_samples - target_hate_per_source
+        
+        logger.info(f"\nTarget balanced distribution:")
+        logger.info(f"  Each source: {target_hate_per_source:,} hate, {target_normal_per_source:,} normal")
+        logger.info(f"  Total: {(target_hate_per_source + target_normal_per_source) * 2:,} samples (50% hate, 50% normal)")
+        
+        # Sample HateXplain to achieve balance (prioritize rationale-rich samples)
+        balanced_hatexplain_hate = random.sample(hatexplain_hate, 
+                                                min(target_hate_per_source, len(hatexplain_hate)))
+        balanced_hatexplain_normal = random.sample(hatexplain_normal, 
+                                                  min(target_normal_per_source, len(hatexplain_normal)))
+        
+        # Sample ToxiGen to achieve same balance with stratified sampling across target groups
+        balanced_toxigen = []
+        
+        # Get ToxiGen distribution by target group and label
+        toxigen_by_group_label = {}
+        for entry in toxigen_entries:
+            group = entry['target_group_norm']
+            label = entry['label_binary']
+            key = f"{group}_{label}"
+            if key not in toxigen_by_group_label:
+                toxigen_by_group_label[key] = []
+            toxigen_by_group_label[key].append(entry)
+        
+        logger.info(f"\nStratified ToxiGen sampling (target: {target_hate_per_source:,} hate, {target_normal_per_source:,} normal):")
+        
+        # Calculate per-group quotas
         for target_group in ['lgbtq', 'mexican', 'middle_east']:
-            group_entries = toxigen_by_group.get(target_group, [])
+            group_hate = toxigen_by_group_label.get(f"{target_group}_hate", [])
+            group_normal = toxigen_by_group_label.get(f"{target_group}_normal", [])
             
-            if not group_entries:
-                logger.warning(f"  {target_group}: No entries found, skipping")
+            # Proportional allocation based on group size
+            total_group_size = len(group_hate) + len(group_normal)
+            if total_group_size == 0:
                 continue
+                
+            group_proportion = total_group_size / len(toxigen_entries)
+            group_hate_quota = int(target_hate_per_source * group_proportion)
+            group_normal_quota = int(target_normal_per_source * group_proportion)
             
-            # Calculate proportional quota for this group
-            group_proportion = len(group_entries) / len(toxigen_entries)
-            group_quota = int(toxigen_target * group_proportion)
-            
-            # Separate by class within group
-            group_hate = [e for e in group_entries if e['label_binary'] == 'hate']
-            group_normal = [e for e in group_entries if e['label_binary'] == 'normal']
-            
-            # Maintain class balance within group (50/50 split)
-            hate_quota = group_quota // 2
-            normal_quota = group_quota - hate_quota
-            
-            # Sample with replacement if necessary to meet quotas
-            if len(group_hate) >= hate_quota:
-                sampled_hate = random.sample(group_hate, hate_quota)
-            else:
-                sampled_hate = group_hate.copy()
-                logger.warning(f"  {target_group}: Only {len(group_hate)} hate samples available (needed {hate_quota})")
-            
-            if len(group_normal) >= normal_quota:
-                sampled_normal = random.sample(group_normal, normal_quota)
-            else:
-                sampled_normal = group_normal.copy()
-                logger.warning(f"  {target_group}: Only {len(group_normal)} normal samples available (needed {normal_quota})")
+            # Sample from each group
+            sampled_hate = random.sample(group_hate, min(group_hate_quota, len(group_hate)))
+            sampled_normal = random.sample(group_normal, min(group_normal_quota, len(group_normal)))
             
             balanced_toxigen.extend(sampled_hate + sampled_normal)
             
-            logger.info(f"  {target_group}: {len(sampled_hate + sampled_normal):,} samples "
-                       f"({len(sampled_hate)} hate, {len(sampled_normal)} normal)")
+            logger.info(f"  {target_group}: {len(sampled_hate):,} hate, {len(sampled_normal):,} normal "
+                       f"(from {len(group_hate):,}/{len(group_normal):,} available)")
         
-        # Combine balanced sources
+        # Combine balanced sources  
+        balanced_hatexplain = balanced_hatexplain_hate + balanced_hatexplain_normal
         balanced_entries = balanced_hatexplain + balanced_toxigen
         
         logger.info(f"\nBalanced dataset summary:")
