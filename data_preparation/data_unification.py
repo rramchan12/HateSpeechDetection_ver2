@@ -574,10 +574,177 @@ class DatasetUnifier:
         
         logger.info(f"Exported dataset statistics: {stats_file}")
         logger.info(f"Dataset unification completed. Output directory: {self.output_dir}")
+    
+    def balance_source_distribution(self, toxigen_multiplier: float = 1.0):
+        """
+        Balance the representation between HateXplain (persona hate) and ToxiGen (implicit hate)
+        by equalizing or proportionally adjusting the number of samples from each source dataset.
+        
+        Args:
+            toxigen_multiplier: How many times more ToxiGen samples than HateXplain
+                               (1.0 = equal, 2.0 = double, 3.0 = triple, etc.)
+        
+        Returns:
+            UnifiedDatasetStats: Updated statistics after balancing
+        """
+        logger.info(f"Balancing source distribution with 1:{toxigen_multiplier} HateXplain:ToxiGen ratio...")
+        
+        if not self.unified_data:
+            raise ValueError("No unified data available. Call unify_datasets() first.")
+        
+        # Combine all unified data
+        all_entries = []
+        for split_data in self.unified_data.values():
+            all_entries.extend(split_data)
+        
+        if not all_entries:
+            raise ValueError("No entries found in unified dataset")
+        
+        # Separate by source
+        hatexplain_entries = [e for e in all_entries if e['source_dataset'] == 'hatexplain']
+        toxigen_entries = [e for e in all_entries if e['source_dataset'] == 'toxigen']
+        
+        logger.info(f"Current source distribution:")
+        logger.info(f"  HateXplain (persona hate): {len(hatexplain_entries):,} samples")
+        logger.info(f"  ToxiGen (implicit hate): {len(toxigen_entries):,} samples")
+        logger.info(f"  Current ratio: 1:{len(toxigen_entries)/len(hatexplain_entries) if hatexplain_entries else 0:.1f}")
+        
+        # Calculate target sizes
+        hatexplain_samples = len(hatexplain_entries)
+        toxigen_target = int(hatexplain_samples * toxigen_multiplier)
+        total_target = hatexplain_samples + toxigen_target
+        
+        logger.info(f"\nTarget distribution:")
+        logger.info(f"  HateXplain: {hatexplain_samples:,} samples ({100/(1+toxigen_multiplier):.1f}%)")
+        logger.info(f"  ToxiGen: {toxigen_target:,} samples ({100*toxigen_multiplier/(1+toxigen_multiplier):.1f}%)")
+        logger.info(f"  Total: {total_target:,} samples")
+        
+        # Keep all HateXplain entries (valuable persona hate with rationales)
+        balanced_hatexplain = hatexplain_entries.copy()
+        
+        # Stratified ToxiGen sampling maintaining target group and class balance
+        balanced_toxigen = []
+        
+        # Get current ToxiGen target group distribution
+        toxigen_by_group = {}
+        for entry in toxigen_entries:
+            group = entry['target_group_norm']
+            if group not in toxigen_by_group:
+                toxigen_by_group[group] = []
+            toxigen_by_group[group].append(entry)
+        
+        import random
+        random.seed(42)  # For reproducible results
+        
+        logger.info(f"\nStratified ToxiGen sampling:")
+        
+        for target_group in ['lgbtq', 'mexican', 'middle_east']:
+            group_entries = toxigen_by_group.get(target_group, [])
+            
+            if not group_entries:
+                logger.warning(f"  {target_group}: No entries found, skipping")
+                continue
+            
+            # Calculate proportional quota for this group
+            group_proportion = len(group_entries) / len(toxigen_entries)
+            group_quota = int(toxigen_target * group_proportion)
+            
+            # Separate by class within group
+            group_hate = [e for e in group_entries if e['label_binary'] == 'hate']
+            group_normal = [e for e in group_entries if e['label_binary'] == 'normal']
+            
+            # Maintain class balance within group (50/50 split)
+            hate_quota = group_quota // 2
+            normal_quota = group_quota - hate_quota
+            
+            # Sample with replacement if necessary to meet quotas
+            if len(group_hate) >= hate_quota:
+                sampled_hate = random.sample(group_hate, hate_quota)
+            else:
+                sampled_hate = group_hate.copy()
+                logger.warning(f"  {target_group}: Only {len(group_hate)} hate samples available (needed {hate_quota})")
+            
+            if len(group_normal) >= normal_quota:
+                sampled_normal = random.sample(group_normal, normal_quota)
+            else:
+                sampled_normal = group_normal.copy()
+                logger.warning(f"  {target_group}: Only {len(group_normal)} normal samples available (needed {normal_quota})")
+            
+            balanced_toxigen.extend(sampled_hate + sampled_normal)
+            
+            logger.info(f"  {target_group}: {len(sampled_hate + sampled_normal):,} samples "
+                       f"({len(sampled_hate)} hate, {len(sampled_normal)} normal)")
+        
+        # Combine balanced sources
+        balanced_entries = balanced_hatexplain + balanced_toxigen
+        
+        logger.info(f"\nBalanced dataset summary:")
+        logger.info(f"  HateXplain: {len(balanced_hatexplain):,} samples ({len(balanced_hatexplain)/len(balanced_entries)*100:.1f}%)")
+        logger.info(f"  ToxiGen: {len(balanced_toxigen):,} samples ({len(balanced_toxigen)/len(balanced_entries)*100:.1f}%)")
+        logger.info(f"  Total: {len(balanced_entries):,} samples")
+        logger.info(f"  Reduction: {len(all_entries) - len(balanced_entries):,} samples removed ({(len(all_entries) - len(balanced_entries))/len(all_entries)*100:.1f}%)")
+        
+        # Redistribute back to splits maintaining original split ratios
+        self._redistribute_to_splits(balanced_entries, all_entries)
+        
+        # Analyze and return updated statistics
+        final_stats = self.analyze_unified_dataset()
+        
+        logger.info(f"\nFinal source distribution:")
+        for source, count in final_stats.source_distribution.items():
+            percentage = (count / final_stats.total_entries) * 100
+            logger.info(f"  {source}: {count:,} samples ({percentage:.1f}%)")
+        
+        logger.info(f"Final class distribution:")
+        for label, count in final_stats.label_binary_distribution.items():
+            percentage = (count / final_stats.total_entries) * 100
+            logger.info(f"  {label}: {count:,} samples ({percentage:.1f}%)")
+        
+        return final_stats
+    
+    def _redistribute_to_splits(self, balanced_entries: List[Dict[str, Any]], original_entries: List[Dict[str, Any]]):
+        """
+        Redistribute balanced entries back to train/val/test splits maintaining original ratios.
+        
+        Args:
+            balanced_entries: List of balanced unified entries
+            original_entries: List of original unified entries for ratio calculation
+        """
+        # Calculate original split ratios
+        original_split_counts = {}
+        for split, data in self.unified_data.items():
+            original_split_counts[split] = len(data)
+        
+        total_original = len(original_entries)
+        original_split_ratios = {
+            split: count / total_original 
+            for split, count in original_split_counts.items()
+            if total_original > 0
+        }
+        
+        logger.info(f"Redistributing to splits with original ratios: {original_split_ratios}")
+        
+        # Shuffle balanced entries for random distribution
+        import random
+        random.shuffle(balanced_entries)
+        
+        # Redistribute to splits
+        start_idx = 0
+        for split, ratio in original_split_ratios.items():
+            split_size = int(len(balanced_entries) * ratio)
+            end_idx = start_idx + split_size
+            
+            # Handle final split to include any remaining entries
+            if split == list(original_split_ratios.keys())[-1]:
+                end_idx = len(balanced_entries)
+            
+            self.unified_data[split] = balanced_entries[start_idx:end_idx]
+            logger.info(f"  {split}: {len(self.unified_data[split]):,} samples ({len(self.unified_data[split])/len(balanced_entries)*100:.1f}%)")
+            start_idx = end_idx
 
 
 def main():
-    """Main function to demonstrate dataset unification."""
+    """Main function to demonstrate dataset unification with source balancing."""
     # Initialize unifier
     unifier = DatasetUnifier(
         hatexplain_dir="data/processed/hatexplain",
@@ -590,14 +757,33 @@ def main():
     # Unify datasets
     unifier.unify_datasets()
     
-    # Analyze and print summary
+    # Print original summary
+    print("\n" + "="*70)
+    print("ORIGINAL UNIFIED DATASET")
+    print("="*70)
     unifier.print_dataset_summary()
     
-    # Export unified dataset
+    # Balance source distribution (1:1 ratio by default)
+    print("\n" + "="*70)
+    print("BALANCING SOURCE DISTRIBUTION (1:1 RATIO)")
+    print("="*70)
+    balanced_stats = unifier.balance_source_distribution(toxigen_multiplier=1.0)
+    
+    # Print balanced summary
+    print("\n" + "="*70)
+    print("BALANCED UNIFIED DATASET")
+    print("="*70)
+    unifier.print_dataset_summary(balanced_stats)
+    
+    # Export balanced unified dataset
     unifier.export_unified_dataset(format='json')
     
     print("\n" + "*" * 60)
-    print("*** Dataset unification completed successfully! ***")
+    print("*** Dataset unification and balancing completed successfully! ***")
+    print(f"*** Final dataset: {balanced_stats.total_entries:,} samples ***")
+    print(f"*** HateXplain: {balanced_stats.hatexplain_entries:,} samples ({balanced_stats.hatexplain_entries/balanced_stats.total_entries*100:.1f}%) ***")
+    print(f"*** ToxiGen: {balanced_stats.toxigen_entries:,} samples ({balanced_stats.toxigen_entries/balanced_stats.total_entries*100:.1f}%) ***")
+    print(f"*** Rationale coverage: {balanced_stats.rationale_coverage:.1%} ***")
     print("*" * 60)
 
 
