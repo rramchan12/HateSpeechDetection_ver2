@@ -123,36 +123,40 @@ python prompt_runner.py --data-source unified --sample-size 100 --strategies all
 
 For detailed framework documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md).
 
-The unified dataset contains 64,321 entries across 3 target groups:
+The unified dataset contains **5,151 entries** using a **stratified balancing approach** across 3 target groups (reduced from original 64,321 for improved quality and balance):
 
-- **LGBTQ**: 22,785 entries (35.4%)
-- **Mexican**: 20,632 entries (32.1%)  
-- **Middle East**: 20,904 entries (32.5%)
+- **LGBTQ**: 2,515 entries (48.8%)
+- **Middle East**: 1,471 entries (28.5%)  
+- **Mexican**: 1,165 entries (22.6%)
 
 Dataset characteristics:
 
+- **Quality over Quantity**: 92% size reduction with 11.5x improvement in rationale coverage
+- **Perfect Source Balance**: 47.1% HateXplain vs 52.9% ToxiGen (vs original 4.2%/95.8%)
 - Original target group identities preserved (e.g., "Arab" → `target_group_norm: "middle_east"`, `persona_tag: "arab"`)
 - Standardized binary and multiclass labels
 - Combined real and synthetic data sources
+
+For detailed methodology, see [`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md).
 
 ## 📊 Unified Dataset Features
 
 ### Target Groups & Mapping
 
-| **Group** | **HateXplain Source** | **ToxiGen Source** | **Persona Tags** | **Final Count** |
-|-----------|----------------------|-------------------|-----------------|-----------------|
-| **LGBTQ** | Homosexual, Gay | lgbtq | homosexual, gay, lgbtq | 22,785 |
-| **Mexican** | Hispanic, Latino | mexican | hispanic, latino, mexican | 20,632 |
-| **Middle East** | Arab | middle_east | arab, middle_east | 20,904 |
+| **Group** | **HateXplain Source** | **ToxiGen Source** | **Persona Tags** | **Final Count** | **Percentage** |
+|-----------|----------------------|-------------------|-----------------|-----------------|----------------|
+| **LGBTQ** | Homosexual, Gay | lgbtq | homosexual, gay, lgbtq | 2,515 | 48.8% |
+| **Mexican** | Hispanic, Latino | mexican | hispanic, latino, mexican | 1,165 | 22.6% |
+| **Middle East** | Arab | middle_east | arab, middle_east | 1,471 | 28.5% |
 
 **Persona Tag Preservation**: Original target group identities are preserved in `persona_tag` field while `target_group_norm` provides normalized grouping for consistent analysis.
 
 ### Label Distribution
 
-- **Binary Labels**: 46.9% hate, 53.1% normal (balanced for training)
+- **Binary Labels**: 47.1% hate, 52.9% normal (near-perfect balance for training)
 - **Multiclass Labels**: hate, offensive, normal, toxic_implicit, benign_implicit
-- **Sources**: 95.8% ToxiGen (synthetic), 4.2% HateXplain (real social media)
-- **Rationale Coverage**: 3.2% of entries include human explanations
+- **Sources**: 52.9% ToxiGen (synthetic), 47.1% HateXplain (real social media) - **Perfect Balance Achieved**
+- **Rationale Coverage**: 36.9% of entries include human explanations (11.5x improvement from original 3.2%)
 
 ### Unified Schema (12 Fields)
 
@@ -334,13 +338,17 @@ pytest tests/test_toxigen_data_preparation.py -v
 
 ### Unified Dataset Output
 
-After processing and unification:
+After processing and stratified balancing:
 
-- **Total Entries**: 64,321 (filtered from ~270K original)
-- **Target Groups**: 3 (LGBTQ, Mexican, Middle East)  
-- **Label Balance**: 47% hate, 53% normal
-- **Data Split**: 80% train, 10% val, 10% test
+- **Total Entries**: 5,151 (balanced from original 64,321 using stratified approach - 92% reduction for quality)
+- **Target Groups**: 3 (LGBTQ 48.8%, Middle East 28.5%, Mexican 22.6%)  
+- **Label Balance**: 47.1% hate, 52.9% normal (near-perfect balance)
+- **Source Balance**: 47.1% HateXplain, 52.9% ToxiGen (perfect balance achieved)
+- **Rationale Coverage**: 36.9% (11.5x improvement from original 3.2%)
+- **Data Split**: 70.4% train, 10.0% val, 19.6% test
 - **File Format**: JSON with unified 12-field schema
+
+**Methodology**: See [`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md) for detailed stratified balancing approach.
 
 ## 🔧 Development & Extension
 
