@@ -52,11 +52,9 @@ from typing import List, Dict, Any, Optional
 from azure.ai.inference.models import SystemMessage, UserMessage
 
 # Local imports
-from azureai_mi_connector_wrapper import AzureAIConnector
-from strategy_templates_loader import StrategyTemplatesLoader
-from unified_dataset_loader import load_dataset, load_dataset_by_filename, get_dataset_info, DatasetType
-from evaluation_metrics_calc import EvaluationMetrics, ValidationResult, calculate_metrics_from_runid
-from persistence_helper import PersistenceHelper
+from connector import AzureAIConnector
+from loaders import StrategyTemplatesLoader, load_dataset, load_dataset_by_filename, get_dataset_info, DatasetType
+from metrics import EvaluationMetrics, ValidationResult, calculate_metrics_from_runid, PersistenceHelper
 
 
 # ============================================================================
@@ -1214,16 +1212,16 @@ def main():
         # Auto-detect config file if not specified
         config_path = args.config
         if config_path is None:
-            # Look for model_connection.yaml in current directory or prompt_engineering directory
+            # Look for model_connection.yaml in new connector package location and legacy locations
             current_dir = Path(".")
             prompt_eng_dir = Path("prompt_engineering")
+            connector_dir = Path(__file__).parent / "connector"
             
-            for potential_path in [current_dir / "model_connection.yaml", 
+            for potential_path in [connector_dir / "model_connection.yaml",
+                                 current_dir / "model_connection.yaml", 
                                  prompt_eng_dir / "model_connection.yaml"]:
                 if potential_path.exists():
                     config_path = str(potential_path)
-                    logger.info(f"Auto-detected config file: {config_path}")
-                    break
                     logger.info(f"Auto-detected config file: {config_path}")
                     break
         

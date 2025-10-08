@@ -1,0 +1,70 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-08 21:34:39
+Model: gpt-oss-20b
+Prompt Template File: baseline_v1.json
+Data Source: unified
+Total samples tested: 3
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --strategies all --sample-size 3 --output-dir outputs --prompt-template-file baseline_v1.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: say what you will about nazi germany but it was definitely the most lgbt inclusive place in the midd...
+   Label: normal
+
+2. Text: mexican tamales are the best ever
+   Label: normal
+
+3. Text: shes straight, super sweet, and likes to go hiking. ive never once noticed her checking out a guy or...
+   Label: normal
+
+[Showing sample of 3 out of 3 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE_CONSERVATIVE Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0
+
+BASELINE_STANDARD Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0
+
+BASELINE_CREATIVE Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0
+
+BASELINE_FOCUSED Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0
+
+BASELINE_EXPLORATORY Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0
+
+BASELINE_BALANCED Strategy:
+  Accuracy:  1.000
+  Precision: 0.000
+  Recall:    0.000
+  F1-Score:  0.000
+  Confusion Matrix: TP=0, TN=3, FP=0, FN=0

@@ -1,0 +1,88 @@
+{
+  "strategies": {
+    "baseline_conservative": {
+      "name": "baseline_conservative",
+      "description": "Conservative baseline: Low temperature, deterministic responses for consistent hate speech detection",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 256,
+        "temperature": 0.0,
+        "top_p": 0.9,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "baseline_standard": {
+      "name": "baseline_standard",
+      "description": "Standard baseline: Balanced parameters for reliable hate speech classification",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "baseline_creative": {
+      "name": "baseline_creative",
+      "description": "Creative baseline: Higher temperature for nuanced reasoning in edge cases",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 768,
+        "temperature": 0.3,
+        "top_p": 0.95,
+        "frequency_penalty": 0.1,
+        "presence_penalty": 0.1,
+        "response_format": "json_object"
+      }
+    },
+    "baseline_focused": {
+      "name": "baseline_focused",
+      "description": "Focused baseline: Optimized for concise, high-confidence classifications",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 200,
+        "temperature": 0.05,
+        "top_p": 0.8,
+        "frequency_penalty": 0.2,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "baseline_exploratory": {
+      "name": "baseline_exploratory",
+      "description": "Exploratory baseline: Higher diversity parameters for discovering edge case patterns",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 1024,
+        "temperature": 0.5,
+        "top_p": 0.85,
+        "frequency_penalty": 0.3,
+        "presence_penalty": 0.2,
+        "response_format": "json_object"
+      }
+    },
+    "baseline_balanced": {
+      "name": "baseline_balanced",
+      "description": "Balanced baseline: Optimized parameters based on OpenAI best practices for classification tasks",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 400,
+        "temperature": 0.2,
+        "top_p": 0.9,
+        "frequency_penalty": 0.05,
+        "presence_penalty": 0.05,
+        "response_format": "json_object"
+      }
+    }
+  }
+}

@@ -1,27 +1,18 @@
 # Hate Speech Detection Prompt Validation Framework
 
-A comprehensive, production-ready prompt validation framework for testing and evaluating different hate speech detection strategies with multiple AI models, featuring YAML-based configuration, incremental storage, detailed analytics, and flexible data source management.
+A comprehensive, production-ready prompt validation framework for testing and evaluating different hate speech detection strategies with multiple AI models. Built with a modular package architecture featuring YAML-based configuration, incremental storage, detailed analytics, and flexible data source management.
 
 ## Overview
 
 This framework provides:
 
-- **Multi-Model Support**: Switch between GPT-OSS-20B, GPT-5, and other configured models via YAML
-- **Flexible Data Sources**: Support for unified dataset sampling and specific canned datasets by name
-- **YAML Configuration**: Centralized model configuration with environment variable support  
-- **Strategy Testing**: Four comprehensive prompt strategies (Baseline, Policy, Persona, Combined)
-- **Concurrent Processing**: Multi-threaded execution with configurable batch sizes and worker limits
-- **Incremental Storage**: Memory-efficient processing with real-time result saving
-- **Performance Analytics**: Detailed accuracy, timing, and response analysis with runId-based organization
-- **Rate Limiting & Retry Logic**: Intelligent retry with exponential backoff and rate limit detection
-- **File Logging**: Complete audit trail with logs written to runID folders
-- **Connection Testing**: Validate Azure AI endpoint connectivity before runs
-- **Sample Size Control**: Configurable sampling for all data sources (unified and canned)
-- **Robust Metrics**: Comprehensive evaluation metrics calculated from stored results
-- **Custom Prompt Templates**: CLI support for selecting different prompt template files
-- **Rich Evaluation Reports**: Detailed reports with model metadata, command line, and execution context
-- **Clean Output**: Professional logging and reporting with organized file structure
-- **Modular Design**: Separate components for easy extension and customization
+- **Modular Package Architecture**: Organized into `connector`, `loaders`, and `metrics` packages
+- **Multi-Model Support**: Switch between configured models via YAML configuration
+- **Strategy Testing**: Five prompt strategies (Baseline, Policy, Persona, Combined, Enhanced Combined)
+- **Flexible Data Sources**: Unified dataset sampling and canned datasets
+- **Concurrent Processing**: Multi-threaded execution with configurable settings
+- **Performance Analytics**: Accuracy, timing, and response analysis with runId organization
+- **YAML Configuration**: Model configuration with environment variable support
 
 ## Main Entry Point
 
@@ -32,10 +23,10 @@ This framework provides:
 python prompt_runner.py --help
 
 # Basic validation with canned dataset
-python prompt_runner.py --data-source canned_basic_all --strategies baseline
+python prompt_runner.py --data-source canned_50_quick --strategies baseline
 
 # Run all strategies on specific canned dataset with sampling
-python prompt_runner.py --data-source canned_100_all --strategies all --sample-size 10
+python prompt_runner.py --data-source canned_100_stratified --strategies all --sample-size 10
 
 # Extract samples from unified dataset
 python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
@@ -59,8 +50,9 @@ python prompt_runner.py --data-source unified --sample-size 100 --strategies all
 
 - **Unified Dataset**: `--data-source unified` - Large comprehensive dataset with configurable sampling
 - **Canned Datasets**: Curated, ready-to-use test sets:
-  - `--data-source canned_basic_all` - Basic test samples (5 samples)
-  - `--data-source canned_100_all` - Diverse stratified samples (100 samples)
+  - `--data-source canned_50_quick` - Quick test samples (50 samples)
+  - `--data-source canned_100_size_varied` - Size-varied text samples (100 samples)
+  - `--data-source canned_100_stratified` - Diverse stratified samples (100 samples)
 
 ### **Sample Size Control**
 
@@ -70,12 +62,43 @@ The `--sample-size` parameter now works with ALL data sources:
 # Sample 25 items from unified dataset
 python prompt_runner.py --data-source unified --sample-size 25 --strategies baseline
 
-# Sample 5 items from canned_100_all dataset  
-python prompt_runner.py --data-source canned_100_all --sample-size 5 --strategies all
+# Sample 5 items from canned dataset  
+python prompt_runner.py --data-source canned_100_stratified --sample-size 5 --strategies all
 
 # Use full canned dataset (omit --sample-size)
-python prompt_runner.py --data-source canned_basic_all --strategies policy
+python prompt_runner.py --data-source canned_50_quick --strategies policy
 ```
+
+## Package Usage
+
+### **Direct Package Imports**
+
+The framework is organized into specialized packages that can be used independently:
+
+```python
+# Import from main package (recommended)
+from prompt_engineering import StrategyTemplatesLoader, EvaluationMetrics, AzureAIConnector
+
+# Import from specific packages (for advanced usage)
+from prompt_engineering.loaders import UnifiedDatasetLoader, load_dataset
+from prompt_engineering.metrics import PersistenceHelper, ValidationResult
+from prompt_engineering.connector import AzureAIConnector, ModelConfigLoader
+
+# Example: Load and analyze data programmatically
+loader = UnifiedDatasetLoader()
+samples = loader.load_samples("unified", num_samples=10)
+
+# Example: Calculate metrics from stored results  
+from prompt_engineering.metrics import calculate_metrics_from_runid
+results = calculate_metrics_from_runid("run_20251008_210824")
+```
+
+### **Package Structure Benefits**
+
+- **Modular Development**: Each package can be developed and tested independently
+- **Clean Imports**: Import only what you need for specific functionality
+- **Standard Conventions**: Follows Python packaging best practices
+- **Easy Extension**: Add new functionality to appropriate packages without affecting others
 
 ## Configuration
 
@@ -314,33 +337,52 @@ All test runs generate files in timestamped runId directories (`outputs/run_YYYY
 ```text
 prompt_engineering/
 ├── prompt_runner.py                  # Main CLI orchestrator (primary entry point)
-├── strategy_templates_loader.py      # Strategy template management and loading
-├── evaluation_metrics_calc.py        # Metrics calculation and result structures
-├── persistence_helper.py             # Output file management and saving
-├── azureai_mi_connector_wrapper.py   # Azure AI SDK connection wrapper
-├── unified_dataset_loader.py         # Flexible dataset loading (canned + unified)
-├── model_connection.yaml             # YAML-based model configuration
-├── prompt_templates/
-│   └── all_combined.json             # Strategy configuration (all 4 strategies)
-├── data_samples/
-│   ├── canned_basic_all.json         # Basic test samples (5 samples)
-│   └── canned_100_all.json           # Diverse stratified samples (100 samples)
+├── dataset_sampler.py                # Dataset sampling utilities
+├── connector/                        # Azure AI connection package
+│   ├── __init__.py                   # Package initialization with exports
+│   ├── azureai_connector.py          # Azure AI SDK connection wrapper
+│   ├── model_connection.yaml         # YAML-based model configuration
+│   └── README.md                     # Connector package documentation
+├── loaders/                          # Data and template loading utilities package
+│   ├── __init__.py                   # Package initialization with exports
+│   ├── strategy_templates_loader.py  # Strategy template management and loading
+│   └── unified_dataset_loader.py     # Flexible dataset loading (canned + unified)
+├── metrics/                          # Evaluation and persistence utilities package
+│   ├── __init__.py                   # Package initialization with exports
+│   ├── evaluation_metrics_calc.py    # Metrics calculation and result structures
+│   ├── persistence_helper.py         # Output file management and saving
+│   └── outputs/                      # Package-specific output directory
+├── prompt_templates/                 # Strategy configuration files
+│   ├── all_combined.json             # Main strategy configuration (5 strategies)
+│   ├── baseline_v1.json              # Legacy baseline strategy
+│   └── baseline_v1_README.md         # Legacy baseline documentation
+├── data_samples/                     # Test datasets and samples
+│   ├── canned_50_quick.json          # Quick test samples (50 samples)
+│   ├── canned_100_size_varied.json   # Size-varied samples (100 samples)
+│   ├── canned_100_stratified.json    # Stratified diverse samples (100 samples)
+│   └── README.md                     # Data samples documentation
 ├── outputs/                          # Generated result files (organized by runId)
-├── README.md                         # This file
-├── STRATEGY_TEST_RESULTS.md          # Test results documentation
-└── DEBUG.md                          # Debugging guide
+│   ├── run_20251008_210824/          # Example run with results
+│   └── run_20251008_213409/          # Another example run
+├── __pycache__/                      # Python compiled bytecode cache
+├── README.md                         # This file (framework documentation)
+└── DEBUG.md                          # Debugging and troubleshooting guide
 ```
 
 ## Architecture Highlights
 
-### **Modular Design**
+### **Modular Package Design**
 
-- **PromptRunner**: Main orchestrator, handles CLI and coordinates all components with concurrent processing
-- **StrategyTemplatesLoader**: Encapsulates all strategy template logic and prompt extraction with custom file support
-- **UnifiedDatasetLoader**: Flexible data loading with sample size support for all sources
-- **AzureAIConnector**: YAML-based model configuration with environment variable support and custom logging
-- **PersistenceHelper**: Handles file I/O and output organization in runId folders with incremental storage
-- **EvaluationMetricsCalc**: Dedicated metrics calculation from stored results with rich reporting
+- **Main Entry Point**: `prompt_runner.py` - CLI orchestrator coordinating all packages with concurrent processing
+- **Connector Package** (`connector/`): Azure AI SDK integration with YAML configuration
+  - `AzureAIConnector`: Model connection management with environment variable support
+  - `ModelConfigLoader`: YAML-based model configuration loading
+- **Loaders Package** (`loaders/`): Data and template management utilities
+  - `StrategyTemplatesLoader`: Encapsulates strategy template logic and prompt extraction
+  - `UnifiedDatasetLoader`: Flexible data loading with sample size support for all sources
+- **Metrics Package** (`metrics/`): Evaluation and persistence functionality
+  - `EvaluationMetrics`: Comprehensive metrics calculation from stored results
+  - `PersistenceHelper`: File I/O and output organization in runId folders with incremental storage
 
 ### **Concurrent Processing & Performance**
 
@@ -389,7 +431,7 @@ prompt_engineering/
 python prompt_runner.py --test-connection
 
 # Quick validation with canned data
-python prompt_runner.py --data-source canned_basic_all --strategies baseline
+python prompt_runner.py --data-source canned_50_quick --strategies baseline
 
 # Comprehensive evaluation
 python prompt_runner.py --data-source unified --strategies all --sample-size 100
@@ -404,13 +446,15 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 - `policy`: Platform guidelines-based moderation
 - `persona`: Multi-perspective evaluation with bias awareness
 - `combined`: Policy + persona fusion approach
-- `all`: Execute all four strategies
+- `enhanced_combined`: Advanced fusion with enhanced reasoning
+- `all`: Execute all five strategies
 
 ### Data Source Options
 
 - `unified`: Large unified dataset with configurable sampling
-- `canned_basic_all`: 5 curated test samples
-- `canned_100_all`: 100 diverse stratified samples
+- `canned_50_quick`: 50 quick test samples for rapid validation
+- `canned_100_size_varied`: 100 samples with varied text lengths
+- `canned_100_stratified`: 100 diverse stratified samples for comprehensive testing
 
 ## Development
 
@@ -418,22 +462,29 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
 1. Edit `prompt_templates/all_combined.json`
 2. Add new strategy configuration following existing patterns
-3. Test with `python prompt_runner.py --data-source canned_basic_all --strategies <new_strategy>`
+3. Test with `python prompt_runner.py --data-source canned_50_quick --strategies <new_strategy>`
 4. Validate with comprehensive evaluation
 
 ### Extending Metrics
 
-1. Edit `evaluation_metrics_calc.py`
-2. Add new calculation methods to `calculate_metrics_from_runid`
-3. Update result structures as needed
-4. Validate with test data
+1. Edit `metrics/evaluation_metrics_calc.py`
+2. Add new calculation methods to `EvaluationMetrics` class
+3. Update `PerformanceMetrics` dataclass if needed
+4. Test with existing runs using `--metrics-only` flag
 
 ### Adding New Models
 
-1. Edit `model_connection.yaml`
+1. Edit `connector/model_connection.yaml`
 2. Add new model configuration with required parameters
 3. Test connection with `python prompt_runner.py --model <new_model> --test-connection`
 4. Validate with strategy testing
+
+### Package Development
+
+1. **Connector Package**: Add new model providers or connection types in `connector/`
+2. **Loaders Package**: Extend data sources or template formats in `loaders/`
+3. **Metrics Package**: Add new evaluation metrics or output formats in `metrics/`
+4. Each package has its own `__init__.py` with proper exports for clean imports
 
 ## Troubleshooting
 
@@ -480,12 +531,21 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 - **Clean Console Output**: Only runID printed to console for CI/CD integration
 - **Complete Audit Trail**: Full execution logs with detailed error handling
 
+### **Modular Package Architecture (October 2025)**
+
+- **Package Organization**: Separated into specialized packages for better maintainability
+- **Connector Package**: Azure AI integration with YAML configuration management
+- **Loaders Package**: Data and template loading utilities with proper path handling
+- **Metrics Package**: Evaluation metrics and persistence functionality
+- **Clean Imports**: Each package exports classes via `__init__.py` for easy importing
+- **Standard Python Conventions**: Follows established packaging patterns for professional development
+
 ### **Incremental Storage and Memory Efficiency**
 
 - **Incremental CSV Writing**: Results saved during validation, not at the end
 - **Memory Optimization**: No in-memory accumulation of large result sets
 - **Metrics from Storage**: Calculate metrics from saved CSV files, not memory
-- **Separation of Concerns**: File I/O in PersistenceHelper, metrics in EvaluationMetricsCalc
+- **Separation of Concerns**: File I/O in PersistenceHelper, metrics in EvaluationMetricsCalc within dedicated packages
 
 ### **Enhanced CLI and Data Source Support**
 
@@ -504,10 +564,13 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
 ### **Architecture Refactoring**
 
+- **Modular Package Structure**: Organized into `connector`, `loaders`, and `metrics` packages
 - **Single Orchestrator**: `prompt_runner.py` is the only entry point
-- **Encapsulated Strategy Logic**: All template logic in `StrategyTemplatesLoader` class
+- **Clean Package Separation**: Each package handles specific functionality with proper `__init__.py` exports
+- **Encapsulated Strategy Logic**: All template logic in `StrategyTemplatesLoader` class within `loaders` package
 - **Robust Error Handling**: Critical failures log and exit cleanly
-- **YAML Configuration**: Multi-model support with environment variable substitution
+- **YAML Configuration**: Multi-model support with environment variable substitution in `connector` package
+- **Standard Python Conventions**: Follows established packaging patterns for better maintainability
 
 ### **Output Organization**
 

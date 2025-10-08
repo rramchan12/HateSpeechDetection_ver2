@@ -4,7 +4,9 @@
 
 ### How It Works
 
-1. Open `prompt_runner.py` (the main entry point)
+1. Open├── connector/                        # Azure AI connection package
+│   ├── azureai_connector.py          # Azure AI - debug connection issues
+│   └── model_connection.yaml         # Config - check YAML structureprompt_runner.py` (the main entry point)
 2. Click line number to set breakpoints where needed
 3. Press `F5` - VS Code will debug the file you have open
 4. When prompted, enter your CLI arguments
@@ -59,7 +61,7 @@
 **Problem**: Strategy templates not loading correctly
 
 **Debug Steps**:
-1. Open `strategy_templates_loader.py`
+1. Open `loaders/strategy_templates_loader.py`
 2. Set breakpoint in `load_all_strategy_templates` method
 3. Inspect `self.templates_path` and verify JSON file exists
 4. Check JSON structure matches expected format
@@ -69,7 +71,7 @@
 **Problem**: Data sources not loading or sampling issues
 
 **Debug Steps**:
-1. Open `unified_dataset_loader.py`
+1. Open `loaders/unified_dataset_loader.py`
 2. Set breakpoint in `load_dataset_by_filename` method
 3. Check file paths and data structure
 4. Verify sample_size logic for different data sources
@@ -79,7 +81,7 @@
 **Problem**: Metrics calculation fails or returns unexpected results
 
 **Debug Steps**:
-1. Open `evaluation_metrics_calc.py`
+1. Open `metrics/evaluation_metrics_calc.py`
 2. Set breakpoint in `calculate_metrics_from_runid` method
 3. Verify CSV file exists and has correct structure
 4. Check data type conversions and None handling
@@ -89,7 +91,7 @@
 **Problem**: Output files not generated or incorrect format
 
 **Debug Steps**:
-1. Open `persistence_helper.py`
+1. Open `metrics/persistence_helper.py`
 2. Set breakpoint in `save_validation_results` or related methods
 3. Check runId generation and folder creation
 4. Verify CSV writing and file permissions
@@ -99,7 +101,7 @@
 **Problem**: Azure AI connection failures
 
 **Debug Steps**:
-1. Open `azureai_mi_connector_wrapper.py`
+1. Open `connector/azureai_connector.py`
 2. Set breakpoint in `test_connection` method
 3. Check environment variables and YAML configuration
 4. Verify endpoint URLs and authentication
@@ -111,12 +113,15 @@
 ```text
 prompt_engineering/
 ├── prompt_runner.py                  # Main CLI - primary debug entry point
-├── strategy_templates_loader.py      # Strategy management - debug template loading
-├── unified_dataset_loader.py         # Data loading - debug sampling and file access
-├── evaluation_metrics_calc.py        # Metrics - debug calculation logic
-├── persistence_helper.py             # File I/O - debug output generation
-├── azureai_mi_connector_wrapper.py   # Azure AI - debug connection issues
-└── model_connection.yaml             # Config - check YAML structure
+├── connector/                        # Azure AI connection package
+│   ├── azureai_connector.py          # Azure AI - debug connection issues
+│   └── model_connection.yaml         # Config - check YAML structure  
+├── loaders/                          # Data and template loading utilities
+│   ├── strategy_templates_loader.py  # Strategy management - debug template loading
+│   └── unified_dataset_loader.py     # Data loading - debug sampling and file access
+├── metrics/                          # Evaluation and persistence utilities
+│   ├── evaluation_metrics_calc.py    # Metrics - debug calculation logic
+│   └── persistence_helper.py         # File I/O - debug output generation
 ```
 
 ### Key Debug Points by Component
@@ -127,22 +132,22 @@ prompt_engineering/
 - **Error handling**: Check exception catching and logging
 - **runId generation**: Verify timestamp format and folder creation
 
-#### StrategyTemplatesLoader (strategy_templates_loader.py)
+#### StrategyTemplatesLoader (loaders/strategy_templates_loader.py)
 - **JSON loading**: Verify template file parsing
 - **Strategy extraction**: Check individual strategy access
 - **Prompt building**: Verify SystemMessage and UserMessage creation
 
-#### UnifiedDatasetLoader (unified_dataset_loader.py)
+#### UnifiedDatasetLoader (loaders/unified_dataset_loader.py)
 - **File resolution**: Check path construction for different data sources
 - **Sampling logic**: Verify random sampling and seed handling
 - **Data filtering**: Check sample size application
 
-#### EvaluationMetricsCalc (evaluation_metrics_calc.py)
+#### EvaluationMetricsCalc (metrics/evaluation_metrics_calc.py)
 - **CSV reading**: Verify result file parsing
 - **Metrics calculation**: Check accuracy, precision, recall computations
 - **Data cleaning**: Verify None/invalid prediction handling
 
-#### PersistenceHelper (persistence_helper.py)
+#### PersistenceHelper (metrics/persistence_helper.py)
 - **Folder creation**: Check runId directory generation
 - **CSV writing**: Verify incremental result saving
 - **File formatting**: Check column headers and data types
@@ -184,7 +189,7 @@ Debug slow model responses:
 **Cause**: Incorrect path resolution for canned files or unified dataset
 
 **Solution**: 
-- Check `unified_dataset_loader.py` path construction
+- Check `loaders/unified_dataset_loader.py` path construction
 - Verify file existence in `data_samples/` or `../data/processed/unified/`
 
 ### 2. "KeyError" in Strategy Templates
