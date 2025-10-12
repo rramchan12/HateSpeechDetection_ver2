@@ -1,0 +1,85 @@
+{
+  "optimization_summary": {
+    "total_strategies_evaluated": 6,
+    "total_runs_analyzed": 1,
+    "scoring_weights": {
+      "performance_weight": 0.7,
+      "bias_weight": 0.3
+    },
+    "protected_groups": [
+      "lgbtq",
+      "mexican",
+      "middle_east"
+    ],
+    "command_line_args": {
+      "run_id": "run_20251011_085450",
+      "mode": "all",
+      "output_dir": null,
+      "full_command": "optimization_runner.py --run-id run_20251011_085450"
+    }
+  },
+  "optimal_configuration": {
+    "rank": 1,
+    "strategy_name": "baseline_focused",
+    "run_id": "run_20251011_085450",
+    "template_file": "baseline_v1.json",
+    "model_name": "gpt-oss-120b",
+    "scores": {
+      "f1_score": 0.5979381443298969,
+      "f1_normalized": 1.0,
+      "bias_score": 0.6387227538543327,
+      "bias_normalized": 1.0,
+      "hybrid_score": 1.0
+    },
+    "hyperparameters": {
+      "max_tokens": 200,
+      "temperature": 0.05,
+      "top_p": 0.8,
+      "frequency_penalty": 0.2,
+      "presence_penalty": 0.0,
+      "response_format": "json_object"
+    }
+  },
+  "top_5_alternatives": [
+    {
+      "rank": 2,
+      "strategy_name": "baseline_conservative",
+      "run_id": "run_20251011_085450",
+      "hybrid_score": 0.8715319497115191,
+      "f1_score": 0.5918367346938775,
+      "bias_score": 0.6180721690590112
+    },
+    {
+      "rank": 3,
+      "strategy_name": "baseline_standard",
+      "run_id": "run_20251011_085450",
+      "hybrid_score": 0.5631930138248479,
+      "f1_score": 0.5393258426966292,
+      "bias_score": 0.6091174906964382
+    },
+    {
+      "rank": 4,
+      "strategy_name": "baseline_balanced",
+      "run_id": "run_20251011_085450",
+      "hybrid_score": 0.18820993235186836,
+      "f1_score": 0.4943820224719101,
+      "bias_score": 0.5779405901116427
+    },
+    {
+      "rank": 5,
+      "strategy_name": "baseline_creative",
+      "run_id": "run_20251011_085450",
+      "hybrid_score": 0.14752429959977145,
+      "f1_score": 0.4888888888888889,
+      "bias_score": 0.575219298245614
+    },
+    {
+      "rank": 6,
+      "strategy_name": "baseline_exploratory",
+      "run_id": "run_20251011_085450",
+      "hybrid_score": 0.0231194338996263,
+      "f1_score": 0.4597701149425287,
+      "bias_score": 0.5801131780600928
+    }
+  ]
+}
