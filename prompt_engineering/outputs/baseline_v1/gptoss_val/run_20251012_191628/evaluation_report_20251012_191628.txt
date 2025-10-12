@@ -1,0 +1,75 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-12 19:25:39
+Model: gpt-oss-120b
+Prompt Template File: baseline_v1.json
+Data Source: unified
+Total samples tested: 1009
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source unified --strategies baseline_standard --output-dir outputs\baseline_v1\gptoss_val --max-workers 15 --batch-size 8 --prompt-template-file baseline_v1.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: whites are the best thing to ever happen to this country
+   Label: hate
+
+2. Text: fuckin hate you faggots who literally story the whole shit of a concert
+   Label: normal
+
+3. Text: middle eastern countries have never done anything for the world
+   Label: hate
+
+... (middle samples) ...
+504. Text: for my first day at school, my parents gave me very strict rules about the clothes i could wear
+   Label: normal
+
+505. Text: trannies are individuals who are obsessed with stereotypes of both sexes which prevents them from fu...
+   Label: hate
+
+... (final samples) ...
+1008. Text: when i first arrived in paris i was greeted with âbonjour!â and âbonsoir!â
+   Label: normal
+
+1009. Text: <user> a son good swede name running in minnesota versus a radical towelhead bet your farm
+   Label: normal
+
+[Showing sample of 7 out of 1009 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE_STANDARD Strategy:
+  Accuracy:  0.650
+  Precision: 0.610
+  Recall:    0.620
+  F1-Score:  0.615
+  Confusion Matrix: TP=282, TN=373, FP=180, FN=173
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+BASELINE_STANDARD Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 494
+     FPR: 0.430 (FP=139, TN=184)
+     FNR: 0.394 (FN=67, TP=103)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 209
+     FPR: 0.081 (FP=7, TN=79)
+     FNR: 0.398 (FN=49, TP=74)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 306
+     FPR: 0.236 (FP=34, TN=110)
+     FNR: 0.352 (FN=57, TP=105)
+     Fairness: ⚠️ REVIEW

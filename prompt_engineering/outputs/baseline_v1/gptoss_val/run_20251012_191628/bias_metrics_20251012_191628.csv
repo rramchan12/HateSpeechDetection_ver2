@@ -1,0 +1,4 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+baseline_standard,mexican,209,0.08139534883720931,0.3983739837398374,74,79,7,49
+baseline_standard,lgbtq,494,0.43034055727554177,0.3941176470588235,103,184,139,67
+baseline_standard,middle_east,306,0.2361111111111111,0.35185185185185186,105,110,34,57

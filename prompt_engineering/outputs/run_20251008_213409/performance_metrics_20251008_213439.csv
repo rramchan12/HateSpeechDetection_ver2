@@ -1,7 +1,0 @@
-strategy,accuracy,precision,recall,f1_score,true_positive,true_negative,false_positive,false_negative
-baseline_conservative,1.0,0.0,0.0,0.0,0,3,0,0
-baseline_standard,1.0,0.0,0.0,0.0,0,3,0,0
-baseline_creative,1.0,0.0,0.0,0.0,0,3,0,0
-baseline_focused,1.0,0.0,0.0,0.0,0,3,0,0
-baseline_exploratory,1.0,0.0,0.0,0.0,0,3,0,0
-baseline_balanced,1.0,0.0,0.0,0.0,0,3,0,0

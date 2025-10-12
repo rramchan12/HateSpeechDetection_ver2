@@ -1192,8 +1192,7 @@ Examples:
     
     parser.add_argument("--strategies", "-s", nargs="+", 
                        default=["baseline"],
-                       choices=["policy", "persona", "combined", "baseline", "all"],
-                       help="Strategy(ies) to validate (default: baseline). Use 'all' to run all available strategies")
+                       help="Strategy(ies) to validate (default: baseline). Use 'all' to run all available strategies. Available strategies depend on the loaded template file.")
     
     parser.add_argument("--prompt-template-file", "-p", default="all_combined.json",
                        help="Prompt template file to load from prompt_templates folder (default: all_combined.json)")
@@ -1242,12 +1241,22 @@ def main():
     logger = logging.getLogger(__name__)
     
     try:
+        # Create runner to validate strategies
+        runner = PromptRunner(model_id=args.model, config_path=args.config, 
+                            prompt_template_file=args.prompt_template_file)
+        runner.set_execution_metadata(command_line, "strategy_validation")
+        
         # Handle "all" strategies
         if "all" in args.strategies:
-            runner = PromptRunner(model_id=args.model, config_path=args.config, 
-                                prompt_template_file=args.prompt_template_file)
-            runner.set_execution_metadata(command_line, "strategy_expansion")
             args.strategies = runner.get_available_strategies()
+        else:
+            # Validate individual strategies
+            invalid_strategies = runner.validate_strategies(args.strategies)
+            if invalid_strategies:
+                available_strategies = runner.get_available_strategies()
+                logger.error(f"Invalid strategy names: {invalid_strategies}")
+                logger.error(f"Available strategies in '{args.prompt_template_file}': {available_strategies}")
+                sys.exit(1)
         
         logger.info(f"Starting prompt validation for model '{args.model}'")
         
