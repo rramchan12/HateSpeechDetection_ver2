@@ -2,8 +2,8 @@
 # This file contains connection details for different AI models
 
 models:
-  gpt-oss-20b:
-    name: "GPT-OSS-20B"
+  gpt-oss-120b:
+    name: "GPT-OSS-120B"
     endpoint: "${AZURE_INFERENCE_SDK_ENDPOINT}"
     api_key: "${AZURE_INFERENCE_SDK_KEY}"
     model_deployment: "gpt-oss-120b"
@@ -15,7 +15,7 @@ models:
       frequency_penalty: 0.0
       presence_penalty: 0.0
       response_format: "json_object"
-    description: "Azure AI hosted GPT-OSS-20B model for hate speech detection"
+    description: "Azure AI hosted GPT-OSS-120B model for hate speech detection"
     
   gpt-5:
     name: "GPT-5"
@@ -33,13 +33,13 @@ models:
     description: "Azure AI hosted GPT-5 model for advanced text analysis"
 
 # Default model to use when none is specified
-default_model: "gpt-oss-20b"
+default_model: "gpt-oss-120b"
 
 # Connection settings
 connection:
   timeout: 30
-  read_timeout: 45  # Allow longer for large responses
-  connection_timeout: 10  # Quick connection establishment
+  read_timeout: 120  # Allow longer for large responses (2 minutes)
+  connection_timeout: 15  # Connection establishment timeout
   retry_attempts: 3
   retry_delay: 1.0
   max_connections: 20  # Connection pool size

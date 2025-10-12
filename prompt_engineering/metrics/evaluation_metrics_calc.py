@@ -65,6 +65,31 @@ class PerformanceMetrics:
     false_negative: int
 
 
+@dataclass
+class BiasMetrics:
+    """
+    Structure for storing bias and fairness metrics by persona.
+    
+    Attributes:
+        persona_tag (str): The persona/target group (e.g., 'lgbtq', 'arab', 'hispanic')
+        sample_count (int): Total samples for this persona
+        false_positive_rate (float): FPR = FP / (FP + TN) - Rate of misclassifying benign as hate
+        false_negative_rate (float): FNR = FN / (FN + TP) - Rate of missing actual hate speech
+        true_positive (int): True positive count for this persona
+        true_negative (int): True negative count for this persona  
+        false_positive (int): False positive count for this persona
+        false_negative (int): False negative count for this persona
+    """
+    persona_tag: str
+    sample_count: int
+    false_positive_rate: float
+    false_negative_rate: float
+    true_positive: int
+    true_negative: int
+    false_positive: int
+    false_negative: int
+
+
 class EvaluationMetrics:
     """
     Comprehensive evaluation metrics calculator for hate speech detection.
@@ -237,12 +262,99 @@ class EvaluationMetrics:
         
         return performance_metrics
     
+    def calculate_bias_metrics_by_persona(self, all_results: Dict[str, List[ValidationResult]], 
+                                        strategy_name: str) -> List[BiasMetrics]:
+        """
+        Calculate bias and fairness metrics (FPR, FNR) by persona for a specific strategy.
+        
+        Args:
+            all_results (Dict[str, List[ValidationResult]]): Results grouped by strategy
+            strategy_name (str): Name of strategy to analyze for bias
+            
+        Returns:
+            List[BiasMetrics]: Bias metrics for each persona in the strategy results
+        """
+        if strategy_name not in all_results:
+            return []
+        
+        results = all_results[strategy_name]
+        if not results:
+            return []
+        
+        # Group results by target_group_norm (normalized target groups)
+        target_group_groups = {}
+        for result in results:
+            # Get target group from ValidationResult attributes, prioritize target_group_norm
+            target_group = getattr(result, 'target_group_norm', getattr(result, 'persona_tag', 'unknown'))
+            # Ensure we only track the three main target groups
+            if target_group.lower() in ['lgbtq', 'mexican', 'middle_east']:
+                target_group = target_group.lower()
+                if target_group not in target_group_groups:
+                    target_group_groups[target_group] = []
+                target_group_groups[target_group].append(result)
+        
+        bias_metrics = []
+        
+        for target_group, group_results in target_group_groups.items():
+            if not group_results:
+                continue
+            
+            # Extract labels for this target group
+            y_true = [r.true_label for r in group_results if r.predicted_label is not None]
+            y_pred = [r.predicted_label for r in group_results if r.predicted_label is not None]
+            
+            if len(y_true) != len(y_pred) or len(y_true) == 0:
+                continue
+            
+            try:
+                # Calculate confusion matrix for this target group
+                cm = confusion_matrix(y_true, y_pred, labels=['hate', 'normal'])
+                
+                if cm.size == 4:
+                    # cm structure: [[tp, fn], [fp, tn]] for labels ['hate', 'normal']
+                    tp, fn, fp, tn = cm.ravel()
+                else:
+                    # Handle cases where not all labels are present
+                    tp = fp = tn = fn = 0
+                    for true_label, pred_label in zip(y_true, y_pred):
+                        if true_label == 'hate' and pred_label == 'hate':
+                            tp += 1
+                        elif true_label == 'hate' and pred_label == 'normal':
+                            fn += 1
+                        elif true_label == 'normal' and pred_label == 'hate':
+                            fp += 1
+                        elif true_label == 'normal' and pred_label == 'normal':
+                            tn += 1
+                
+                # Calculate FPR and FNR with safe division
+                fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0  # False Positive Rate
+                fnr = fn / (fn + tp) if (fn + tp) > 0 else 0.0  # False Negative Rate
+                
+                bias_metric = BiasMetrics(
+                    persona_tag=target_group,
+                    sample_count=len(group_results),
+                    false_positive_rate=fpr,
+                    false_negative_rate=fnr,
+                    true_positive=int(tp),
+                    true_negative=int(tn),
+                    false_positive=int(fp),
+                    false_negative=int(fn)
+                )
+                bias_metrics.append(bias_metric)
+                
+            except Exception as e:
+                self.logger.warning(f"Error calculating bias metrics for target group '{target_group}': {e}")
+                continue
+        
+        return bias_metrics
+    
     def generate_performance_report_lines(self, performance_metrics: List[PerformanceMetrics], 
                                         samples: List[Dict], 
                                         model_name: str = "Unknown", 
                                         prompt_template_file: str = "Unknown",
                                         data_source: str = "Unknown",
-                                        command_line: str = "Unknown") -> List[str]:
+                                        command_line: str = "Unknown",
+                                        bias_metrics: Optional[Dict[str, List[BiasMetrics]]] = None) -> List[str]:
         """
         Generate human-readable performance report lines.
         
@@ -325,6 +437,35 @@ class EvaluationMetrics:
                               f"TN={metrics.true_negative}, FP={metrics.false_positive}, "
                               f"FN={metrics.false_negative}")
         
+        # Add bias and fairness metrics by persona if provided
+        if bias_metrics:
+            report_lines.append("\n\nBIAS AND FAIRNESS METRICS BY PERSONA:")
+            report_lines.append("-" * 40)
+            report_lines.append("📊 FPR = False Positive Rate (benign→hate misclassification)")
+            report_lines.append("📊 FNR = False Negative Rate (hate→benign missed detection)")
+            report_lines.append("🎯 Lower rates indicate better fairness across personas")
+            
+            for strategy_name, strategy_bias_metrics in bias_metrics.items():
+                if strategy_bias_metrics:
+                    report_lines.append(f"\n{strategy_name.upper()} Strategy - Bias Analysis:")
+                    
+                    # Sort by target group for consistent reporting
+                    sorted_bias_metrics = sorted(strategy_bias_metrics, key=lambda x: x.persona_tag)
+                    
+                    for bias_metric in sorted_bias_metrics:
+                        report_lines.append(f"  📋 Target Group: {bias_metric.persona_tag.upper()}")
+                        report_lines.append(f"     Samples: {bias_metric.sample_count}")
+                        report_lines.append(f"     FPR: {bias_metric.false_positive_rate:.3f} "
+                                          f"(FP={bias_metric.false_positive}, TN={bias_metric.true_negative})")
+                        report_lines.append(f"     FNR: {bias_metric.false_negative_rate:.3f} "
+                                          f"(FN={bias_metric.false_negative}, TP={bias_metric.true_positive})")
+                        
+                        # Add fairness assessment
+                        fairness_status = "✅ FAIR" if (bias_metric.false_positive_rate < 0.2 and 
+                                                       bias_metric.false_negative_rate < 0.2) else "⚠️ REVIEW"
+                        report_lines.append(f"     Fairness: {fairness_status}")
+                        report_lines.append("")
+        
         return report_lines
     
     def performance_metrics_to_dict_list(self, performance_metrics: List[PerformanceMetrics]) -> List[Dict]:
@@ -351,6 +492,85 @@ class EvaluationMetrics:
             }
             for metrics in performance_metrics
         ]
+
+    def bias_metrics_to_dict_list(self, bias_metrics_by_strategy: Dict[str, List[BiasMetrics]]) -> List[Dict]:
+        """
+        Convert BiasMetrics objects to dictionary list for CSV export.
+        
+        Args:
+            bias_metrics_by_strategy (Dict[str, List[BiasMetrics]]): Bias metrics grouped by strategy
+            
+        Returns:
+            List[Dict]: List of dictionaries suitable for CSV writing
+        """
+        bias_data = []
+        for strategy_name, bias_metrics_list in bias_metrics_by_strategy.items():
+            for bias_metric in bias_metrics_list:
+                bias_data.append({
+                    'strategy': strategy_name,
+                    'target_group': bias_metric.persona_tag,  # This now contains target_group_norm
+                    'sample_count': bias_metric.sample_count,
+                    'false_positive_rate': bias_metric.false_positive_rate,
+                    'false_negative_rate': bias_metric.false_negative_rate,
+                    'true_positive': bias_metric.true_positive,
+                    'true_negative': bias_metric.true_negative,
+                    'false_positive': bias_metric.false_positive,
+                    'false_negative': bias_metric.false_negative
+                })
+        return bias_data
+    
+    def _create_enhanced_performance_data(self, performance_metrics: List[PerformanceMetrics], 
+                                        bias_metrics_by_strategy: Dict[str, List[BiasMetrics]]) -> List[Dict]:
+        """
+        Create enhanced performance data combining overall metrics with bias metrics for the three target groups.
+        
+        Args:
+            performance_metrics (List[PerformanceMetrics]): Overall performance metrics
+            bias_metrics_by_strategy (Dict[str, List[BiasMetrics]]): Bias metrics by strategy
+            
+        Returns:
+            List[Dict]: Enhanced performance data with bias metrics columns
+        """
+        enhanced_data = []
+        
+        for perf_metric in performance_metrics:
+            strategy = perf_metric.strategy
+            
+            # Start with basic performance metrics
+            row_data = {
+                'strategy': strategy,
+                'accuracy': perf_metric.accuracy,
+                'precision': perf_metric.precision,
+                'recall': perf_metric.recall,
+                'f1_score': perf_metric.f1_score,
+                'true_positive': perf_metric.true_positive,
+                'true_negative': perf_metric.true_negative,
+                'false_positive': perf_metric.false_positive,
+                'false_negative': perf_metric.false_negative
+            }
+            
+            # Add bias metrics for each target group
+            bias_metrics = bias_metrics_by_strategy.get(strategy, [])
+            
+            # Initialize bias columns for the three target groups
+            target_groups = ['lgbtq', 'mexican', 'middle_east']
+            for target_group in target_groups:
+                # Find bias metrics for this target group
+                group_bias = next((bm for bm in bias_metrics if bm.persona_tag == target_group), None)
+                
+                if group_bias:
+                    row_data[f'{target_group}_fpr'] = group_bias.false_positive_rate
+                    row_data[f'{target_group}_fnr'] = group_bias.false_negative_rate
+                    row_data[f'{target_group}_samples'] = group_bias.sample_count
+                else:
+                    # No data for this target group in this strategy
+                    row_data[f'{target_group}_fpr'] = 'N/A'
+                    row_data[f'{target_group}_fnr'] = 'N/A'
+                    row_data[f'{target_group}_samples'] = 0
+            
+            enhanced_data.append(row_data)
+        
+        return enhanced_data
     
     # Legacy method alias for backward compatibility
     def calculate_metrics(self, predictions: List[str], true_labels: List[str]) -> Dict:
@@ -415,13 +635,15 @@ class EvaluationMetrics:
             all_results = {}
             for strategy in results_df['strategy'].unique():
                 strategy_results = results_df[results_df['strategy'] == strategy]
-                # Create ValidationResult-like objects with required attributes
+                # Create ValidationResult-like objects with required attributes including persona
                 validation_results = []
                 for _, row in strategy_results.iterrows():
                     result_obj = type('ValidationResult', (), {
                         'predicted_label': row['predicted_label'],
                         'true_label': row['true_label'],
-                        'strategy_name': row['strategy']
+                        'strategy_name': row['strategy'],
+                        'persona_tag': row.get('persona_tag', 'unknown'),
+                        'target_group_norm': row.get('target_group_norm', 'unknown')
                     })()
                     validation_results.append(result_obj)
                 all_results[strategy] = validation_results
@@ -429,28 +651,68 @@ class EvaluationMetrics:
             # Calculate performance metrics for all strategies
             performance_metrics = self.calculate_metrics_for_all_strategies(all_results, samples)
             
+            # Calculate bias metrics by persona for each strategy
+            bias_metrics_by_strategy = {}
+            for strategy in all_results.keys():
+                bias_metrics_by_strategy[strategy] = self.calculate_bias_metrics_by_persona(all_results, strategy)
+            
             # Convert to dictionary format for CSV export
             performance_data = self.performance_metrics_to_dict_list(performance_metrics)
             
-            # Generate human-readable report
+            # Create enhanced performance data with bias metrics
+            enhanced_performance_data = self._create_enhanced_performance_data(performance_metrics, bias_metrics_by_strategy)
+            
+            # Generate human-readable report including bias metrics
             report_lines = self.generate_performance_report_lines(performance_metrics, samples,
                                                                 model_name, prompt_template_file, 
-                                                                data_source, command_line)
+                                                                data_source, command_line,
+                                                                bias_metrics_by_strategy)
             
-            # Generate timestamp for output files
-            from datetime import datetime
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            # Extract timestamp from runID for consistency, or generate new one as fallback
+            if runid.startswith('run_'):
+                timestamp = runid[4:]  # Extract timestamp part from 'run_YYYYMMDD_HHMMSS'
+            else:
+                from datetime import datetime
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             
-            # Save performance metrics and report to runId directory
+            # Save enhanced performance metrics (including bias data) to runId directory
             performance_file = runid_dir / f"performance_metrics_{timestamp}.csv"
             with open(performance_file, 'w', newline='', encoding='utf-8') as f:
-                if performance_data:
-                    fieldnames = performance_data[0].keys()
+                if enhanced_performance_data:
+                    fieldnames = enhanced_performance_data[0].keys()
                     writer = csv.DictWriter(f, fieldnames=fieldnames)
                     writer.writeheader()
-                    writer.writerows(performance_data)
+                    writer.writerows(enhanced_performance_data)
             
-            self.logger.info(f"Performance metrics saved to: {performance_file}")
+            self.logger.info(f"Enhanced performance metrics (with bias data) saved to: {performance_file}")
+            
+            # Save bias metrics CSV if bias metrics were calculated
+            bias_file = None
+            if bias_metrics_by_strategy:
+                bias_data = []
+                for strategy_name, bias_metrics_list in bias_metrics_by_strategy.items():
+                    for bias_metric in bias_metrics_list:
+                        bias_data.append({
+                            'strategy': strategy_name,
+                            'persona_tag': bias_metric.persona_tag,
+                            'sample_count': bias_metric.sample_count,
+                            'false_positive_rate': bias_metric.false_positive_rate,
+                            'false_negative_rate': bias_metric.false_negative_rate,
+                            'true_positive': bias_metric.true_positive,
+                            'true_negative': bias_metric.true_negative,
+                            'false_positive': bias_metric.false_positive,
+                            'false_negative': bias_metric.false_negative
+                        })
+                
+                if bias_data:
+                    bias_file = runid_dir / f"bias_metrics_{timestamp}.csv"
+                    with open(bias_file, 'w', newline='', encoding='utf-8') as f:
+                        fieldnames = bias_data[0].keys()
+                        writer = csv.DictWriter(f, fieldnames=fieldnames)
+                        writer.writeheader()
+                        writer.writerows(bias_data)
+                    
+                    self.logger.info(f"Bias metrics saved to: {bias_file}")
             
             # Save evaluation report to runId directory
             report_file = runid_dir / f"evaluation_report_{timestamp}.txt"
@@ -459,12 +721,17 @@ class EvaluationMetrics:
             
             self.logger.info(f"Evaluation report saved to: {report_file}")
             
-            return {
+            result = {
                 'performance_metrics': performance_file,
                 'evaluation_report': report_file,
                 'total_samples': len(samples),
                 'strategies_tested': list(results_df['strategy'].unique())
             }
+            
+            if bias_file:
+                result['bias_metrics'] = bias_file
+            
+            return result
             
         except Exception as e:
             self.logger.error(f"Error calculating metrics from runId {runid}: {e}")

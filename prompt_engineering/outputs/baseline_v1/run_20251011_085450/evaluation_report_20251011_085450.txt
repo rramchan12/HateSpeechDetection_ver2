@@ -1,0 +1,210 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-11 08:59:15
+Model: gpt-oss-120b
+Prompt Template File: baseline_v1.json
+Data Source: canned_100_stratified
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_stratified --strategies all --output-dir outputs\baseline_v1 --max-workers 15 --batch-size 8 --prompt-template-file baseline_v1.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: <user> they are both gay listen to better bands made by better bands gang
+   Label: normal
+
+2. Text: noir is so good you gays
+   Label: normal
+
+3. Text: <user> <user> nigga called him gay for being athletic lmfao
+   Label: normal
+
+... (middle samples) ...
+50. Text: the title, poem 1 (the hunger) is about a dark country, but that same country is named "la mexica". ...
+   Label: normal
+
+51. Text: i see the future of britain as being a wasteland of ancient molten nuclear reactors and mutated arab...
+   Label: hate
+
+... (final samples) ...
+99. Text: africans mexicans do not like the homos put up billboards in the ghetto barrio tying dems to gays i ...
+   Label: hate
+
+100. Text: my colleagues n my chief use the french equivalent of fag on a big basis every day and call gay man ...
+   Label: hate
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE_CONSERVATIVE Strategy:
+  Accuracy:  0.600
+  Precision: 0.569
+  Recall:    0.617
+  F1-Score:  0.592
+  Confusion Matrix: TP=29, TN=31, FP=22, FN=18
+
+BASELINE_STANDARD Strategy:
+  Accuracy:  0.586
+  Precision: 0.558
+  Recall:    0.522
+  F1-Score:  0.539
+  Confusion Matrix: TP=24, TN=34, FP=19, FN=22
+
+BASELINE_CREATIVE Strategy:
+  Accuracy:  0.540
+  Precision: 0.512
+  Recall:    0.468
+  F1-Score:  0.489
+  Confusion Matrix: TP=22, TN=32, FP=21, FN=25
+
+BASELINE_FOCUSED Strategy:
+  Accuracy:  0.610
+  Precision: 0.580
+  Recall:    0.617
+  F1-Score:  0.598
+  Confusion Matrix: TP=29, TN=32, FP=21, FN=18
+
+BASELINE_EXPLORATORY Strategy:
+  Accuracy:  0.525
+  Precision: 0.500
+  Recall:    0.426
+  F1-Score:  0.460
+  Confusion Matrix: TP=20, TN=32, FP=20, FN=27
+
+BASELINE_BALANCED Strategy:
+  Accuracy:  0.550
+  Precision: 0.524
+  Recall:    0.468
+  F1-Score:  0.494
+  Confusion Matrix: TP=22, TN=33, FP=20, FN=25
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+BASELINE_CONSERVATIVE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.500 (FP=15, TN=15)
+     FNR: 0.263 (FN=5, TP=14)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.500 (FN=6, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.500 (FP=6, TN=6)
+     FNR: 0.438 (FN=7, TP=9)
+     Fairness: ⚠️ REVIEW
+
+
+BASELINE_STANDARD Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.467 (FP=14, TN=16)
+     FNR: 0.421 (FN=8, TP=11)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.500 (FN=6, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.333 (FP=4, TN=8)
+     FNR: 0.533 (FN=8, TP=7)
+     Fairness: ⚠️ REVIEW
+
+
+BASELINE_CREATIVE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.533 (FP=16, TN=14)
+     FNR: 0.474 (FN=9, TP=10)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.000 (FP=0, TN=11)
+     FNR: 0.500 (FN=6, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.417 (FP=5, TN=7)
+     FNR: 0.625 (FN=10, TP=6)
+     Fairness: ⚠️ REVIEW
+
+
+BASELINE_FOCUSED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.500 (FP=15, TN=15)
+     FNR: 0.368 (FN=7, TP=12)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.417 (FN=5, TP=7)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.417 (FP=5, TN=7)
+     FNR: 0.375 (FN=6, TP=10)
+     Fairness: ⚠️ REVIEW
+
+
+BASELINE_EXPLORATORY Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.586 (FP=17, TN=12)
+     FNR: 0.579 (FN=11, TP=8)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.000 (FP=0, TN=11)
+     FNR: 0.417 (FN=5, TP=7)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.250 (FP=3, TN=9)
+     FNR: 0.688 (FN=11, TP=5)
+     Fairness: ⚠️ REVIEW
+
+
+BASELINE_BALANCED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.467 (FP=14, TN=16)
+     FNR: 0.579 (FN=11, TP=8)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.417 (FN=5, TP=7)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.417 (FP=5, TN=7)
+     FNR: 0.562 (FN=9, TP=7)
+     Fairness: ⚠️ REVIEW

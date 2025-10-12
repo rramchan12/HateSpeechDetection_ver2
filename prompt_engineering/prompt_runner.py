@@ -76,7 +76,7 @@ class PromptRunner:
         logger (logging.Logger): Logger instance for this class
     """
     
-    def __init__(self, model_id: str = "gpt-oss-20b", config_path: Optional[str] = None, 
+    def __init__(self, model_id: str = "gpt-oss-120b", config_path: Optional[str] = None, 
                  prompt_template_file: str = "all_combined.json"):
         """
         Initialize the PromptRunner.
@@ -92,7 +92,19 @@ class PromptRunner:
         
         # Initialize strategy loader with the specified template file
         template_path = os.path.join(os.path.dirname(__file__), "prompt_templates", prompt_template_file)
-        self.strategy_loader = StrategyTemplatesLoader(template_path)
+        try:
+            self.strategy_loader = StrategyTemplatesLoader(template_path)
+        except FileNotFoundError:
+            self.logger.error(f"Prompt template file not found: {template_path}")
+            self.logger.error(f"Available template files in prompt_templates directory:")
+            templates_dir = os.path.join(os.path.dirname(__file__), "prompt_templates")
+            if os.path.exists(templates_dir):
+                for file in os.listdir(templates_dir):
+                    if file.endswith('.json'):
+                        self.logger.error(f"  - {file}")
+            else:
+                self.logger.error(f"  Templates directory not found: {templates_dir}")
+            raise FileNotFoundError(f"Template file '{prompt_template_file}' not found in prompt_templates directory")
         
         # Store metadata for reporting
         self.prompt_template_file = prompt_template_file
@@ -501,12 +513,15 @@ class PromptRunner:
             
             # Load dataset samples with error handling
             try:
+                # Convert None sample_size to "all" for compatibility
+                num_samples = sample_size if sample_size is not None else "all"
+                
                 if data_source == "unified":
                     # Use proper unified dataset loader
-                    samples = load_dataset(DatasetType.UNIFIED, num_samples=sample_size, random_seed=42)
+                    samples = load_dataset(DatasetType.UNIFIED, num_samples=num_samples, random_seed=42)
                 else:
                     # Use canned file loader for specific canned datasets
-                    samples = load_dataset_by_filename(data_source, random_seed=42, num_samples=sample_size)
+                    samples = load_dataset_by_filename(data_source, random_seed=42, num_samples=num_samples)
             except Exception as e:
                 error_msg = f"CRITICAL ERROR: Failed to load {data_source} dataset: {e}. Cannot proceed with validation."
                 logger.error(error_msg)
@@ -909,6 +924,7 @@ def calculate_metrics_only(run_id: str, output_dir: str = "outputs") -> Dict[str
     import os
     import pandas as pd
     from datetime import datetime
+    from pathlib import Path
     logger = logging.getLogger(__name__)
     
     try:
@@ -929,13 +945,39 @@ def calculate_metrics_only(run_id: str, output_dir: str = "outputs") -> Dict[str
         results_file = os.path.join(run_folder, results_files[0])
         logger.info(f"Loading results from: {results_file}")
         
+        # Try to extract metadata from original log file for better context
+        original_model = "Unknown (recalc)"
+        original_template = "Unknown (recalc)" 
+        original_data_source = "Unknown (recalc)"
+        
+        # Look for validation log to extract original metadata
+        log_file = Path(run_folder) / f"validation_log_{run_id[4:]}.log"  # Remove 'run_' prefix
+        if log_file.exists():
+            try:
+                with open(log_file, 'r', encoding='utf-8') as f:
+                    log_content = f.read()
+                    # Extract model info from log
+                    if "Model:" in log_content:
+                        for line in log_content.split('\n'):
+                            if "Model:" in line:
+                                original_model = line.split("Model:")[-1].strip()
+                                break
+                    # Extract other metadata if available
+                    if "prompt_template_file" in log_content:
+                        for line in log_content.split('\n'):
+                            if "prompt_template_file" in line and "=" in line:
+                                original_template = line.split("=")[-1].strip().strip("'\"")
+                                break
+            except Exception as e:
+                logger.warning(f"Could not extract original metadata from log: {e}")
+        
         # Use evaluation_metrics_calc for proper separation of concerns
         try:
             evaluator = EvaluationMetrics()
             metrics_result = evaluator.calculate_metrics_from_runid(run_id, output_dir,
-                                                                  "Unknown (recalc)", 
-                                                                  "Unknown (recalc)",
-                                                                  "Unknown (recalc)",
+                                                                  original_model, 
+                                                                  original_template,
+                                                                  original_data_source,
                                                                   f"Recalculation from run: {run_id}")
             
             # Load basic stats for summary
@@ -1136,8 +1178,8 @@ Examples:
     )
     
     # Model and configuration
-    parser.add_argument("--model", "-m", default="gpt-oss-20b", 
-                       help="Model to use from YAML config (default: gpt-oss-20b)")
+    parser.add_argument("--model", "-m", default="gpt-oss-120b", 
+                       help="Model to use from YAML config (default: gpt-oss-120b)")
     parser.add_argument("--config", "-c", default=None,
                        help="Path to YAML model configuration file (auto-detected if not specified)")
     
@@ -1285,6 +1327,9 @@ def main():
         else:
             logger.info("Validation completed")
             
+    except FileNotFoundError as e:
+        logger.error(f"File not found error: {str(e)}")
+        sys.exit(1)
     except Exception as e:
         logger.error(f"Validation failed: {str(e)}")
         if args.debug:

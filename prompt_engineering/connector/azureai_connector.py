@@ -91,7 +91,7 @@ class ModelConfigLoader:
     def get_default_model_id(self) -> str:
         """Get the default model ID from configuration"""
         config = self.load_config()
-        return config.get('default_model', 'gpt-oss-20b')
+        return config.get('default_model', 'gpt-oss-120b')
     
     def list_available_models(self) -> List[str]:
         """Get list of available model IDs"""
@@ -171,14 +171,15 @@ class AzureAIConnector:
             
             # Get connection settings from config
             connection_config = self.config_loader.load_config().get('connection', {})
-            timeout = connection_config.get('timeout', 30)
+            connection_timeout = connection_config.get('connection_timeout', 10)
+            read_timeout = connection_config.get('read_timeout', 45)
             
             self.client = ChatCompletionsClient(
                 endpoint=self.endpoint,
                 credential=AzureKeyCredential(self.key),
                 logging_policy=logging_policy,
-                connection_timeout=timeout,
-                read_timeout=timeout
+                connection_timeout=connection_timeout,
+                read_timeout=read_timeout
             )
             self.logger.info(f"Azure AI client initialized for '{self.model_id}' with endpoint: {self.endpoint}")
             self.logger.debug("Configured logging policy to show rate limit headers")
