@@ -92,22 +92,24 @@ def extract_run_info(run_id):
         }
 
 
-def run_performance_focused_analysis(run_info, output_dir):
+def run_performance_focused_analysis(run_infos, output_dir):
     """Run performance-focused analysis (90% performance, 10% bias)."""
     print('\nTEST 1: Performance-Focused Analysis (90% performance, 10% bias)')
     
     optimizer = HyperparameterOptimiser(
-        prompt_templates_dir=run_info['prompt_templates_dir'],
+        prompt_templates_dir=run_infos[0]['prompt_templates_dir'],  # Use first run's template dir
         output_dir=output_dir,
         bias_weight=0.1,
         performance_weight=0.9
     )
 
-    run_configs = [{
-        'run_path': run_info['run_path'],
-        'template_file': run_info['template_file'],
-        'model_name': run_info['model_name']
-    }]
+    run_configs = []
+    for run_info in run_infos:
+        run_configs.append({
+            'run_path': run_info['run_path'],
+            'template_file': run_info['template_file'],
+            'model_name': run_info['model_name']
+        })
 
     optimizer.analyze_runs(run_configs)
     optimal = optimizer.select_optimal_configuration()
@@ -116,22 +118,24 @@ def run_performance_focused_analysis(run_info, output_dir):
     return optimizer, optimal
 
 
-def run_fairness_focused_analysis(run_info, output_dir):
+def run_fairness_focused_analysis(run_infos, output_dir):
     """Run fairness-focused analysis (50% performance, 50% bias)."""
     print('\nTEST 2: Fairness-Focused Analysis (50% performance, 50% bias)')
     
     optimizer = HyperparameterOptimiser(
-        prompt_templates_dir=run_info['prompt_templates_dir'],
+        prompt_templates_dir=run_infos[0]['prompt_templates_dir'],  # Use first run's template dir
         output_dir=output_dir,
         bias_weight=0.5,
         performance_weight=0.5
     )
 
-    run_configs = [{
-        'run_path': run_info['run_path'],
-        'template_file': run_info['template_file'],
-        'model_name': run_info['model_name']
-    }]
+    run_configs = []
+    for run_info in run_infos:
+        run_configs.append({
+            'run_path': run_info['run_path'],
+            'template_file': run_info['template_file'],
+            'model_name': run_info['model_name']
+        })
 
     optimizer.analyze_runs(run_configs)
     optimal = optimizer.select_optimal_configuration()
@@ -140,22 +144,24 @@ def run_fairness_focused_analysis(run_info, output_dir):
     return optimizer, optimal
 
 
-def run_balanced_analysis(run_info, output_dir):
+def run_balanced_analysis(run_infos, output_dir):
     """Run balanced analysis (70% performance, 30% bias)."""
     print('\nTEST 3: Balanced Analysis (70% performance, 30% bias)')
     
     optimizer = HyperparameterOptimiser(
-        prompt_templates_dir=run_info['prompt_templates_dir'],
+        prompt_templates_dir=run_infos[0]['prompt_templates_dir'],  # Use first run's template dir
         output_dir=output_dir,
         bias_weight=0.3,
         performance_weight=0.7
     )
 
-    run_configs = [{
-        'run_path': run_info['run_path'],
-        'template_file': run_info['template_file'],
-        'model_name': run_info['model_name']
-    }]
+    run_configs = []
+    for run_info in run_infos:
+        run_configs.append({
+            'run_path': run_info['run_path'],
+            'template_file': run_info['template_file'],
+            'model_name': run_info['model_name']
+        })
 
     optimizer.analyze_runs(run_configs)
     optimal = optimizer.select_optimal_configuration()
@@ -163,26 +169,25 @@ def run_balanced_analysis(run_info, output_dir):
     return optimizer, optimal
 
 
-def run_multi_configuration_analysis(run_info, output_dir):
+def run_multi_configuration_analysis(run_infos, output_dir):
     """Run analysis with multiple configurations for comparison."""
     print('\nTEST 4: Multi-Configuration Analysis')
     
     optimizer = HyperparameterOptimiser(
-        prompt_templates_dir=run_info['prompt_templates_dir'],
+        prompt_templates_dir=run_infos[0]['prompt_templates_dir'],  # Use first run's template dir
         output_dir=output_dir,
         bias_weight=0.3,
         performance_weight=0.7
     )
 
-    # Example with multiple run configurations
-    run_configs = [
-        {
+    # Build run configurations from all provided run infos
+    run_configs = []
+    for run_info in run_infos:
+        run_configs.append({
             'run_path': run_info['run_path'],
             'template_file': run_info['template_file'],
             'model_name': run_info['model_name']
-        }
-        # Add more configurations here as they become available
-    ]
+        })
 
     optimizer.analyze_runs(run_configs)
     
@@ -217,25 +222,29 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Run with default settings (outputs to hyperparam/outputs/{run_id})
+  # Run with single run ID (outputs to hyperparam/outputs/{run_id})
   python optimization_runner.py --run-id run_20251012_133005
 
-  # Run specific analysis mode
-  python optimization_runner.py --run-id run_20251012_133005 --mode balanced
+  # Run with multiple run IDs (outputs to hyperparam/outputs/runid_{run_id1}_{run_id2})
+  python optimization_runner.py --run-id run_20251012_133005 run_20251013_140512
+
+  # Run specific analysis mode with multiple runs
+  python optimization_runner.py --run-id run_20251012_133005 run_20251013_140512 --mode balanced
 
   # Run with custom output directory
   python optimization_runner.py --run-id run_20251012_133005 --output-dir ./custom_results
 
-  # Run all analyses with custom output
-  python optimization_runner.py --run-id run_20251012_133005 --mode all --output-dir ./my_analysis
+  # Run all analyses with multiple runs and custom output
+  python optimization_runner.py --run-id run_20251012_133005 run_20251013_140512 --mode all --output-dir ./my_analysis
         """
     )
     
     parser.add_argument(
         '--run-id',
         type=str,
+        nargs='+',
         required=True,
-        help='Run ID (e.g., run_20251012_133005) - contains all configuration info'
+        help='One or more Run IDs (e.g., run_20251012_133005 run_20251013_140512) - contains all configuration info'
     )
     
     parser.add_argument(
@@ -250,7 +259,7 @@ Examples:
         '--output-dir',
         type=str,
         default=None,
-        help='Output directory for results (default: hyperparam/outputs/{run_id})'
+        help='Output directory for results (default: hyperparam/outputs/runid_{run_id1}_{run_id2}_...)'
     )
     
     return parser.parse_args()
@@ -260,35 +269,56 @@ def main():
     """Main optimization runner function."""
     args = parse_arguments()
     
-    # Extract run information from run_id
-    run_info = extract_run_info(args.run_id)
+    # Extract run information from all run_ids
+    run_infos = []
+    for run_id in args.run_id:
+        run_info = extract_run_info(run_id)
+        run_info['run_id'] = run_id  # Store the run_id for reference
+        run_infos.append(run_info)
     
     # Set output directory - create run_id specific folder if not provided
     if args.output_dir:
         output_dir = args.output_dir
     else:
-        # Default to hyperparam/outputs/{run_id}
-        base_output_dir = Path(__file__).parent / "outputs" / args.run_id
+        # Default to hyperparam/outputs/runid_{run_id1}_{run_id2}_...
+        if len(args.run_id) == 1:
+            dir_name = args.run_id[0]
+        else:
+            # Create compound directory name: runid_run_20251012_133005_run_20251013_140512
+            dir_name = "runid_" + "_".join(args.run_id)
+        
+        base_output_dir = Path(__file__).parent / "outputs" / dir_name
         base_output_dir.mkdir(parents=True, exist_ok=True)
         output_dir = str(base_output_dir)
     
     print('HYPERPARAMETER OPTIMIZER COMPREHENSIVE DEMO')
     print('=' * 80)
-    print(f'Run ID: {args.run_id}')
-    print(f'Run Path: {run_info["run_path"]}')
-    print(f'Template: {run_info["template_file"]}')
-    print(f'Model: {run_info["model_name"]}')
-    if 'data_source' in run_info and run_info['data_source'] != 'unknown':
-        print(f'Data Source: {run_info["data_source"]}')
-    print(f'Mode: {args.mode}')
+    print(f'Run IDs: {", ".join(args.run_id)}')
+    
+    # Print information about all runs
+    for i, run_info in enumerate(run_infos):
+        print(f'\nRun {i+1} ({run_info["run_id"]}):')
+        print(f'  Run Path: {run_info["run_path"]}')
+        print(f'  Template: {run_info["template_file"]}')
+        print(f'  Model: {run_info["model_name"]}')
+        if 'data_source' in run_info and run_info['data_source'] != 'unknown':
+            print(f'  Data Source: {run_info["data_source"]}')
+    
+    print(f'\nMode: {args.mode}')
     print(f'Output Dir: {output_dir}')
+    
+    # Verify all runs use the same model (assumption from requirements)
+    models = [run_info['model_name'] for run_info in run_infos]
+    if len(set(models)) > 1:
+        print(f'\nWARNING: Different models detected: {set(models)}')
+        print('Results may not be directly comparable.')
     
     try:
         results = {}
         
         # Store command line arguments for all optimizers
         command_line_args = {
-            'run_id': args.run_id,
+            'run_ids': args.run_id,
             'mode': args.mode,
             'output_dir': args.output_dir,
             'full_command': ' '.join(sys.argv)
@@ -296,22 +326,22 @@ def main():
         
         # Run analyses based on mode
         if args.mode in ['all', 'performance']:
-            perf_optimizer, perf_optimal = run_performance_focused_analysis(run_info, output_dir)
+            perf_optimizer, perf_optimal = run_performance_focused_analysis(run_infos, output_dir)
             perf_optimizer.set_command_line_args(command_line_args)
             results['performance'] = (perf_optimizer, perf_optimal)
         
         if args.mode in ['all', 'fairness']:
-            fair_optimizer, fair_optimal = run_fairness_focused_analysis(run_info, output_dir)
+            fair_optimizer, fair_optimal = run_fairness_focused_analysis(run_infos, output_dir)
             fair_optimizer.set_command_line_args(command_line_args)
             results['fairness'] = (fair_optimizer, fair_optimal)
         
         if args.mode in ['all', 'balanced']:
-            balanced_optimizer, balanced_optimal = run_balanced_analysis(run_info, output_dir)
+            balanced_optimizer, balanced_optimal = run_balanced_analysis(run_infos, output_dir)
             balanced_optimizer.set_command_line_args(command_line_args)
             results['balanced'] = (balanced_optimizer, balanced_optimal)
         
         if args.mode in ['all', 'multi']:
-            multi_optimizer, multi_optimal = run_multi_configuration_analysis(run_info, output_dir)
+            multi_optimizer, multi_optimal = run_multi_configuration_analysis(run_infos, output_dir)
             multi_optimizer.set_command_line_args(command_line_args)
             results['multi'] = (multi_optimizer, multi_optimal)
             
@@ -327,14 +357,16 @@ def main():
         
         print(f'\nANALYSIS COMPLETE!')
         print(f'Check the {output_dir} directory for detailed optimization results')
+        print(f'Analyzed {len(run_infos)} run(s) with {len([cfg for run_info in run_infos for cfg in [run_info]])} total configurations')
         
         return True
         
     except Exception as e:
         print(f'\nERROR: {str(e)}')
         print('Please ensure:')
-        print(f'  - Run data exists in {run_info["run_path"]}/')
-        print(f'  - Prompt templates exist in {run_info["prompt_templates_dir"]}/')
+        for i, run_info in enumerate(run_infos):
+            print(f'  - Run {i+1} data exists in {run_info["run_path"]}/')
+        print(f'  - Prompt templates exist in {run_infos[0]["prompt_templates_dir"]}/')
         print('  - All required dependencies are installed')
         return False
 

@@ -199,15 +199,27 @@ class AzureAIConnector:
         
         try:
             self.logger.info("Testing Azure AI connection...")
-            response = self.client.complete(
-                messages=[
-                    SystemMessage(content="You are a helpful assistant."),
-                    UserMessage(content="Respond with 'Connection successful' only.")
-                ],
-                max_tokens=10,
-                temperature=0.0,
-                model=self.model_name
-            )
+            
+            # Test connection with appropriate parameters for model type
+            if 'gpt-5' in self.model_id.lower() or 'o1' in self.model_id.lower():
+                response = self.client.complete(
+                    messages=[
+                        SystemMessage(content="You are a helpful assistant."),
+                        UserMessage(content="Respond with 'Connection successful' only.")
+                    ],
+                    model_extras={"max_completion_tokens": 10},
+                    model=self.model_name
+                )
+            else:
+                response = self.client.complete(
+                    messages=[
+                        SystemMessage(content="You are a helpful assistant."),
+                        UserMessage(content="Respond with 'Connection successful' only.")
+                    ],
+                    max_tokens=10,
+                    temperature=0.0,
+                    model=self.model_name
+                )
             
             if response and response.choices:
                 self.is_connected = True
@@ -254,22 +266,60 @@ class AzureAIConnector:
             # Use configuration defaults if parameters not provided
             defaults = self.default_parameters
             
-            # Build request parameters with config defaults
+            # Build request parameters based on model type
             params = {
                 "messages": messages,
-                "max_tokens": max_tokens if max_tokens is not None else defaults.get("max_tokens", 2048),
-                "temperature": temperature if temperature is not None else defaults.get("temperature", 1.0),
-                "top_p": top_p if top_p is not None else defaults.get("top_p", 1.0),
-                "frequency_penalty": frequency_penalty if frequency_penalty is not None else defaults.get("frequency_penalty", 0.0),
-                "presence_penalty": presence_penalty if presence_penalty is not None else defaults.get("presence_penalty", 0.0),
                 "model": self.model_name,
                 **kwargs
             }
             
+            # Handle GPT-5/o1 reasoning models which have limited parameter support
+            if 'gpt-5' in self.model_id.lower() or 'o1' in self.model_id.lower():
+                # GPT-5 models use max_completion_tokens via model_extras
+                model_extras = {}
+                if max_tokens is not None:
+                    model_extras['max_completion_tokens'] = max_tokens
+                elif defaults.get("max_tokens"):
+                    model_extras['max_completion_tokens'] = defaults.get("max_tokens")
+                
+                if model_extras:
+                    params['model_extras'] = model_extras
+                
+                # GPT-5 reasoning models only support limited parameters
+                # Temperature must be default (1.0) - don't pass it if it's different
+                temp_value = temperature if temperature is not None else defaults.get("temperature", 1.0)
+                if temp_value == 1.0:
+                    params["temperature"] = temp_value
+                else:
+                    self.logger.warning(f"GPT-5 does not support temperature={temp_value}, using default (1.0)")
+                    params["temperature"] = 1.0
+                
+                # Skip other parameters that GPT-5 doesn't support
+                # top_p, frequency_penalty, presence_penalty are not supported by reasoning models
+                self.logger.debug("GPT-5 reasoning model: skipping top_p, frequency_penalty, presence_penalty parameters")
+            else:
+                # Standard models use max_tokens directly
+                params.update({
+                    "max_tokens": max_tokens if max_tokens is not None else defaults.get("max_tokens", 2048),
+                    "temperature": temperature if temperature is not None else defaults.get("temperature", 1.0),
+                    "top_p": top_p if top_p is not None else defaults.get("top_p", 1.0),
+                    "frequency_penalty": frequency_penalty if frequency_penalty is not None else defaults.get("frequency_penalty", 0.0),
+                    "presence_penalty": presence_penalty if presence_penalty is not None else defaults.get("presence_penalty", 0.0)
+                })
+            
             # Add response_format if specified or use default
             final_response_format = response_format if response_format is not None else defaults.get("response_format")
-            if final_response_format:
+            if final_response_format and final_response_format != "json_object":
                 params["response_format"] = final_response_format
+            elif final_response_format == "json_object":
+                # For JSON format, ensure message contains 'json'
+                has_json_mention = any(
+                    'json' in str(msg.content).lower() 
+                    for msg in params["messages"] 
+                    if hasattr(msg, 'content')
+                )
+                if has_json_mention:
+                    params["response_format"] = final_response_format
             
             # Make API call
             response = self.client.complete(**params)

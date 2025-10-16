@@ -1,0 +1,13 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+direct_binary,middle_east,14,0.5,0.5,4,3,3,4
+direct_binary,mexican,11,0.0,0.5,3,5,0,3
+direct_binary,lgbtq,25,0.25,0.5555555555555556,4,12,4,5
+multi_perspective,middle_east,14,0.3333333333333333,0.625,3,4,2,5
+multi_perspective,lgbtq,25,0.0625,0.5555555555555556,4,15,1,5
+multi_perspective,mexican,11,0.0,0.8333333333333334,1,4,0,5
+cultural_context,middle_east,14,0.4,0.7142857142857143,2,3,2,5
+cultural_context,mexican,11,0.0,0.5,3,5,0,3
+cultural_context,lgbtq,25,0.26666666666666666,0.7777777777777778,2,11,4,7
+hybrid_fast_accurate,lgbtq,25,0.1875,0.3333333333333333,6,13,3,3
+hybrid_fast_accurate,middle_east,14,0.5,0.5,4,3,3,4
+hybrid_fast_accurate,mexican,11,0.0,0.16666666666666666,5,5,0,1

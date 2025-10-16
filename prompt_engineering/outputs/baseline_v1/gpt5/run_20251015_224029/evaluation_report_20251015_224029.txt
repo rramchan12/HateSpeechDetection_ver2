@@ -1,0 +1,156 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-15 22:44:58
+Model: gpt-5
+Prompt Template File: gpt5_architecture_v1.json
+Data Source: canned_100_stratified
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_stratified --strategies all --output-dir outputs\baseline_v1\gpt5 --max-workers 15 --batch-size 8 --prompt-template-file gpt5_architecture_v1.json --model gpt-5
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: <user> they are both gay listen to better bands made by better bands gang
+   Label: normal
+
+2. Text: noir is so good you gays
+   Label: normal
+
+3. Text: <user> <user> nigga called him gay for being athletic lmfao
+   Label: normal
+
+... (middle samples) ...
+50. Text: the title, poem 1 (the hunger) is about a dark country, but that same country is named "la mexica". ...
+   Label: normal
+
+51. Text: i see the future of britain as being a wasteland of ancient molten nuclear reactors and mutated arab...
+   Label: hate
+
+... (final samples) ...
+99. Text: africans mexicans do not like the homos put up billboards in the ghetto barrio tying dems to gays i ...
+   Label: hate
+
+100. Text: my colleagues n my chief use the french equivalent of fag on a big basis every day and call gay man ...
+   Label: hate
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+DIRECT_BINARY Strategy:
+  Accuracy:  0.566
+  Precision: 0.577
+  Recall:    0.319
+  F1-Score:  0.411
+  Confusion Matrix: TP=15, TN=41, FP=11, FN=32
+
+MULTI_PERSPECTIVE Strategy:
+  Accuracy:  0.535
+  Precision: 0.500
+  Recall:    0.261
+  F1-Score:  0.343
+  Confusion Matrix: TP=12, TN=41, FP=12, FN=34
+
+CULTURAL_CONTEXT Strategy:
+  Accuracy:  0.500
+  Precision: 0.421
+  Recall:    0.178
+  F1-Score:  0.250
+  Confusion Matrix: TP=8, TN=40, FP=11, FN=37
+
+HYBRID_FAST_ACCURATE Strategy:
+  Accuracy:  0.590
+  Precision: 0.571
+  Recall:    0.511
+  F1-Score:  0.539
+  Confusion Matrix: TP=24, TN=35, FP=18, FN=23
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+DIRECT_BINARY Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.267 (FP=8, TN=22)
+     FNR: 0.684 (FN=13, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.750 (FN=9, TP=3)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.182 (FP=2, TN=9)
+     FNR: 0.625 (FN=10, TP=6)
+     Fairness: ⚠️ REVIEW
+
+
+MULTI_PERSPECTIVE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.267 (FP=8, TN=22)
+     FNR: 0.722 (FN=13, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.833 (FN=10, TP=2)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.250 (FP=3, TN=9)
+     FNR: 0.688 (FN=11, TP=5)
+     Fairness: ⚠️ REVIEW
+
+
+CULTURAL_CONTEXT Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.267 (FP=8, TN=22)
+     FNR: 0.889 (FN=16, TP=2)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.100 (FP=1, TN=9)
+     FNR: 0.750 (FN=9, TP=3)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.182 (FP=2, TN=9)
+     FNR: 0.800 (FN=12, TP=3)
+     Fairness: ⚠️ REVIEW
+
+
+HYBRID_FAST_ACCURATE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.433 (FP=13, TN=17)
+     FNR: 0.474 (FN=9, TP=10)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.091 (FP=1, TN=10)
+     FNR: 0.583 (FN=7, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.333 (FP=4, TN=8)
+     FNR: 0.438 (FN=7, TP=9)
+     Fairness: ⚠️ REVIEW

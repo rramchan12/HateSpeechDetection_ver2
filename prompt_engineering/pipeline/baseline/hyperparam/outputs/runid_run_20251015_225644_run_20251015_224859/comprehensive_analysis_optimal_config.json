@@ -1,0 +1,85 @@
+{
+  "optimization_summary": {
+    "total_strategies_evaluated": 7,
+    "total_runs_analyzed": 2,
+    "scoring_weights": {
+      "performance_weight": 0.7,
+      "bias_weight": 0.3
+    },
+    "protected_groups": [
+      "lgbtq",
+      "mexican",
+      "middle_east"
+    ],
+    "command_line_args": {
+      "run_ids": [
+        "run_20251015_225644",
+        "run_20251015_224859"
+      ],
+      "mode": "all",
+      "output_dir": null,
+      "full_command": "optimization_runner.py --run-id run_20251015_225644 run_20251015_224859"
+    }
+  },
+  "optimal_configuration": {
+    "rank": 1,
+    "strategy_name": "hybrid_fast_accurate",
+    "run_id": "run_20251015_224859",
+    "template_file": "gpt5_architecture_v1.json",
+    "model_name": "gpt-5",
+    "scores": {
+      "f1_score": 0.5979381443298969,
+      "f1_normalized": 1.0,
+      "bias_score": 0.6314383715699505,
+      "bias_normalized": 0.9820380220721227,
+      "hybrid_score": 0.9946114066216367
+    },
+    "hyperparameters": {
+      "max_tokens": 600,
+      "temperature": 1.0,
+      "response_format": "json_object"
+    }
+  },
+  "top_5_alternatives": [
+    {
+      "rank": 2,
+      "strategy_name": "direct_binary",
+      "run_id": "run_20251015_224859",
+      "hybrid_score": 0.9373565576318177,
+      "f1_score": 0.5679012345679012,
+      "bias_score": 0.6337241340530814
+    },
+    {
+      "rank": 3,
+      "strategy_name": "baseline_standard",
+      "run_id": "run_20251015_225644",
+      "hybrid_score": 0.8404996443548743,
+      "f1_score": 0.5517241379310345,
+      "bias_score": 0.6069500674763832
+    },
+    {
+      "rank": 4,
+      "strategy_name": "baseline_balanced",
+      "run_id": "run_20251015_225644",
+      "hybrid_score": 0.6361113897371238,
+      "f1_score": 0.5057471264367817,
+      "bias_score": 0.5609255510571302
+    },
+    {
+      "rank": 5,
+      "strategy_name": "multi_perspective",
+      "run_id": "run_20251015_224859",
+      "hybrid_score": 0.5975251194134756,
+      "f1_score": 0.4594594594594595,
+      "bias_score": 0.5855066351776878
+    },
+    {
+      "rank": 6,
+      "strategy_name": "cultural_context",
+      "run_id": "run_20251015_224859",
+      "hybrid_score": 0.539784119808483,
+      "f1_score": 0.417910447761194,
+      "bias_score": 0.5977704678362573
+    }
+  ]
+}

@@ -2,11 +2,7 @@
 
 ## Overview
 
-This file contains GPT-5 optimized baseline prompt variations**Enhanced False Positive Rate (FPR) Analysis**: GPT-5's improved cultural understanding should significantly reduce false positives across target communities (LGBTQ+, Middle Eastern, Mexican), addressing representational harm more effectively. Research demonstrates that frontier models like GPT-5 maintain comparative stability across linguistic variations, crucial for cross-cultural fairness [5].
-
-**Improved False Negative Rate (FNR) Analysis**: GPT-5's advanced reasoning capabilities should better detect subtle and implicit hate speech, reducing missed detection across all communities while maintaining fairness. Studies show GPT-5's reasoning improvements of 31.4% provide better handling of complex multilingual scenarios [4].
-
-**Cross-Cultural Consistency**: GPT-5's enhanced cultural awareness should demonstrate superior consistency across diverse linguistic patterns and cultural references within each target group. Large-scale benchmarking shows that reasoning-capable models maintain better calibration across diverse tasks and populations [6]. hyperparameter configurations specifically designed for GPT-5's enhanced reasoning, improved safety alignment, and advanced contextual understanding capabilities. This approach builds upon established prompt engineering methodologies while leveraging GPT-5's architectural improvements for superior hate speech detection performance.
+This file contains GPT-5 optimized baseline prompt variations specifically designed for GPT-5's enhanced reasoning, improved safety alignment, and advanced contextual understanding capabilities. Given GPT-5's parameter limitations (only `max_tokens` and `temperature=1.0` supported), this approach focuses on prompt engineering optimization rather than hyperparameter tuning, while leveraging GPT-5's architectural improvements for superior hate speech detection performance.
 
 ## GPT-5 Architectural Advantages
 
@@ -40,108 +36,70 @@ Text: "{text}"
 Respond in JSON format: {"classification": "[hate/normal]", "rationale": "[explanation]"}
 ```
 
-## GPT-5 Hyperparameter Analysis & Strategy Matrix
+## GPT-5 Baseline Analysis & Strategy Matrix
 
-| Strategy | max_tokens | temperature | top_p | freq_penalty | pres_penalty | Purpose | GPT-5 Optimization |
-|----------|------------|-------------|-------|--------------|--------------|---------|-------------------|
-| **baseline_conservative** | 200 | 0.0 | 0.85 | 0.0 | 0.0 | Ultra-deterministic | Exploits perfect consistency |
-| **baseline_standard** | 300 | 0.05 | 0.9 | 0.0 | 0.0 | Balanced reliability | Standard baseline performance |
-| **baseline_creative** | 500 | 0.15 | 0.92 | 0.05 | 0.05 | Advanced analysis | Enhanced creative reasoning |
-| **baseline_focused** | 150 | 0.02 | 0.75 | 0.1 | 0.0 | Ultra-precision | Speed-optimized efficiency |
-| **baseline_exploratory** | 800 | 0.25 | 0.88 | 0.15 | 0.1 | Edge case discovery | Full analytical capability |
-| **baseline_balanced** | 350 | 0.08 | 0.9 | 0.03 | 0.02 | Production optimal | Real-world deployment |
+| Strategy | max_tokens | temperature | response_format | Purpose | GPT-5 Optimization |
+|----------|------------|-------------|----------------|---------|-------------------|
+| **baseline_conservative** | 200 | 1.0 | json_object | Concise classification | Minimal token usage with GPT-5 consistency |
+| **baseline_standard** | 300 | 1.0 | json_object | Balanced analysis | Standard reasoning length for GPT-5 |
+| **baseline_balanced** | 350 | 1.0 | json_object | Production optimal | Real-world deployment optimized for GPT-5 |
 
 ## GPT-5 Specific Parameter Analysis
 
 ### ⚠️ **API Compatibility Note**
 
-This template uses the standard Chat Completions API with traditional parameters (temperature, top_p, frequency_penalty, presence_penalty). The `reasoning_effort` parameter is not supported in this configuration as it requires the Responses API, which has limitations on other sampling parameters. GPT-5's enhanced reasoning capabilities are leveraged through optimized prompt engineering and parameter tuning rather than explicit reasoning effort controls.
-
-### 🎯 **Temperature Optimization for GPT-5**
-
-GPT-5's improved baseline reasoning allows for more aggressive temperature reduction [1]. Research demonstrates that model performance and calibration both improve with scale, supporting lower temperature values for critical classification tasks [6]. Studies on frontier models like GPT-5 show remarkable stability with controlled temperature settings, particularly for tasks requiring linguistic robustness [5]:
-
-- **0.0 (Conservative)**: Perfect determinism leveraging GPT-5's enhanced consistency
-- **0.02 (Focused)**: Near-zero randomness with GPT-5's precision capabilities
-- **0.05 (Standard)**: Minimal creativity optimized for GPT-5's reasoning architecture
-- **0.08 (Balanced)**: Production-optimized for GPT-5's balanced performance
-- **0.15 (Creative)**: Controlled creativity leveraging enhanced reasoning
-- **0.25 (Exploratory)**: Higher creativity with GPT-5's improved guidance control
-
-### 🎯 **top_p Nucleus Sampling for GPT-5**
-
-GPT-5's enhanced token selection benefits from optimized nucleus sampling [2]. The nucleus sampling approach prevents neural text degeneration while maintaining quality, particularly critical for content moderation tasks where precision is paramount. Chain-of-thought research indicates that coherent reasoning steps are more important than diverse outputs for classification tasks [7]:
-
-- **0.75 (Focused)**: Ultra-conservative selection leveraging improved precision
-- **0.85 (Conservative)**: Balanced focus with GPT-5's enhanced coherence
-- **0.88 (Exploratory)**: Diverse selection with maintained quality control
-- **0.9 (Standard/Balanced)**: Optimal balance for GPT-5's token distribution
-- **0.92 (Creative)**: Enhanced diversity with GPT-5's improved coherence
+Based on empirical API testing, GPT-5 has significant parameter limitations. This template uses only the supported parameters: `max_tokens`, `temperature=1.0` (fixed), and `response_format`. Unsupported parameters (`top_p`, `frequency_penalty`, `presence_penalty`, custom temperature values) have been removed. GPT-5's enhanced reasoning capabilities are leveraged through optimized prompt engineering rather than parameter tuning.
 
 ### 🎯 **max_tokens Optimization for GPT-5**
 
-GPT-5's efficiency improvements allow for optimized token allocation. Research on large language model evaluation shows that performance scales with available reasoning space, but with diminishing returns beyond optimal lengths [6]. Chain-of-thought studies demonstrate that relevant reasoning steps matter more than length [7]:
+GPT-5's efficiency improvements allow for optimized token allocation per use case. Research on large language model evaluation shows that performance scales with available reasoning space, but with diminishing returns beyond optimal lengths [6]. Different classification scenarios benefit from different token allocations [7]:
 
-- **150 (Focused)**: Ultra-efficient for high-speed classification
-- **200 (Conservative)**: Minimal but adequate leveraging GPT-5's conciseness
-- **300 (Standard)**: Balanced allocation for GPT-5's optimal reasoning length
-- **350 (Balanced)**: Production-optimized for comprehensive explanations
-- **500 (Creative)**: Enhanced reasoning space for complex analysis
-- **800 (Exploratory)**: Full analytical capability for edge case discovery
+- **200 (Conservative)**: Minimal but adequate for concise classification leveraging GPT-5's efficiency
+- **300 (Standard)**: Balanced allocation for GPT-5's optimal reasoning length in most cases
+- **350 (Balanced)**: Production-optimized for comprehensive explanations while maintaining efficiency
 
-### 🎯 **Penalty Parameters for GPT-5**
+### 🎯 **Fixed Temperature Architecture**
 
-GPT-5's improved coherence allows for more nuanced penalty application. Large-scale evaluation studies show that modern language models demonstrate better natural diversity and topic coherence [6], reducing the need for aggressive penalty parameters that can harm reasoning quality [7]:
-
-- **frequency_penalty**: Lower values (0.0-0.15) due to GPT-5's natural diversity and improved repetition handling
-- **presence_penalty**: Minimal values (0.0-0.1) leveraging improved topic coherence and reasoning consistency
+GPT-5 requires `temperature=1.0` as a fixed parameter. Unlike previous models where temperature variation was used for optimization, GPT-5's consistency and quality are achieved through its internal architecture rather than sampling parameters. This constraint actually benefits consistency by removing a variable that could introduce unwanted randomness in content moderation tasks.
 
 ## Progressive GPT-5 Testing Strategy
 
-### Phase 1: GPT-5 Deterministic Baseline
+### Phase 1: GPT-5 Baseline Establishment
 
-**Goal**: Establish GPT-5's maximum consistency potential using enhanced deterministic capabilities
+**Goal**: Establish GPT-5's baseline performance using minimal token allocation
 
 ```bash
 python prompt_runner.py --strategies baseline_conservative --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 ```
 
-- Expected: Perfect consistency with GPT-5's deterministic improvements
-- Use for: Upper bound reliability benchmarking
+- Expected: Efficient classification with GPT-5's enhanced capabilities
+- Use for: Speed and resource efficiency benchmarking
 
 ### Phase 2: GPT-5 Standard Comparison
 
-**Goal**: Compare against GPT-5 optimized baseline parameters
+**Goal**: Compare against GPT-5 standard configuration with balanced token allocation
 
 ```bash
 python prompt_runner.py --strategies baseline_standard --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 ```
 
-- Expected: Superior performance to GPT-4 equivalent with enhanced reasoning
-- Use for: Cross-generational performance comparison
+- Expected: Superior reasoning performance with moderate token usage
+- Use for: Balanced performance assessment
 
-### Phase 3: GPT-5 Advanced Reasoning Exploration
+### Phase 3: GPT-5 Production Optimization
 
-**Goal**: Leverage GPT-5's enhanced reasoning capabilities for complex analysis
+**Goal**: Test GPT-5's production-ready configuration
 
 ```bash
-# Test reasoning-enhanced variants
-python prompt_runner.py --strategies baseline_creative,baseline_balanced,baseline_exploratory --prompt-template-file baseline_v1_gpt5.json --model gpt-5
+# Test production-optimized variant
+python prompt_runner.py --strategies baseline_balanced --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 
-# Full GPT-5 optimization suite
+# Full GPT-5 baseline suite
 python prompt_runner.py --strategies all --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 ```
 
-### Phase 4: GPT-5 Edge Case Mastery
-
-**Goal**: Exploit GPT-5's advanced reasoning for sophisticated hate speech detection
-
-```bash
-python prompt_runner.py --strategies baseline_exploratory --prompt-template-file baseline_v1_gpt5.json --model gpt-5
-```
-
-- Expected: Discovery of subtle hate speech patterns impossible with previous models
-- Use for: Advanced content moderation research and model capability assessment
+- Expected: Optimal balance of accuracy, reasoning quality, and efficiency
+- Use for: Real-world deployment assessment
 
 ## GPT-5 Enhanced Performance Metrics
 
@@ -182,32 +140,15 @@ Run GPT-5 optimized conservative and standard variants to establish enhanced per
 
 Test GPT-5's advanced reasoning capabilities:
 
-- Focused: Ultra-precision leveraging GPT-5's efficiency improvements
 - Balanced: Production-optimized for GPT-5's enhanced capabilities
 
-### Step 3: Advanced Analysis Capabilities
+### Step 3: Parameter Constraint Analysis
 
-Exploit GPT-5's sophisticated reasoning for maximum detection capability:
+GPT-5's parameter limitations require optimization focus:
 
-- Creative: Enhanced reasoning for nuanced content analysis
-- Exploratory: Full analytical power for edge case discovery
-
-### Step 4: GPT-5 Custom Parameter Tuning
-
-Create GPT-5 specific variants leveraging discovered optimal parameters:
-
-```json
-"baseline_gpt5_custom": {
-  "parameters": {
-    "max_tokens": "[gpt5_optimal_length]",
-    "temperature": "[gpt5_precision_temp]",
-    "top_p": "[gpt5_nucleus_optimal]",
-    "frequency_penalty": "[gpt5_diversity_tuned]",
-    "presence_penalty": "[gpt5_coherence_optimized]",
-    "response_format": "json_object"
-  }
-}
-```
+- **Supported Parameters**: max_tokens (via model_extras), temperature (fixed at 1.0)
+- **Optimization Approach**: Token allocation efficiency and prompt architecture quality
+- **Alternative Method**: Use architecture optimization (gpt5_architecture_v1.json) for advanced prompt engineering
 
 ## GPT-5 Testing Commands Reference
 
@@ -215,13 +156,13 @@ Create GPT-5 specific variants leveraging discovered optimal parameters:
 # GPT-5 individual strategy testing with Chat Completions API
 python prompt_runner.py --strategies baseline_conservative --sample-size 100 --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 
-# GPT-5 multi-strategy comparison with optimized parameters
-python prompt_runner.py --strategies baseline_standard,baseline_balanced,baseline_creative --sample-size 100 --prompt-template-file baseline_v1_gpt5.json --model gpt-5
+# GPT-5 multi-strategy comparison with supported parameters
+python prompt_runner.py --strategies baseline_standard,baseline_balanced --sample-size 100 --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 
-# Full GPT-5 optimization suite with enhanced capabilities
+# Full GPT-5 baseline suite with simplified strategies
 python prompt_runner.py --strategies all --sample-size 500 --prompt-template-file baseline_v1_gpt5.json --model gpt-5 --max-workers 4
 
-# GPT-5 comprehensive analysis with all strategies
+# GPT-5 comprehensive analysis with all available strategies
 python prompt_runner.py --strategies all --sample-size 1000 --output-dir outputs/gpt5_baseline_optimization --prompt-template-file baseline_v1_gpt5.json --model gpt-5
 ```
 
@@ -234,13 +175,13 @@ python prompt_runner.py --strategies all --sample-size 1000 --output-dir outputs
 
 ### Phase 2 Success: GPT-5 Performance Excellence
 
-- Balanced variant shows >15% F1-score improvement over GPT-4 equivalent
-- Focused variant demonstrates >20% precision improvement with 3x speed
+- Standard variant shows >15% F1-score improvement over GPT-4 equivalent
+- Balanced variant demonstrates >20% precision improvement with optimal efficiency
 
-### Phase 3 Success: GPT-5 Advanced Reasoning Success
+### Phase 3 Success: GPT-5 Optimization Success
 
-- Creative variant achieves >25% recall improvement on nuanced cases
-- Exploratory variant discovers ≥20 new subtle hate speech patterns
+- All variants achieve consistent performance across different token allocations
+- Architecture optimization approach compensates for parameter limitations
 
 ### Final Success: GPT-5 Optimal Configuration
 
@@ -250,12 +191,13 @@ python prompt_runner.py --strategies all --sample-size 1000 --output-dir outputs
 
 ## GPT-5 Specific Implementation Notes
 
-- **Standard API Compatibility**: Uses Chat Completions API with traditional parameter controls
+- **Limited Parameter Support**: Uses only max_tokens (via model_extras) and temperature=1.0 (fixed)
 - **Enhanced System Prompts**: Exploit GPT-5's improved instruction following and reasoning
-- **Optimized Temperature Ranges**: Leverage GPT-5's enhanced deterministic capabilities
-- **Efficient Token Allocation**: Account for GPT-5's improved efficiency and comprehension
+- **Fixed Temperature Architecture**: GPT-5 requires temperature=1.0 for consistency
+- **Efficient Token Allocation**: Optimized max_tokens values for different use cases (200/300/350)
 - **Cultural Awareness**: Leverage GPT-5's enhanced contextual understanding through prompt engineering
 - **JSON Response Format**: Structured output for reliable classification and rationale extraction
+- **Alternative Optimization**: Use gpt5_architecture_v1.json for prompt engineering optimization
 
 ## References
 

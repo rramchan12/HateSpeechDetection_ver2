@@ -1,0 +1,156 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-15 22:39:03
+Model: gpt-5
+Prompt Template File: gpt5_architecture_v1.json
+Data Source: canned_50_quick
+Total samples tested: 50
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_50_quick --strategies all --output-dir outputs\baseline_v1\gpt5 --max-workers 15 --batch-size 8 --prompt-template-file gpt5_architecture_v1.json --model gpt-5
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: niggas really fucking faggots
+   Label: normal
+
+2. Text: i can barely go out into society anymore i basically just buy food from the beaner filled store pay ...
+   Label: hate
+
+3. Text: ~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-
+   Label: normal
+
+... (middle samples) ...
+25. Text: i didn't feel like a failure of a feminist for being into women; actually, it was the opposite.
+   Label: normal
+
+26. Text: who the fuck you faggots think you are
+   Label: hate
+
+... (final samples) ...
+49. Text: holly is a self-described hag dyke and a lesbian artist. thats a gay art person that is a butch.
+   Label: normal
+
+50. Text: Â the only thing they know how to make is oil wells and bombs
+   Label: hate
+
+[Showing sample of 7 out of 50 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+DIRECT_BINARY Strategy:
+  Accuracy:  0.620
+  Precision: 0.611
+  Recall:    0.478
+  F1-Score:  0.537
+  Confusion Matrix: TP=11, TN=20, FP=7, FN=12
+
+MULTI_PERSPECTIVE Strategy:
+  Accuracy:  0.633
+  Precision: 0.727
+  Recall:    0.348
+  F1-Score:  0.471
+  Confusion Matrix: TP=8, TN=23, FP=3, FN=15
+
+CULTURAL_CONTEXT Strategy:
+  Accuracy:  0.553
+  Precision: 0.538
+  Recall:    0.318
+  F1-Score:  0.400
+  Confusion Matrix: TP=7, TN=19, FP=6, FN=15
+
+HYBRID_FAST_ACCURATE Strategy:
+  Accuracy:  0.720
+  Precision: 0.714
+  Recall:    0.652
+  F1-Score:  0.682
+  Confusion Matrix: TP=15, TN=21, FP=6, FN=8
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+DIRECT_BINARY Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 25
+     FPR: 0.250 (FP=4, TN=12)
+     FNR: 0.556 (FN=5, TP=4)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 11
+     FPR: 0.000 (FP=0, TN=5)
+     FNR: 0.500 (FN=3, TP=3)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 14
+     FPR: 0.500 (FP=3, TN=3)
+     FNR: 0.500 (FN=4, TP=4)
+     Fairness: ⚠️ REVIEW
+
+
+MULTI_PERSPECTIVE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 25
+     FPR: 0.062 (FP=1, TN=15)
+     FNR: 0.556 (FN=5, TP=4)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 11
+     FPR: 0.000 (FP=0, TN=4)
+     FNR: 0.833 (FN=5, TP=1)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 14
+     FPR: 0.333 (FP=2, TN=4)
+     FNR: 0.625 (FN=5, TP=3)
+     Fairness: ⚠️ REVIEW
+
+
+CULTURAL_CONTEXT Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 25
+     FPR: 0.267 (FP=4, TN=11)
+     FNR: 0.778 (FN=7, TP=2)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 11
+     FPR: 0.000 (FP=0, TN=5)
+     FNR: 0.500 (FN=3, TP=3)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 14
+     FPR: 0.400 (FP=2, TN=3)
+     FNR: 0.714 (FN=5, TP=2)
+     Fairness: ⚠️ REVIEW
+
+
+HYBRID_FAST_ACCURATE Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 25
+     FPR: 0.188 (FP=3, TN=13)
+     FNR: 0.333 (FN=3, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 11
+     FPR: 0.000 (FP=0, TN=5)
+     FNR: 0.167 (FN=1, TP=5)
+     Fairness: ✅ FAIR
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 14
+     FPR: 0.500 (FP=3, TN=3)
+     FNR: 0.500 (FN=4, TP=4)
+     Fairness: ⚠️ REVIEW

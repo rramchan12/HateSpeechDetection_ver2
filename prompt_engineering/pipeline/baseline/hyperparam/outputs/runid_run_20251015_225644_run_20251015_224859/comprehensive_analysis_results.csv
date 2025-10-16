@@ -1,0 +1,8 @@
+rank,strategy_name,run_id,template_file,model_name,f1_score,f1_normalized,bias_score,bias_normalized,hybrid_score,hyperparam_max_tokens,hyperparam_temperature,hyperparam_response_format
+1,hybrid_fast_accurate,run_20251015_224859,gpt5_architecture_v1.json,gpt-5,0.5979,1.0,0.6314,0.982,0.9946,600,1.0,json_object
+2,direct_binary,run_20251015_224859,gpt5_architecture_v1.json,gpt-5,0.5679,0.9105,0.6337,1.0,0.9374,250,1.0,json_object
+3,baseline_standard,run_20251015_225644,baseline_v1_gpt5.json,gpt-5,0.5517,0.8623,0.607,0.7896,0.8405,300,1.0,json_object
+4,baseline_balanced,run_20251015_225644,baseline_v1_gpt5.json,gpt-5,0.5057,0.7253,0.5609,0.4279,0.6361,350,1.0,json_object
+5,multi_perspective,run_20251015_224859,gpt5_architecture_v1.json,gpt-5,0.4595,0.5874,0.5855,0.6211,0.5975,250,1.0,json_object
+6,cultural_context,run_20251015_224859,gpt5_architecture_v1.json,gpt-5,0.4179,0.4636,0.5978,0.7175,0.5398,250,1.0,json_object
+7,baseline_conservative,run_20251015_225644,baseline_v1_gpt5.json,gpt-5,0.2623,0.0,0.5065,0.0,0.0,200,1.0,json_object

@@ -396,12 +396,25 @@ class PromptRunner:
                 UserMessage(content=user_prompt)
             ]
             
-            response = connector.complete(
-                messages=messages,
-                max_tokens=512,
-                temperature=0.1,
-                response_format="json_object"
-            )
+            # Use appropriate parameters based on model type
+            if 'gpt-5' in self.model_id.lower() or 'o1' in self.model_id.lower():
+                # For reasoning models, ensure JSON is mentioned in the message
+                if not any('json' in str(msg.content).lower() for msg in messages):
+                    # Update user message to include JSON requirement
+                    messages[1] = UserMessage(content=user_prompt + " Respond in JSON format.")
+                
+                response = connector.complete(
+                    messages=messages,
+                    max_tokens=512,
+                    response_format="json_object"
+                )
+            else:
+                response = connector.complete(
+                    messages=messages,
+                    max_tokens=512,
+                    temperature=0.1,
+                    response_format="json_object"
+                )
             
             response_time = time.time() - start_time
             
