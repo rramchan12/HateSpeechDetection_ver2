@@ -1,0 +1,4 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+hybrid_fast_accurate,lgbtq,494,0.2808641975308642,0.5411764705882353,78,233,91,92
+hybrid_fast_accurate,mexican,209,0.11627906976744186,0.4878048780487805,63,76,10,60
+hybrid_fast_accurate,middle_east,306,0.2222222222222222,0.5679012345679012,70,112,32,92
