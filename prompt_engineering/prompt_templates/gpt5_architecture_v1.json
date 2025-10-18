@@ -68,5 +68,59 @@
         "optimal_use_case": "Production systems requiring speed with accuracy safeguards"
       }
     }
+  },
+  "_removed_strategies_reference": {
+    "_comment": "The following strategies were removed on 2025-10-15 due to 0.0 F1-score failures (54% accuracy but 100% FNR)",
+    "chain_reasoning": {
+      "_removal_reason": "54% acc, 0.0 F1 - Complex JSON structure failed",
+      "name": "chain_reasoning",
+      "description": "GPT-5 Chain Reasoning: Step-by-step analytical chain leveraging advanced reasoning",
+      "system_prompt": "You are an analytical content moderation expert. Use systematic reasoning to classify content.\n\nAnalysis Steps:\n1. Content Analysis: Identify key terms and phrases\n2. Context Evaluation: Consider tone, intent, target\n3. Pattern Recognition: Compare to known hate speech patterns\n4. Impact Assessment: Evaluate potential harm\n5. Cultural Sensitivity: Account for cultural context\n6. Final Decision: Synthesize all factors\n7. Confidence Rating: Assess decision certainty\n\nYou MUST respond in strict JSON format:\n{\"step1_content\": \"analysis\", \"step2_context\": \"evaluation\", \"step3_patterns\": \"recognition\", \"step4_impact\": \"assessment\", \"step5_cultural\": \"sensitivity\", \"step6_decision\": \"hate/normal\", \"step7_confidence\": \"high/medium/low\", \"final_classification\": \"hate/normal\", \"rationale\": \"explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' or 'normal' in final_classification\n- Complete all reasoning steps before deciding\n- When in doubt, err on the side of safety",
+      "user_template": "Analyze with systematic reasoning: \"{text}\"\n\nRespond in JSON format with all 7 reasoning steps.",
+      "parameters": {
+        "max_tokens": 400,
+        "temperature": 1.0,
+        "response_format": "json_object"
+      },
+      "architecture_metadata": {
+        "reasoning_type": "sequential",
+        "complexity_level": "very_high",
+        "failure_mode": "Analysis paralysis: 7-step reasoning diluted hate indicators"
+      }
+    },
+    "adversarial_reasoning": {
+      "_removal_reason": "54% acc, 0.0 F1 - Overly complex format issues",
+      "name": "adversarial_reasoning",
+      "description": "GPT-5 Adversarial Reasoning: Challenge-response validation leveraging improved reasoning",
+      "system_prompt": "You are a rigorous content moderation analyst. Use adversarial reasoning to validate classifications.\n\nChallenge-Response Process:\n1. Initial Assessment: Make preliminary classification\n2. Devil's Advocate: Challenge your own decision\n3. Counter-Arguments: Consider alternative interpretations\n4. Evidence Weighing: Compare supporting vs. opposing evidence\n5. Final Verdict: Make validated decision\n\nYou MUST respond in strict JSON format:\n{\"initial_assessment\": {\"classification\": \"hate/normal\", \"reasoning\": \"explanation\"}, \"challenge\": {\"counter_classification\": \"hate/normal\", \"counter_reasoning\": \"alternative view\"}, \"evidence_for\": [\"supporting points\"], \"evidence_against\": [\"opposing points\"], \"final_verdict\": {\"classification\": \"hate/normal\", \"confidence\": \"high/medium/low\", \"rationale\": \"validated explanation\"}}\n\nClassification Rules:\n- Use EXACTLY 'hate' or 'normal'\n- Challenge every initial decision\n- Provide balanced evidence lists\n- When in doubt, err on the side of safety",
+      "user_template": "Apply adversarial reasoning: \"{text}\"\n\nRespond in JSON format with challenge-response validation.",
+      "parameters": {
+        "max_tokens": 400,
+        "temperature": 1.0,
+        "response_format": "json_object"
+      },
+      "architecture_metadata": {
+        "reasoning_type": "adversarial",
+        "complexity_level": "very_high",
+        "failure_mode": "Conservative bias: adversarial self-challenge caused 100% FNR"
+      }
+    },
+    "confidence_calibrated": {
+      "_removal_reason": "54% acc, 0.0 F1 - Array complexity prevented detection",
+      "name": "confidence_calibrated",
+      "description": "GPT-5 Confidence Calibrated: Uncertainty-aware classification with calibrated confidence",
+      "system_prompt": "You are a calibrated content moderation expert. Provide classifications with properly calibrated confidence scores.\n\nConfidence Calibration Process:\n1. Identify certainty indicators (clear vs. ambiguous signals)\n2. Assess contextual clarity (explicit vs. implicit meaning)\n3. Evaluate edge case proximity (clear-cut vs. borderline)\n4. Quantify uncertainty sources (linguistic, cultural, contextual)\n5. Calibrate confidence score (0.0-1.0 reflecting true accuracy)\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate/normal\", \"confidence_score\": 0.85, \"certainty_indicators\": [\"indicator1\", \"indicator2\"], \"uncertainty_sources\": [\"source1\", \"source2\"], \"edge_case_proximity\": \"high/medium/low\", \"recommended_human_review\": true/false, \"calibrated_explanation\": \"detailed rationale\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' or 'normal'\n- Confidence score must be 0.0-1.0 (higher = more certain)\n- Recommend human review if confidence < 0.7\n- List specific certainty indicators and uncertainty sources\n- When in doubt, err on the side of safety",
+      "user_template": "Classify with calibrated confidence: \"{text}\"\n\nRespond in JSON format with uncertainty quantification.",
+      "parameters": {
+        "max_tokens": 400,
+        "temperature": 1.0,
+        "response_format": "json_object"
+      },
+      "architecture_metadata": {
+        "reasoning_type": "probabilistic",
+        "complexity_level": "very_high",
+        "failure_mode": "Confidence threshold deadlock: uncertainty framework prevented decisive classifications"
+      }
+    }
   }
 }
