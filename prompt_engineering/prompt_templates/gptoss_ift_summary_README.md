@@ -7,7 +7,7 @@ This document presents comprehensive empirical results from systematic hyperpara
 **Key Achievement**: Through two-phase systematic testing—hyperparameter optimization (run_20251012_133005, 100 samples) and large-scale production validation (run_20251012_191628, 1,009 samples)—we identified and validated `baseline_standard` as the optimal configuration, achieving **F1-score of 0.615** on the full unified dataset with comprehensive bias analysis across protected demographic groups (LGBTQ+, Middle Eastern, Mexican/Latino).
 
 **Model Details**:
-- **Base Model**: gpt-oss-120b (Phi-3.5-MoE-instruct)
+- **Base Model**: gpt-oss-120b 
 - **Parameters**: 120 billion parameters
 - **Architecture**: Mixture-of-Experts
 - **Task**: Binary hate speech classification (hate/normal)

@@ -1,14 +1,14 @@
 HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
 ============================================================
-Generated: 2025-10-16 22:13:42
-Model: gpt-oss-120b
+Generated: 2025-10-19 17:25:51
+Model: gpt-5
 Prompt Template File: gpt5_architecture_v1.json
 Data Source: unified
 Total samples tested: 1009
 
 EXECUTION DETAILS:
 --------------------
-Command Line: prompt_runner.py --data-source unified --strategies hybrid_fast_accurate --output-dir outputs\baseline_v1\gpt5\baseline --max-workers 15 --batch-size 8 --prompt-template-file gpt5_architecture_v1.json
+Command Line: prompt_runner.py --data-source unified --strategies hybrid_fast_accurate --output-dir outputs\baseline_v1\gpt5\baseline --max-workers 15 --batch-size 8 --prompt-template-file gpt5_architecture_v1.json --model gpt-5
 
 SAMPLE TEST DATA:
 --------------------
@@ -42,11 +42,11 @@ STRATEGY PERFORMANCE:
 -------------------------
 
 HYBRID_FAST_ACCURATE Strategy:
-  Accuracy:  0.626
-  Precision: 0.613
-  Recall:    0.464
-  F1-Score:  0.528
-  Confusion Matrix: TP=211, TN=421, FP=133, FN=244
+  Accuracy:  0.647
+  Precision: 0.615
+  Recall:    0.578
+  F1-Score:  0.596
+  Confusion Matrix: TP=262, TN=390, FP=164, FN=191
 
 
 BIAS AND FAIRNESS METRICS BY PERSONA:
@@ -58,18 +58,18 @@ BIAS AND FAIRNESS METRICS BY PERSONA:
 HYBRID_FAST_ACCURATE Strategy - Bias Analysis:
   📋 Target Group: LGBTQ
      Samples: 494
-     FPR: 0.281 (FP=91, TN=233)
-     FNR: 0.541 (FN=92, TP=78)
+     FPR: 0.407 (FP=132, TN=192)
+     FNR: 0.412 (FN=70, TP=100)
      Fairness: ⚠️ REVIEW
 
   📋 Target Group: MEXICAN
      Samples: 209
-     FPR: 0.116 (FP=10, TN=76)
-     FNR: 0.488 (FN=60, TP=63)
+     FPR: 0.081 (FP=7, TN=79)
+     FNR: 0.459 (FN=56, TP=66)
      Fairness: ⚠️ REVIEW
 
   📋 Target Group: MIDDLE_EAST
      Samples: 306
-     FPR: 0.222 (FP=32, TN=112)
-     FNR: 0.568 (FN=92, TP=70)
+     FPR: 0.174 (FP=25, TN=119)
+     FNR: 0.404 (FN=65, TP=96)
      Fairness: ⚠️ REVIEW

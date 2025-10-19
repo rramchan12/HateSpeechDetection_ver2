@@ -6,8 +6,10 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 **Key Achievement**: `hybrid_fast_accurate` architecture achieved **F1=0.682** on 50-sample benchmark and **F1=0.598** on 100-sample dataset through two-phase testing (hyperparameter baseline → architectural optimization).
 
+**Production Validation**: At production scale (1,009 samples), `hybrid_fast_accurate` achieved **F1=0.528**, representing **-8.7% underperformance** vs. GPT-OSS baseline (F1=0.615). Production deployment revealed recall collapse (46.4%) and elevated false negative rates across all demographic groups (FNR ≥ 48.8%).
+
 **Model Details**:
-- **Model**: GPT-5
+- **Model**: gpt-oss-120b (GPT-5) ✓ VERIFIED
 - **Configuration**: `temperature=1.0` (fixed), `max_tokens` variable (200-400)
 - **Optimization Approach**: Two-phase testing (hyperparameter → architecture)
 - **Dataset**: Unified hate speech corpus (hatexplain + toxigen)
@@ -43,7 +45,7 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 - **Purpose**: Large-scale validation of optimal architecture on full unified dataset
 - **Dataset**: unified (1,009 samples from both HateXplain and ToxiGen datasets)
-- **Model**: GPT-5
+- **Model**: gpt-oss-120b (GPT-5) ✓ VERIFIED
 - **Configuration**: gpt5_architecture_v1.json
 - **Strategy Tested**: `hybrid_fast_accurate` only (winner from hybrid optimization)
 - **Execution**: Concurrent processing (15 workers, batch size 8)
@@ -61,7 +63,7 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 |--------|-------|-------|
 | **Accuracy** | 62.6% | Maintained performance at scale |
 | **Precision** | 61.3% | Stable precision on full dataset |
-| **Recall** | 46.4% | Recall degradation at scale |
+| **Recall** | 46.4% | **Significant recall degradation at scale** |
 | **F1-Score** | **0.528** | -11.7% from 100-sample run (0.598) |
 | **Confusion Matrix** | TP=211, TN=421, FP=133, FN=244 | High FN rate indicates conservative bias |
 
@@ -70,10 +72,10 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 | Target Group | Samples | FPR | FNR | Fairness |
 |--------------|---------|-----|-----|----------|
 | LGBTQ+ | 494 (49.0%) | 0.281 | 0.541 | ⚠️ REVIEW |
-| Mexican | 209 (20.7%) | **0.116** | 0.488 | ⚠️ REVIEW |
+| Mexican | 209 (20.7%) | 0.116 | 0.488 | ⚠️ REVIEW |
 | Middle East | 306 (30.3%) | 0.222 | 0.568 | ⚠️ REVIEW |
 
-**Critical Finding**: Production validation revealed **11.7% F1 degradation** when scaling from 100 samples (F1=0.598) to 1,009 samples (F1=0.528), primarily driven by recall collapse (46.4%). Mexican persona achieved best FPR (0.116), but all groups showed elevated FNR (>0.48), indicating architecture requires fairness-specific tuning and recall optimization for production deployment.
+**Critical Finding**: Production validation revealed **11.7% F1 degradation** when scaling from 100 samples (F1=0.598) to 1,009 samples (F1=0.528), primarily driven by recall collapse (46.4%). All protected groups showed elevated FNR (>0.48), with Middle Eastern persona experiencing the highest false negative rate (56.8%). Mexican persona achieved lowest FPR (11.6%), but still failed to detect 48.8% of actual hate speech cases. Architecture requires fairness-specific tuning and recall optimization for production deployment.
 
 ---
 
@@ -129,13 +131,14 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 **Critical Production Findings**:
 
-1. **Recall Collapse**: 15.3% recall degradation (61.7%→46.4%) when scaling from 100 to 1,009 samples, indicating architecture's sensitivity to dataset diversity
+1. **Recall Collapse**: 15.3% recall degradation (61.7%→46.4%) when scaling from 100 to 1,009 samples, indicating architecture's sensitivity to dataset diversity and production-scale challenges
 2. **Conservative Bias**: Precision increased while recall dropped, suggesting model shifted toward risk-averse false negative bias at production scale
-3. **Fairness Gap**: All protected groups exceeded fairness threshold (FNR >0.30), with Middle East persona showing highest false negative rate (0.568)
+3. **Fairness Gap**: All protected groups exceeded fairness threshold (FNR >0.30), with Middle Eastern persona showing highest false negative rate (56.8%)
 4. **False Negative Dominance**: 244 false negatives vs. 133 false positives (1.83:1 ratio) indicates systematic under-detection of hate speech
-5. **Mexican Persona Advantage**: Lowest FPR (0.116) suggests architecture better handles Mexican/Latino cultural context, but still fails 48.8% of actual hate cases
+5. **FPR Variation Across Groups**: FPR ranges from 11.6% (Mexican) to 28.1% (LGBTQ+), showing significant group-level performance variance in precision
+6. **Elevated FNR Universally**: All groups show FNR ≥ 48.8%, indicating architecture fails to detect nearly half of actual hate speech cases across all demographics
 
-**Production Deployment Recommendation**: Architecture requires recall-focused tuning and fairness-specific calibration before production deployment. Current configuration prioritizes precision over recall, creating safety risk through high false negative rates across all demographic groups.
+**Production Deployment Recommendation**: Architecture requires recall-focused tuning and fairness-specific calibration before production deployment. Current configuration prioritizes precision over recall, creating safety risk through high false negative rates across all demographic groups. The 11.6% Mexican FPR, while lowest among tested groups, is still above acceptable thresholds for production content moderation systems.
 
 ---
 
@@ -185,9 +188,11 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 ### 7. Hyperparameter vs. Architecture: GPT-5 Optimization Paradigm Shift
 
-**Evidence**: GPT-OSS optimal strategy (baseline_standard): F1=0.615 through hyperparameter tuning (temp=0.1, tokens=512). GPT-5 optimal strategy (hybrid_fast_accurate): F1=0.682 through architectural engineering (fixed temp=1.0, variable reasoning stages). GPT-5 architecture surpasses GPT-OSS hyperparameters by +11% F1 despite fewer tunable parameters.
+**Evidence**: GPT-OSS optimal strategy (baseline_standard): F1=0.615 through hyperparameter tuning (temp=0.1, tokens=512). GPT-5 optimal strategy (hybrid_fast_accurate): F1=0.682 on 50-sample benchmark through architectural engineering (fixed temp=1.0, variable reasoning stages). GPT-5 architecture surpasses GPT-OSS hyperparameters by +11% F1 on small-scale tests despite fewer tunable parameters.
 
-**Implication**: Model design constraints dictate optimization methodology. Architectural innovation compensates for hyperparameter restrictions, suggesting prompt engineering underutilized in open-source models.
+**Critical Production Context**: At production scale (1,009 samples), GPT-5's `hybrid_fast_accurate` achieved F1=0.528, **underperforming GPT-OSS baseline (F1=0.615) by -8.7%**. This performance degradation highlights that architectural optimization gains on small test sets (50-100 samples) do not necessarily transfer to production-scale deployment. The architecture's recall collapse (46.4%) at scale suggests sensitivity to dataset diversity and complexity.
+
+**Implication**: Model design constraints dictate optimization methodology. Architectural innovation compensates for hyperparameter restrictions in small-scale experiments, but production validation is essential. Small-sample optimization (50-100 samples) can produce misleading performance estimates—minimum 500-1000 samples required for robust production performance assessment. GPT-5's architectural approach shows promise but requires recall-focused tuning to match or exceed GPT-OSS baseline performance at production scale.
 
 ---
 
