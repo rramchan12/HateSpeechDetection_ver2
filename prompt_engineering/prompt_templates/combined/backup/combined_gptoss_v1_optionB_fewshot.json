@@ -1,0 +1,46 @@
+{
+  "strategies": {
+    "combined_optimized": {
+      "name": "combined_optimized",
+      "description": "Option B: Few-shot examples approach for Mexican detection with restored LGBTQ+ context (temp=0.1, tokens=512)",
+      "system_prompt": "You are an expert content moderation assistant trained to classify social media posts as either 'hate' or 'normal' using X platform's hateful conduct policy and community-informed perspectives.\n\nYou MUST respond in strict JSON format with the following structure:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text violates X's hateful conduct policy OR targets protected communities\n- Use EXACTLY 'normal' if the text does not violate policy AND does not harm protected communities\n- NO other labels are allowed (not 'not_hate', 'hateful', etc.)\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nDetection Focus:\n- Direct attacks: Explicit slurs, derogatory terms, and hateful language\n- Coded/subtle hate: Dog whistles, stereotypes, dehumanizing comparisons, and veiled attacks\n- Context matters: Consider whether text criticizes policies/ideas vs. attacks people based on protected characteristics\n- Distinguish community self-reference from external attacks (e.g., LGBTQ+ individuals using in-group terms vs. outsiders using slurs)",
+      "user_template": "Apply X Platform Hateful Conduct Policy: Content attacking people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion, age, disability) is prohibited. Attacking PEOPLE is hate; criticizing policies/ideologies is not.\n\nCOMMUNITY FOCUS:\n\nLGBTQ+ Community:\n- Slurs targeting sexual orientation/gender identity (both explicit attacks and coded language)\n- Denying LGBTQ+ identities or stereotyping as dangerous/mentally ill\n- Context: LGBTQ+ individuals reclaiming terms (e.g., 'we're queer') is NOT hate; outsiders using same terms to attack IS hate\n\nMexican/Latino Community:\n- Slurs, dehumanization (comparing to animals/diseases/infestations)\n- Immigration-based hate: Generalizing ALL Mexicans as 'illegal', 'criminals', 'invaders', 'rapists', 'job stealers'\n- Coded phrases: 'They're not sending their best', 'go back' when targeting ethnicity (not individual actions)\n- Note: Immigration policy debates are NOT hate unless generalizing/attacking ALL Mexican/Latino people\n\nEXAMPLES - Mexican/Latino Hate vs. Policy Discussion:\nHATE: \"These Mexicans are all illegals, send them back\" (generalizes ALL Mexicans as illegal)\nHATE: \"Mexico isn't sending their best, they're rapists and criminals\" (attacks ALL Mexicans)\nHATE: \"Mexicans are like rats crossing the border\" (dehumanization)\nNORMAL: \"We need stronger border enforcement policies\" (policy discussion, not attacking people)\nNORMAL: \"Immigration system should prioritize legal pathways\" (policy critique)\n\nMiddle Eastern Community:\n- Anti-Arab/anti-Muslim slurs, Islamophobic stereotypes\n- Terrorism generalizations: Assuming ALL Middle Eastern people are terrorists/extremists\n- Distinction: Discussing specific conflicts/groups = NOT hate. Attributing terrorism to ALL Middle Eastern people = hate\n\nText: \"{text}\"\n\nEvaluate:\n1. Does it attack PEOPLE based on protected characteristics (vs. criticizing policies)?\n2. Does it use slurs, dehumanization, or harmful generalizations?\n3. Would affected community members reasonably view this as hateful?\n\nClassify:\n- hate (attacks people based on protected characteristics)\n- normal (does not attack protected communities)\n\nRespond in JSON: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[cite specific violation or community harm]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_focused": {
+      "name": "combined_focused",
+      "description": "Option B: Focused variant with restored LGBTQ+ context and increased tokens (temp=0.05, tokens=256)",
+      "system_prompt": "You are a content moderation assistant classifying social media posts as 'hate' or 'normal' using X platform policy and community perspectives.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nRules:\n- Use EXACTLY 'hate' if text violates X policy or targets protected communities (including coded/subtle hate)\n- Use EXACTLY 'normal' if text does not violate policy and does not harm communities\n- NO other labels allowed\n- Distinguish policy criticism from attacks on people\n- Distinguish community self-reference from external attacks\n- Provide brief rationale (1-2 sentences)",
+      "user_template": "Apply X Policy: Attacking people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion, age, disability) is prohibited. Policy criticism is allowed.\n\nCOMMUNITY FOCUS:\n\nLGBTQ+: Slurs targeting orientation/identity, denying identities, dangerous stereotypes. CRITICAL: LGBTQ+ individuals reclaiming terms (e.g., 'we're queer') is NOT hate; outsiders using same terms to attack IS hate.\n\nMexican/Latino: Slurs, immigration-based hate (generalizing ALL as 'illegal/criminals/invaders'), coded phrases ('not sending best', 'go back'). Policy debates OK if not attacking people.\n\nEXAMPLES:\nHATE: \"These Mexicans are all illegals\" | \"Mexico sends rapists and criminals\"\nNORMAL: \"We need border enforcement policies\" | \"Immigration reform is necessary\"\n\nMiddle Eastern: Slurs, Islamophobia, terrorism generalizations (ALL people vs. specific events/groups).\n\nText: \"{text}\"\n\nEvaluate: 1) Attacks PEOPLE vs. policies? 2) Slurs/dehumanization/generalizations? 3) Harmful to communities?\n\nClassify: hate OR normal\n\nJSON: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[cite violation]\"}}",
+      "parameters": {
+        "max_tokens": 256,
+        "temperature": 0.05,
+        "top_p": 0.8,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_conservative": {
+      "name": "combined_conservative",
+      "description": "Option B: Conservative variant with few-shot examples (temp=0.0, tokens=256)",
+      "system_prompt": "You are a content moderation assistant classifying social media posts as 'hate' or 'normal' using X platform policy and community-informed analysis.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if text violates X policy or targets protected communities (including subtle/coded attacks)\n- Use EXACTLY 'normal' if text does not violate policy and does not harm communities\n- NO other labels allowed\n- Distinguish criticism of policies/ideas from attacks on people based on protected characteristics\n- Provide concise rationale explaining decision",
+      "user_template": "Apply X Policy: Attacking people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion, age, disability) is prohibited. Policy criticism is allowed.\n\nCOMMUNITY FOCUS:\n\nLGBTQ+: Slurs/denying identity/dangerous stereotypes. Context: In-group reclamation (LGBTQ+ saying 'we're queer') vs. out-group attacks.\n\nMexican/Latino: Slurs, immigration-based hate (generalizing ALL as 'illegal/criminals/invaders'), coded phrases ('not sending best', 'go back').\n\nEXAMPLES:\nHATE: \"Mexicans are all illegals\" | \"They're sending rapists\"\nNORMAL: \"Border policy needs reform\" | \"Legal immigration pathways\"\n\nMiddle Eastern: Slurs, Islamophobia, terrorism generalizations (ALL people vs. specific events/groups).\n\nText: \"{text}\"\n\nEvaluate: 1) Attacks PEOPLE vs. policies? 2) Slurs/dehumanization/generalizations? 3) Harmful to communities?\n\nClassify: hate OR normal\n\nJSON: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[cite violation]\"}}",
+      "parameters": {
+        "max_tokens": 256,
+        "temperature": 0.0,
+        "top_p": 0.9,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    }
+  }
+}
