@@ -1,0 +1,256 @@
+strategy,input_text,true_label,predicted_label,response_time,rationale,target_group_norm,persona_tag,source_dataset,status
+combined_optimized,"upon reflection, marriage is a relatively modern and patriarchal institution. it represents stability and security, but it is a very specific kind of stability and security that",normal,normal,2.1839447021484375,"The text critiques the institution of marriage as patriarchal without targeting any protected characteristic, using no slurs or dehumanizing language; therefore it does not constitute hate under the policy.",lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,niggas really fucking faggots,normal,hate,2.4892115592956543,"The statement uses racial slur 'niggas' and homophobic slur 'faggots', directly demeaning Black people and LGBTQ+ individuals, which attacks protected groups and is prohibited by the hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,whats up with everybody who can name the jew buts quotes nihilistic faggots in their about me really aggravates me i mean i agree with some things malcolm x said but im not going to quote the nigger,hate,hate,2.665199041366577,"The post uses multiple protected-group slurs (e.g., ""Jew"", ""faggots"", ""nigger"") and dehumanizing language, directly attacking people based on religion, sexual orientation, and race, which violates X's hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,i can barely go out into society anymore i basically just buy food from the beaner filled store pay all bills online then spend the day talking shit online like a coward what a life,hate,hate,2.6200923919677734,"The post uses the slur ""beaner"" and dehumanizing language to refer to a store and implicitly Mexican/Latino people, constituting an attack on a protected ethnic group.",mexican,hispanic,canned_50_quick,success
+combined_optimized,arabs are behind every medium- to large-sized terrorist attack,hate,hate,2.8445510864257812,"The statement attributes all terrorist attacks to Arabs, a protected ethnic/national group, using a sweeping harmful generalization that attacks people based on their ethnicity, which is prohibited under the hateful conduct policy.",middle_east,middle_east,canned_50_quick,success
+combined_optimized,<user> <user> you do not support the queer community and u are a homophobe unless you listen to it let that sink in,normal,normal,3.0596506595611572,"The statement calls someone a homophobe, which is a personal criticism, not a slur or dehumanizing attack on a protected group; it does not target a protected characteristic and thus does not violate the hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-,normal,normal,3.2537174224853516,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_optimized,"in 2010, they tried to pass a law called fada that would have stopped lgbtq people from adopting children. it failed. -",hate,normal,4.313069581985474,"The statement references a proposed law affecting LGBTQ adoption rights without using slurs, dehumanizing language, or generalizing attacks; it critiques a policy, not people.",lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,<user> never trust arabs,normal,hate,1.0446054935455322,"The statement makes a blanket negative generalization about all Arabs, a protected ethnic/national origin group, demeaning them and encouraging distrust, which is hateful under the policy.",middle_east,arab,canned_50_quick,success
+combined_optimized,the master bedroom isn't a master bedroom. it's a closet.,normal,normal,1.062713623046875,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,<user> <user> nigga called him gay for being athletic lmfao,normal,hate,1.4596264362335205,"The text uses the racial slur ""nigga"" and calls someone ""gay"" as an insult, targeting protected characteristics (race and sexual orientation), which constitutes hateful conduct.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,dykes really be plottin on hoes for years they will sit there and be friends with a chick for years just waiting for them to slip up,hate,hate,1.5192506313323975,"The text uses the slur ""dykes"" to demean lesbians and makes hostile generalizations about them plotting against women, constituting an attack on a protected sexual orientation/gender identity group.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,you are a nobody kike faggot delta male emo bitch who gives a fuck enough about you to even try no one fucking twat,hate,hate,1.568509817123413,"The text uses anti‑Jewish slur ""kike"" and homophobic slur ""faggot"", directly attacking the individual based on protected characteristics (religion/ethnicity and sexual orientation), which constitutes hateful conduct.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,i want to write a book about my journey from america to mexico,normal,normal,2.0305840969085693,"The statement simply expresses a personal intent to write about a journey and contains no slurs, attacks, or harmful generalizations toward any protected group.",mexican,mexican,canned_50_quick,success
+combined_optimized,"all middle easterners are terrorists, but yes,",hate,hate,2.304993152618408,"The statement generalizes all Middle Eastern people as terrorists, a hateful stereotype targeting a protected group based on ethnicity/national origin, which is prohibited under X's hateful conduct policy.",middle_east,middle_east,canned_50_quick,success
+combined_optimized,okay but realistically speaking i am way better at dealing with heat than the cold arabs be like,normal,hate,2.991425037384033,"The statement makes a negative, stereotypical generalization about Arabs—a protected ethnic group—by contrasting the speaker's heat tolerance with ""cold arabs,"" which dehumanizes and attacks the group based on ethnicity.",middle_east,arab,canned_50_quick,success
+combined_optimized,i'm actually a white middle-upper class mexica,normal,normal,1.1948480606079102,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_optimized,<user> ma ’ am that ’ gay,normal,normal,1.2464807033538818,"The text contains only the word 'gay' without any slur, demeaning language, or attack on LGBTQ+ individuals; it does not target a protected group or convey hateful content.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure the ice deportation team that he sends has far sighted agents go get her since she such an ugly spic facially,hate,hate,1.271803855895996,"The post uses the ethnic slur ""spic"" and dehumanizing language to attack a person based on Mexican/Latino heritage, constituting a hateful attack on a protected group.",mexican,hispanic,canned_50_quick,success
+combined_optimized,"Â you are the worst kind of women, the immoral kind!",hate,normal,1.298464298248291,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_optimized,deport every single sand nigger i dony care if they were born herd and lived here for 5 0 years they are muslim sand niggers and do not belong in a white nation,hate,hate,1.3945040702819824,"The text uses racial and religious slurs ('sand nigger', 'muslim sand niggers'), dehumanizes a protected group, and calls for the removal of all individuals based on their ethnicity/religion, which is a direct attack on protected characteristics.",middle_east,arab,canned_50_quick,success
+combined_optimized,any second semester edu major can tell you that going into these trips you want to focus your goals on how you can actually accomplish that- you probably,normal,normal,1.4438841342926025,"The text makes a generic statement about education majors and contains no slurs, dehumanizing language, or attacks based on protected characteristics.",mexican,mexican,canned_50_quick,success
+combined_optimized,<user> everybody is like “ omg delete this ” “ you ’ re so gay ” nah this is <number> this stupid bitches fault plus she recorded it 💯 💯 go isma 😹 😹,normal,hate,1.8328814506530762,"The post uses ""so gay"" as an insult and calls someone a ""bitch,"" employing slurs that target sexual orientation and gender, which constitute attacks on protected characteristics.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,individual faggots are tolerable so long as they stay in their lane and keep things discrete a society that promotes and celebrates faggotry is doomed,hate,normal,2.235335350036621,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_optimized,who the fuck you faggots think you are,hate,hate,0.9973714351654053,"The statement uses the slur ""faggots"" to insult and demean people based on sexual orientation, directly attacking a protected group.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,it only hit the beaner city,hate,hate,1.0740671157836914,"The phrase uses the slur ""beaner"" to target a city associated with Mexican/Latino people, constituting a derogatory, dehumanizing attack on a protected ethnic group.",mexican,hispanic,canned_50_quick,success
+combined_optimized,they want to destroy the west,hate,normal,1.3083610534667969,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_optimized,noir is so good you gays,normal,normal,1.5675373077392578,"The text mentions ""gays"" without slurs, dehumanization, or negative generalizations; it does not attack or demean LGBTQ+ individuals, so it does not violate the hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,"I dont forgive them for coming out to me at a time that was difficult for me, but they were already long gone by then. I also didnt",hate,normal,2.1244912147521973,"The statement expresses personal resentment about an individual's coming out without using slurs, dehumanizing language, or generalizing about a protected group, so it does not constitute an attack on a protected characteristic.",lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,dykes love that lil black sports bra khaki pants combo,normal,hate,2.7452480792999268,"The term ""dykes"" is a derogatory slur targeting lesbian women (sexual orientation), constituting an attack on a protected group, which violates the hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,"i didn't feel like a failure of a feminist for being into women; actually, it was the opposite.",normal,normal,2.6078379154205322,"The text is a personal statement about sexual orientation and feminism, containing no slurs, dehumanization, or attacks on any protected group.",lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,"Â must be white, i don't date outside of my race",hate,normal,2.7777256965637207,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_optimized,love the mexican culture,normal,normal,0.8746614456176758,"The statement positively expresses appreciation for Mexican culture and does not contain slurs, dehumanizing language, or harmful generalizations targeting the Mexican/Latino community.",mexican,mexican,canned_50_quick,success
+combined_optimized,"we did nothing to those people to make them feel inferior, they have been discriminated to much and made to think they are inferior and it makes them angry",hate,normal,1.4106311798095703,"The statement does not contain slurs, dehumanizing language, or attacks on a protected group; it merely comments on perceived discrimination without targeting a specific protected characteristic.",middle_east,middle_east,canned_50_quick,success
+combined_optimized,white gay men mad they can not say dyke bc they do not have faggot to themselves lmao,normal,hate,1.407623052597046,"The post uses slurs like ""dyke"" and ""faggot"" to mock white gay men, targeting them based on sexual orientation (and race), which constitutes hateful conduct toward a protected group.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,really apart from tunnelling what have the arabs provided the world with,normal,normal,1.484117031097412,No rationale provided,middle_east,arab,canned_50_quick,success
+combined_optimized,they are already taking everthing from us white people. they should not be allowed to come to america as well,hate,hate,1.541363000869751,"The statement generalizes non‑white people as taking everything from ""white people"" and claims they should not be allowed in America, constituting a hateful attack based on race/ethnicity.",mexican,mexican,canned_50_quick,success
+combined_optimized,all they do is go around and shoot people. dont they have anything better to do? - theyre troublemakers. they cause all the crime,hate,normal,1.8871164321899414,"The statement makes a vague, generalized accusation without referencing any protected characteristic (race, ethnicity, religion, etc.), so it does not constitute hate under the policy.",mexican,mexican,canned_50_quick,success
+combined_optimized,most of us gay men have some feelings of attraction to young boys,hate,hate,2.2595577239990234,"The statement makes a harmful, stereotypical generalization that gay men are attracted to minors, targeting a protected LGBTQ+ group with demeaning implications, which would be viewed as hateful by the community.",lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,<user> <user> u r not a nazi u r merely an ex merc <number> globo homo sorry that not patriotism,normal,hate,2.8911795616149902,"The post uses the slur ""homo"" to attack the target's sexual orientation, constituting a derogatory term against a protected characteristic (LGBTQ+), which is prohibited under X's hateful conduct policy.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,"43 countries (40% of 193 countries and territories) plus yemen, do not allow same-sex marriage in any form: azerbai",normal,normal,1.2423222064971924,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,"the struggle for queer rights and civil rights is ongoing.\"" - from lgbtq-usa.org",normal,normal,1.2124626636505127,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_optimized,this is what an average iranian female looks like you faggots are retarded you all get the gas we need smarter people than this in the atavistic aryan future,hate,hate,1.4637091159820557,"The text uses homophobic slur ""faggots"" and dehumanizing language while targeting Iranian women (national origin and gender), constituting attacks on protected characteristics.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,well devildog you and i both know arabs turn and run,normal,hate,1.4693984985351562,"The statement makes a negative, dehumanizing generalization about Arabs (a protected ethnic group) by labeling them as cowardly, which is a hateful attack on the community.",middle_east,arab,canned_50_quick,success
+combined_optimized,they are not as intelligent as we are,hate,normal,1.4400537014007568,No response received,middle_east,middle_east,canned_50_quick,success
+combined_optimized,middle eastern women are generally very feminine,normal,normal,1.5576660633087158,No response received,middle_east,middle_east,canned_50_quick,success
+combined_optimized,<user> <user> when the hamilton crew censured pence they proved themselves deaf queer and dense spooks queers and lesbians are we anti thespian to make a few jokes at their expense hamilton boycott hamilton tw exit pence maga 1 a,normal,hate,1.8907380104064941,"The text uses derogatory slurs like ""queer"" and ""lesbians"" as insults and includes the anti‑Muslim slur ""spooks,"" attacking LGBTQ+ and religious/ethnic groups rather than discussing policies.",lgbtq,homosexual,canned_50_quick,success
+combined_optimized,mexican people are very accomodating,normal,normal,2.5569448471069336,"Text analysis fallback: {""final 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 ",mexican,mexican,canned_50_quick,success
+combined_optimized,Â the only thing they know how to make is oil wells and bombs,hate,hate,1.8451118469238281,"The statement makes a sweeping, demeaning generalization linking a protected group (by national origin/ethnicity) to oil production and bombs, which is a dehumanizing stereotype and would be viewed as hateful by the community.",middle_east,middle_east,canned_50_quick,success
+combined_optimized,holly is a self-described hag dyke and a lesbian artist. thats a gay art person that is a butch.,normal,normal,2.250037670135498,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_focused,~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-,normal,normal,0.9147465229034424,The text contains only punctuation symbols and does not target any protected group or contain hateful content.,middle_east,middle_east,canned_50_quick,success
+combined_focused,"upon reflection, marriage is a relatively modern and patriarchal institution. it represents stability and security, but it is a very specific kind of stability and security that",normal,normal,1.0352482795715332,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_focused,"in 2010, they tried to pass a law called fada that would have stopped lgbtq people from adopting children. it failed. -",hate,normal,1.1625676155090332,"The text discusses a legislative attempt affecting LGBTQ adoption without using slurs or demeaning language, so it does not violate the policy.",lgbtq,lgbtq,canned_50_quick,success
+combined_focused,arabs are behind every medium- to large-sized terrorist attack,hate,hate,1.1144382953643799,"The statement attributes terrorism to all Arabs, a protected ethnic/national group, using a hateful generalization that dehumanizes and attacks the community.",middle_east,middle_east,canned_50_quick,success
+combined_focused,whats up with everybody who can name the jew buts quotes nihilistic faggots in their about me really aggravates me i mean i agree with some things malcolm x said but im not going to quote the nigger,hate,hate,1.1861190795898438,"The text uses multiple protected-group slurs (anti‑Jewish, homophobic, and anti‑Black) and dehumanizes those groups, violating the policy against attacks based on protected characteristics.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,i can barely go out into society anymore i basically just buy food from the beaner filled store pay all bills online then spend the day talking shit online like a coward what a life,hate,hate,1.208364486694336,"The post uses the racial slur ""beaner"" and dehumanizes Mexican/Latino people, constituting an attack on a protected group.",mexican,hispanic,canned_50_quick,success
+combined_focused,<user> <user> you do not support the queer community and u are a homophobe unless you listen to it let that sink in,normal,normal,1.4865069389343262,No response received,lgbtq,homosexual,canned_50_quick,success
+combined_focused,niggas really fucking faggots,normal,hate,2.336024761199951,"Uses racial and homophobic slurs to dehumanize and attack people based on race and sexual orientation, violating the policy.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,"all middle easterners are terrorists, but yes,",hate,hate,0.8908512592315674,"The statement makes a blanket, dehumanizing generalization that all Middle Easterners are terrorists, targeting a protected group based on ethnicity/national origin, which violates X policy.",middle_east,middle_east,canned_50_quick,success
+combined_focused,<user> never trust arabs,normal,hate,0.9814772605895996,"Generalizes and dehumanizes Arabs, attacking a protected group based on ethnicity/national origin, violating the policy.",middle_east,arab,canned_50_quick,success
+combined_focused,i want to write a book about my journey from america to mexico,normal,normal,1.1042356491088867,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_focused,the master bedroom isn't a master bedroom. it's a closet.,normal,normal,1.1655805110931396,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_focused,okay but realistically speaking i am way better at dealing with heat than the cold arabs be like,normal,hate,1.3774559497833252,"The statement makes a negative, demeaning generalization about Arabs, a protected group, which violates the policy against attacks based on protected characteristics.",middle_east,arab,canned_50_quick,success
+combined_focused,<user> <user> nigga called him gay for being athletic lmfao,normal,normal,1.4303326606750488,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_focused,you are a nobody kike faggot delta male emo bitch who gives a fuck enough about you to even try no one fucking twat,hate,normal,2.8277475833892822,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_focused,dykes really be plottin on hoes for years they will sit there and be friends with a chick for years just waiting for them to slip up,hate,normal,2.9983980655670166,"Text analysis fallback: {""final 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 ",lgbtq,homosexual,canned_50_quick,success
+combined_focused,individual faggots are tolerable so long as they stay in their lane and keep things discrete a society that promotes and celebrates faggotry is doomed,hate,normal,0.9565925598144531,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_focused,any second semester edu major can tell you that going into these trips you want to focus your goals on how you can actually accomplish that- you probably,normal,normal,1.0029633045196533,"The text contains no attacks, slurs, or generalizations against protected groups and does not violate policy.",mexican,mexican,canned_50_quick,success
+combined_focused,i'm actually a white middle-upper class mexica,normal,normal,1.0874357223510742,"The statement is a personal self-identification and does not contain slurs, dehumanizing language, or attacks on protected groups.",mexican,mexican,canned_50_quick,success
+combined_focused,ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure the ice deportation team that he sends has far sighted agents go get her since she such an ugly spic facially,hate,hate,1.087705135345459,"The post uses the ethnic slur 'spic' and dehumanizing language toward a Mexican/Latino individual, calling for punitive action, which violates the policy against attacks based on protected characteristics.",mexican,hispanic,canned_50_quick,success
+combined_focused,deport every single sand nigger i dony care if they were born herd and lived here for 5 0 years they are muslim sand niggers and do not belong in a white nation,hate,normal,1.2930397987365723,No rationale provided,middle_east,arab,canned_50_quick,success
+combined_focused,<user> ma ’ am that ’ gay,normal,normal,1.3693442344665527,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_focused,<user> everybody is like “ omg delete this ” “ you ’ re so gay ” nah this is <number> this stupid bitches fault plus she recorded it 💯 💯 go isma 😹 😹,normal,hate,1.4321343898773193,"The text uses 'you're so gay' as an insult, which is a slur targeting LGBTQ+ identity and constitutes hate under the policy.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,"Â you are the worst kind of women, the immoral kind!",hate,normal,1.437711477279663,"Text analysis fallback: {""final 0.5}{""
+
+        
+
+
+
+    
+
+
+
+
+
+
+
+    
+
+    
+
+
+
+
+
+
+
+    
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+",middle_east,middle_east,canned_50_quick,success
+combined_focused,"i didn't feel like a failure of a feminist for being into women; actually, it was the opposite.",normal,normal,0.9023702144622803,The statement expresses personal feelings about feminism and attraction to women without targeting or demeaning any protected group.,lgbtq,lgbtq,canned_50_quick,success
+combined_focused,it only hit the beaner city,hate,hate,0.973167896270752,"Uses the derogatory slur 'beaner' to dehumanize and target Mexican/Latino people, constituting hate speech under the policy.",mexican,hispanic,canned_50_quick,success
+combined_focused,noir is so good you gays,normal,hate,1.0633797645568848,"The phrase uses a derogatory slur toward LGBTQ+ people, targeting them based on sexual orientation, which violates the policy.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,who the fuck you faggots think you are,hate,hate,1.1258704662322998,"Uses the slur 'faggots' to attack individuals based on sexual orientation, constituting hateful dehumanization of the LGBTQ+ community.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,dykes love that lil black sports bra khaki pants combo,normal,hate,1.200641393661499,"Uses the slur 'dykes' to target LGBTQ+ individuals, constituting a protected characteristic attack.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,they want to destroy the west,hate,normal,1.353963851928711,No response received,middle_east,middle_east,canned_50_quick,success
+combined_focused,"I dont forgive them for coming out to me at a time that was difficult for me, but they were already long gone by then. I also didnt",hate,normal,1.4136996269226074,"Text analysis fallback: {""final 0.5 0.5 0.5 0",lgbtq,lgbtq,canned_50_quick,success
+combined_focused,"Â must be white, i don't date outside of my race",hate,normal,1.4780831336975098,"Text analysis fallback: {
+  ""classification"": ""normal"",
+  ""rationale"": ""The statement expresses a personal dating preference",mexican,mexican,canned_50_quick,success
+combined_focused,love the mexican culture,normal,normal,0.8599607944488525,"The statement expresses appreciation for Mexican culture without slurs, dehumanization, or negative generalizations, thus it does not violate the policy.",mexican,mexican,canned_50_quick,success
+combined_focused,most of us gay men have some feelings of attraction to young boys,hate,hate,1.033944845199585,"The statement makes a harmful, false generalization about gay men, targeting a protected sexual orientation group with demeaning stereotypes, violating the policy.",lgbtq,lgbtq,canned_50_quick,success
+combined_focused,<user> <user> u r not a nazi u r merely an ex merc <number> globo homo sorry that not patriotism,normal,hate,1.157684087753296,"The text uses a homophobic slur ('homo') to demean a person, targeting a protected characteristic (sexual orientation), which violates the policy.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,white gay men mad they can not say dyke bc they do not have faggot to themselves lmao,normal,normal,1.3424394130706787,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_focused,really apart from tunnelling what have the arabs provided the world with,normal,normal,1.292060375213623,No rationale provided,middle_east,arab,canned_50_quick,success
+combined_focused,they are already taking everthing from us white people. they should not be allowed to come to america as well,hate,normal,1.519493579864502,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_focused,all they do is go around and shoot people. dont they have anything better to do? - theyre troublemakers. they cause all the crime,hate,normal,1.45159912109375,"Text analysis fallback: {""final"":""{\""classification\"": \""normal\"", \""rationale\"": \""The text makes a generic, dehumanizing c",mexican,mexican,canned_50_quick,success
+combined_focused,"we did nothing to those people to make them feel inferior, they have been discriminated to much and made to think they are inferior and it makes them angry",hate,normal,1.766808271408081,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_focused,mexican people are very accomodating,normal,normal,0.87703537940979,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_focused,"the struggle for queer rights and civil rights is ongoing.\"" - from lgbtq-usa.org",normal,normal,0.9514646530151367,"The text affirms ongoing queer rights struggles without slurs, dehumanization, or attacks on protected groups.",lgbtq,lgbtq,canned_50_quick,success
+combined_focused,they are not as intelligent as we are,hate,normal,1.0159330368041992,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_focused,middle eastern women are generally very feminine,normal,normal,1.2183539867401123,"The statement is a neutral/generalized description without slurs, demeaning language, or attacks on a protected group, thus it does not violate the policy.",middle_east,middle_east,canned_50_quick,success
+combined_focused,this is what an average iranian female looks like you faggots are retarded you all get the gas we need smarter people than this in the atavistic aryan future,hate,hate,1.1279127597808838,"The text uses homophobic and ableist slurs and dehumanizes Iranian women, targeting protected characteristics (national origin, sexual orientation, disability) in a hateful manner.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,well devildog you and i both know arabs turn and run,normal,normal,1.4062814712524414,"Text analysis fallback: {""final 0.5}{""
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+
+
+ 
+
+
+
+  
+
+  
+
+ 
+
+
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+
+
+",middle_east,arab,canned_50_quick,success
+combined_focused,"43 countries (40% of 193 countries and territories) plus yemen, do not allow same-sex marriage in any form: azerbai",normal,normal,1.4416861534118652,"Text analysis fallback: {""final 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 ",lgbtq,lgbtq,canned_50_quick,success
+combined_focused,<user> <user> when the hamilton crew censured pence they proved themselves deaf queer and dense spooks queers and lesbians are we anti thespian to make a few jokes at their expense hamilton boycott hamilton tw exit pence maga 1 a,normal,hate,1.513988733291626,"The post uses derogatory slurs like ""queer"" and ""lesbians"" to insult and dehumanize LGBTQ+ individuals, constituting hate speech against a protected group.",lgbtq,homosexual,canned_50_quick,success
+combined_focused,Â the only thing they know how to make is oil wells and bombs,hate,normal,1.3358409404754639,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_focused,holly is a self-described hag dyke and a lesbian artist. thats a gay art person that is a butch.,normal,hate,3.171595335006714,"Text analysis fallback: {""final JSON"":""{\""classification\"": \""hate\"", \""rationale\"": \""Uses derogatory slur 'dyke' and demea",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,i can barely go out into society anymore i basically just buy food from the beaner filled store pay all bills online then spend the day talking shit online like a coward what a life,hate,hate,0.9303369522094727,"Uses the slur 'beaner' to dehumanize Mexican/Latino people and generalizes negatively, constituting an attack on a protected ethnicity.",mexican,hispanic,canned_50_quick,success
+combined_conservative,whats up with everybody who can name the jew buts quotes nihilistic faggots in their about me really aggravates me i mean i agree with some things malcolm x said but im not going to quote the nigger,hate,normal,1.0536582469940186,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,niggas really fucking faggots,normal,normal,1.0021729469299316,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,"in 2010, they tried to pass a law called fada that would have stopped lgbtq people from adopting children. it failed. -",hate,normal,1.1592745780944824,"The text discusses a past legislative proposal affecting LGBTQ adoption rights without using slurs, dehumanization, or generalizations; it critiques a policy, not a protected group.",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,arabs are behind every medium- to large-sized terrorist attack,hate,hate,1.0378973484039307,"The statement attributes all Arabs to terrorist attacks, a hateful generalization targeting a protected ethnic/national group, violating the policy against attacks on people based on protected characteristics.",middle_east,middle_east,canned_50_quick,success
+combined_conservative,~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-,normal,normal,1.1624748706817627,"The text contains only punctuation and no language targeting protected groups or containing slurs, so it does not violate the policy.",middle_east,middle_east,canned_50_quick,success
+combined_conservative,"upon reflection, marriage is a relatively modern and patriarchal institution. it represents stability and security, but it is a very specific kind of stability and security that",normal,normal,1.4181654453277588,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,<user> <user> you do not support the queer community and u are a homophobe unless you listen to it let that sink in,normal,normal,1.758331298828125,No response received,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,<user> never trust arabs,normal,hate,0.963731050491333,"The statement generalizes and dehumanizes Arabs, a protected ethnic/national group, constituting an attack based on protected characteristic and violating the policy.",middle_east,arab,canned_50_quick,success
+combined_conservative,i want to write a book about my journey from america to mexico,normal,normal,0.9565401077270508,"The statement expresses a personal intent to write about a journey and contains no slurs, dehumanizing language, or attacks on protected groups.",mexican,mexican,canned_50_quick,success
+combined_conservative,"all middle easterners are terrorists, but yes,",hate,hate,1.0051798820495605,"The statement makes a blanket, dehumanizing generalization that all Middle Easterners are terrorists, targeting a protected group based on national/ethnic origin, which violates X policy.",middle_east,middle_east,canned_50_quick,success
+combined_conservative,the master bedroom isn't a master bedroom. it's a closet.,normal,normal,1.0258724689483643,"The statement discusses a bedroom layout without referencing any protected characteristic, slur, or hateful generalization; it does not target or dehumanize any group.",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,dykes really be plottin on hoes for years they will sit there and be friends with a chick for years just waiting for them to slip up,hate,hate,1.1832478046417236,"Uses the slur 'dykes' to demean lesbians and makes hostile generalizations about them, constituting an attack on a protected LGBTQ+ group.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,<user> <user> nigga called him gay for being athletic lmfao,normal,hate,1.3820066452026367,"Text analysis fallback: {""final"":""{\""classification\"": \""hate\"", \""rationale\"": \""Uses the racial slur 'nigga' and homophobi",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,okay but realistically speaking i am way better at dealing with heat than the cold arabs be like,normal,normal,1.3466663360595703,No rationale provided,middle_east,arab,canned_50_quick,success
+combined_conservative,you are a nobody kike faggot delta male emo bitch who gives a fuck enough about you to even try no one fucking twat,hate,normal,1.383995771408081,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,any second semester edu major can tell you that going into these trips you want to focus your goals on how you can actually accomplish that- you probably,normal,normal,0.8187429904937744,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_conservative,<user> ma ’ am that ’ gay,normal,normal,1.1865010261535645,"The text only contains the word 'gay' without slurs, demeaning language, or attacks on a protected group; it does not target or dehumanize any community.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,"Â you are the worst kind of women, the immoral kind!",hate,normal,1.181147575378418,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_conservative,ok not only did i report that spic to ✝️ president trump 🇺 🇸 i sent a warning for him to make sure the ice deportation team that he sends has far sighted agents go get her since she such an ugly spic facially,hate,hate,1.2615902423858643,"The post uses the ethnic slur ""spic"" to target a Mexican/Latino individual, dehumanizes them, and calls for punitive action, constituting hate speech against a protected group.",mexican,hispanic,canned_50_quick,success
+combined_conservative,<user> everybody is like “ omg delete this ” “ you ’ re so gay ” nah this is <number> this stupid bitches fault plus she recorded it 💯 💯 go isma 😹 😹,normal,normal,1.2693922519683838,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,deport every single sand nigger i dony care if they were born herd and lived here for 5 0 years they are muslim sand niggers and do not belong in a white nation,hate,hate,1.324497938156128,"The text uses racial and religious slurs, dehumanizes Muslims/Middle Eastern people, and calls for their removal, violating the policy against attacks on protected groups.",middle_east,arab,canned_50_quick,success
+combined_conservative,individual faggots are tolerable so long as they stay in their lane and keep things discrete a society that promotes and celebrates faggotry is doomed,hate,hate,2.1552093029022217,"The text uses anti-LGBTQ+ slurs ('faggots', 'faggotry') and dehumanizing language, attacking people based on sexual orientation, which violates the policy against hate speech.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,i'm actually a white middle-upper class mexica,normal,normal,2.344536781311035,"The statement is a self‑identification and contains no slur, dehumanizing language, or generalizations targeting a protected group; it does not violate the policy.",mexican,mexican,canned_50_quick,success
+combined_conservative,it only hit the beaner city,hate,hate,0.914297342300415,"Uses the derogatory slur 'beaner' to dehumanize and target Mexican/Latino people, constituting an attack based on protected ethnicity/national origin.",mexican,hispanic,canned_50_quick,success
+combined_conservative,"i didn't feel like a failure of a feminist for being into women; actually, it was the opposite.",normal,normal,1.0559284687042236,No rationale provided,lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,who the fuck you faggots think you are,hate,hate,0.9497666358947754,"Uses the slur 'faggots' to dehumanize and attack LGBTQ+ individuals, constituting a protected characteristic hate violation.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,"Â must be white, i don't date outside of my race",hate,hate,1.2467057704925537,"The statement expresses a racial exclusion ('I don't date outside of my race'), attacking people based on the protected characteristic of race, which violates the policy against hate.",mexican,mexican,canned_50_quick,success
+combined_conservative,dykes love that lil black sports bra khaki pants combo,normal,hate,1.3950471878051758,"Uses the slur 'dykes' to refer to lesbians, a protected LGBTQ+ group, constituting hateful language targeting that community.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,they want to destroy the west,hate,normal,1.3969781398773193,No response received,middle_east,middle_east,canned_50_quick,success
+combined_conservative,noir is so good you gays,normal,normal,1.382873773574829,No response received,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,"I dont forgive them for coming out to me at a time that was difficult for me, but they were already long gone by then. I also didnt",hate,normal,1.429476022720337,No response received,lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,love the mexican culture,normal,normal,0.9268720149993896,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_conservative,most of us gay men have some feelings of attraction to young boys,hate,hate,1.0937144756317139,"The statement makes a false, harmful generalization that gay men are attracted to young boys, a hateful stereotype targeting the LGBTQ+ community, violating the policy against attacks based on protected characteristics.",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,<user> <user> u r not a nazi u r merely an ex merc <number> globo homo sorry that not patriotism,normal,hate,1.2637252807617188,"Uses the homophobic slur 'homo' to demean a person, targeting sexual orientation, which violates the policy against attacks on protected groups.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,white gay men mad they can not say dyke bc they do not have faggot to themselves lmao,normal,normal,1.3260552883148193,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,all they do is go around and shoot people. dont they have anything better to do? - theyre troublemakers. they cause all the crime,hate,normal,1.3571200370788574,"The statement does not identify any protected characteristic (race, ethnicity, religion, etc.) and contains no slurs or dehumanizing language toward a protected group; it is a generic critique without targeting a protected community.",mexican,mexican,canned_50_quick,success
+combined_conservative,really apart from tunnelling what have the arabs provided the world with,normal,normal,1.3105802536010742,No rationale provided,middle_east,arab,canned_50_quick,success
+combined_conservative,they are already taking everthing from us white people. they should not be allowed to come to america as well,hate,normal,1.4361090660095215,No rationale provided,mexican,mexican,canned_50_quick,success
+combined_conservative,"we did nothing to those people to make them feel inferior, they have been discriminated to much and made to think they are inferior and it makes them angry",hate,normal,1.9854953289031982,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_conservative,mexican people are very accomodating,normal,normal,0.8263881206512451,"The statement positively describes Mexican people and contains no slur, demeaning generalization, or attack based on protected characteristics.",mexican,mexican,canned_50_quick,success
+combined_conservative,"the struggle for queer rights and civil rights is ongoing.\"" - from lgbtq-usa.org",normal,normal,1.1050043106079102,"The text affirms ongoing queer and civil rights struggles without slurs, dehumanization, or attacks on protected groups; it does not violate the policy.",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,they are not as intelligent as we are,hate,normal,1.2142581939697266,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_conservative,well devildog you and i both know arabs turn and run,normal,hate,1.2778077125549316,"The statement makes a negative generalization about Arabs, a protected ethnic/national group, implying they are cowardly. This dehumanizing, group-based attack violates the policy.",middle_east,arab,canned_50_quick,success
+combined_conservative,this is what an average iranian female looks like you faggots are retarded you all get the gas we need smarter people than this in the atavistic aryan future,hate,hate,1.3292977809906006,"Uses homophobic and ableist slurs and dehumanizing language targeting Iranian people and LGBTQ+ individuals, constituting hate speech against protected groups.",lgbtq,homosexual,canned_50_quick,success
+combined_conservative,<user> <user> when the hamilton crew censured pence they proved themselves deaf queer and dense spooks queers and lesbians are we anti thespian to make a few jokes at their expense hamilton boycott hamilton tw exit pence maga 1 a,normal,normal,1.4832866191864014,No rationale provided,lgbtq,homosexual,canned_50_quick,success
+combined_conservative,middle eastern women are generally very feminine,normal,normal,1.4150409698486328,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_conservative,"43 countries (40% of 193 countries and territories) plus yemen, do not allow same-sex marriage in any form: azerbai",normal,normal,1.5365185737609863,"Text analysis fallback: {""final 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 ",lgbtq,lgbtq,canned_50_quick,success
+combined_conservative,Â the only thing they know how to make is oil wells and bombs,hate,normal,1.4562287330627441,No rationale provided,middle_east,middle_east,canned_50_quick,success
+combined_conservative,holly is a self-described hag dyke and a lesbian artist. thats a gay art person that is a butch.,normal,normal,1.5288124084472656,No response received,lgbtq,lgbtq,canned_50_quick,success

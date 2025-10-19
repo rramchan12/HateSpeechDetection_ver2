@@ -367,18 +367,23 @@ class PromptRunner:
         Returns:
             bool: True if connection is successful, False otherwise
         """
-        print(f"\nTesting connection to Azure AI for model: {self.model_id}")
-        print("=" * 50)
+        import sys
+        print(f"\nTesting connection to Azure AI for model: {self.model_id}", flush=True)
+        print("=" * 50, flush=True)
+        sys.stdout.flush()
         
         try:
             # Get connector
             connector = self.get_connector()
-            print("Azure AI connector initialized successfully")
+            print("Azure AI connector initialized successfully", flush=True)
+            sys.stdout.flush()
             
-            # Get baseline strategy for testing
-            baseline_strategy = self.strategy_loader.get_strategy('baseline')
+            # Get baseline_standard strategy for testing (from baseline_v1.json)
+            baseline_strategy = self.strategy_loader.get_strategy('baseline_standard')
             if baseline_strategy is None:
-                print("ERROR: Baseline strategy not found in templates")
+                print("ERROR: 'baseline_standard' strategy not found in template file", flush=True)
+                print(f"Available strategies: {self.strategy_loader.get_available_strategy_names()}", flush=True)
+                sys.stdout.flush()
                 return False
             
             # Prepare test messages
@@ -420,16 +425,31 @@ class PromptRunner:
             
             if response and response.choices:
                 content = response.choices[0].message.content
-                print(f"Connection successful! Model responded with content")
-                print(f"Response time: {response_time:.3f}s")
-                print(f"Content preview: {content[:100]}...")
+                print(f"Connection successful! Model responded with content", flush=True)
+                print(f"Response time: {response_time:.3f}s", flush=True)
+                print(f"Content preview: {content[:100]}...", flush=True)
+                sys.stdout.flush()
                 return True
             else:
-                print("ERROR: Connection failed: No valid response from model")
+                print("ERROR: Connection failed: No valid response from model", flush=True)
+                print(f"Response object: {response}", flush=True)
+                print("\nPossible causes:", flush=True)
+                print(f"1. Model deployment '{self.model_id}' does not exist in Azure AI", flush=True)
+                print(f"2. Endpoint URL is incorrect: Check model_connection.yaml", flush=True)
+                print(f"3. API key is invalid or missing: Check environment variables", flush=True)
+                print(f"4. Model deployment has been deleted or renamed", flush=True)
+                print(f"\nEndpoint: {connector.endpoint}", flush=True)
+                print(f"Model deployment: {connector.model_name}", flush=True)
+                print(f"\nCheck the latest log file for detailed error messages (404 Resource not found)", flush=True)
+                sys.stdout.flush()
                 return False
                 
         except Exception as e:
-            print(f"ERROR: Connection failed: {str(e)}")
+            print(f"ERROR: Connection failed: {str(e)}", flush=True)
+            import traceback
+            print("\nFull error traceback:", flush=True)
+            traceback.print_exc()
+            sys.stdout.flush()
             return False
     
     def run_validation(self, strategies: List[str], data_source: str, output_dir: str, 
@@ -1207,8 +1227,8 @@ Examples:
                        default=["baseline"],
                        help="Strategy(ies) to validate (default: baseline). Use 'all' to run all available strategies. Available strategies depend on the loaded template file.")
     
-    parser.add_argument("--prompt-template-file", "-p", default="all_combined.json",
-                       help="Prompt template file to load from prompt_templates folder (default: all_combined.json)")
+    parser.add_argument("--prompt-template-file", "-p", default="baseline_v1.json",
+                       help="Prompt template file to load from prompt_templates folder (default: baseline_v1.json)")
     
     # Output and debugging
     parser.add_argument("--output-dir", "-o", default="outputs",
@@ -1254,6 +1274,31 @@ def main():
     logger = logging.getLogger(__name__)
     
     try:
+        # Handle connection testing early (before strategy validation)
+        if args.test_connection:
+            # Auto-detect config file if not specified
+            config_path = args.config
+            if config_path is None:
+                # Look for model_connection.yaml in new connector package location and legacy locations
+                current_dir = Path(".")
+                prompt_eng_dir = Path("prompt_engineering")
+                connector_dir = Path(__file__).parent / "connector"
+                
+                for potential_path in [connector_dir / "model_connection.yaml",
+                                     current_dir / "model_connection.yaml", 
+                                     prompt_eng_dir / "model_connection.yaml"]:
+                    if potential_path.exists():
+                        config_path = str(potential_path)
+                        logger.info(f"Auto-detected config file: {config_path}")
+                        break
+            
+            logger.info("Testing connection to Azure AI endpoint")
+            runner = PromptRunner(model_id=args.model, config_path=config_path, 
+                                prompt_template_file=args.prompt_template_file)
+            runner.set_execution_metadata(command_line, "connection_test")
+            success = runner.test_connection()
+            sys.exit(0 if success else 1)
+        
         # Create runner to validate strategies
         runner = PromptRunner(model_id=args.model, config_path=args.config, 
                             prompt_template_file=args.prompt_template_file)
@@ -1273,7 +1318,7 @@ def main():
         
         logger.info(f"Starting prompt validation for model '{args.model}'")
         
-        # Auto-detect config file if not specified
+        # Auto-detect config file if not specified (for non-connection-test operations)
         config_path = args.config
         if config_path is None:
             # Look for model_connection.yaml in new connector package location and legacy locations
@@ -1288,15 +1333,6 @@ def main():
                     config_path = str(potential_path)
                     logger.info(f"Auto-detected config file: {config_path}")
                     break
-        
-        # Handle connection testing
-        if args.test_connection:
-            logger.info("Testing connection to Azure AI endpoint")
-            runner = PromptRunner(model_id=args.model, config_path=config_path, 
-                                prompt_template_file=args.prompt_template_file)
-            runner.set_execution_metadata(command_line, "connection_test")
-            success = runner.test_connection()
-            sys.exit(0 if success else 1)
         
         # Run validation based on arguments
         if args.metrics_only:

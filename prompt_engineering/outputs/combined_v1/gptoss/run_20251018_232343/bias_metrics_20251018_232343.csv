@@ -1,0 +1,10 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_optimized,lgbtq,49,0.5666666666666667,0.21052631578947367,15,13,17,4
+combined_optimized,mexican,22,0.2,0.5833333333333334,5,8,2,7
+combined_optimized,middle_east,29,0.3076923076923077,0.3125,11,9,4,5
+combined_focused,lgbtq,49,0.43333333333333335,0.3684210526315789,12,17,13,7
+combined_focused,mexican,22,0.0,0.6666666666666666,4,10,0,8
+combined_focused,middle_east,29,0.15384615384615385,0.5625,7,11,2,9
+combined_conservative,mexican,22,0.3,0.5833333333333334,5,7,3,7
+combined_conservative,lgbtq,49,0.43333333333333335,0.47368421052631576,10,17,13,9
+combined_conservative,middle_east,29,0.23076923076923078,0.5625,7,10,3,9

@@ -104,7 +104,7 @@ class StrategyTemplatesLoader:
         if templates_file_path:
             self.templates_file = Path(templates_file_path)
         else:
-            self.templates_file = Path(__file__).parent.parent / "prompt_templates" / "all_combined.json"
+            self.templates_file = Path(__file__).parent.parent / "prompt_templates" / "combined" / "all_combined.json"
         
         # Initialize strategies dictionary
         self.strategies: Dict[str, PromptStrategy] = {}

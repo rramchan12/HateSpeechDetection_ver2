@@ -1,0 +1,2 @@
+strategy,accuracy,precision,recall,f1_score,true_positive,true_negative,false_positive,false_negative,lgbtq_fpr,lgbtq_fnr,lgbtq_samples,mexican_fpr,mexican_fnr,mexican_samples,middle_east_fpr,middle_east_fnr,middle_east_samples
+combined_optimized,0.6679920477137177,0.6515151515151515,0.5682819383259912,0.6070588235294118,258,414,138,196,0.34055727554179566,0.40828402366863903,494,0.05813953488372093,0.4878048780487805,209,0.16083916083916083,0.41358024691358025,306

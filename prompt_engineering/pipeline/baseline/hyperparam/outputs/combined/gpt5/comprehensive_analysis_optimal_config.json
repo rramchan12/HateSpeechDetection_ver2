@@ -1,0 +1,63 @@
+{
+  "optimization_summary": {
+    "total_strategies_evaluated": 3,
+    "total_runs_analyzed": 1,
+    "scoring_weights": {
+      "performance_weight": 0.7,
+      "bias_weight": 0.3
+    },
+    "protected_groups": [
+      "lgbtq",
+      "mexican",
+      "middle_east"
+    ],
+    "command_line_args": {
+      "run_ids": [
+        "run_20251019_125041"
+      ],
+      "mode": "all",
+      "output_dir": "./outputs/combined/gpt5",
+      "full_command": "optimization_runner.py --run-id run_20251019_125041 --output-dir ./outputs/combined/gpt5"
+    }
+  },
+  "optimal_configuration": {
+    "rank": 1,
+    "strategy_name": "combined_optimized",
+    "run_id": "run_20251019_125041",
+    "template_file": "combined/combined_gpt5_v1.json",
+    "model_name": "gpt-5",
+    "scores": {
+      "f1_score": 0.5869565217391305,
+      "f1_normalized": 1.0,
+      "bias_score": 0.6147085735901526,
+      "bias_normalized": 0.9167423683552729,
+      "hybrid_score": 0.9750227105065818
+    },
+    "hyperparameters": {
+      "max_tokens": 650,
+      "temperature": 1.0,
+      "top_p": 1.0,
+      "frequency_penalty": 0.0,
+      "presence_penalty": 0.0,
+      "response_format": "json_object"
+    }
+  },
+  "top_5_alternatives": [
+    {
+      "rank": 2,
+      "strategy_name": "combined_focused",
+      "run_id": "run_20251019_125041",
+      "hybrid_score": 0.7222816399286989,
+      "f1_score": 0.5476190476190477,
+      "bias_score": 0.6181989428699955
+    },
+    {
+      "rank": 3,
+      "strategy_name": "combined_conservative",
+      "run_id": "run_20251019_125041",
+      "hybrid_score": 0.0,
+      "f1_score": 0.4878048780487805,
+      "bias_score": 0.5762764282501124
+    }
+  ]
+}
