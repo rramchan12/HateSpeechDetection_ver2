@@ -191,4 +191,4 @@ test_output/
 
 # Logs
 *.log
-logs/
+logs/prompt_engineering/prompt_templates/combined/backup/
