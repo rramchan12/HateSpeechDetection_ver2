@@ -34,17 +34,18 @@ ls -lh ~/finetuning/data/
 ```
 
 If not transferred yet:
-```powershell
+```bash
 # From local machine
 scp data/prepared/train.jsonl a100vm:~/finetuning/data/
 scp data/prepared/validation.jsonl a100vm:~/finetuning/data/
 ```
 
-### 3. VS Code Remote SSH (Optional but Recommended)
+### 3. VS Code Remote SSH Connected
 
-1. Install "Remote - SSH" extension in VS Code
+1. Install "Remote - SSH" extension in VS Code (if not already)
 2. Press `F1` → "Remote-SSH: Connect to Host" → `a100vm`
 3. Open folder: `/home/azureuser/finetuning`
+4. All subsequent steps can be run from VS Code terminal or SSH terminal
 
 ---
 
@@ -71,38 +72,38 @@ mkdir -p ~/finetuning/{data,outputs,models,scripts}
 cd ~/finetuning
 ```
 
-### Step 2: Create Virtual Environment
+### Step 2: Create Virtual Environment (in VS Code)
 
-```bash
-# Create venv
-python3 -m venv venv
+Using VS Code's integrated terminal (connected via Remote SSH):
 
-# Activate
-source venv/bin/activate
+1. Open VS Code terminal: `` Ctrl+` ``
+2. Ensure you're in `/home/azureuser/finetuning`:
+   ```bash
+   cd ~/finetuning
+   ```
+3. Create and activate virtual environment:
+   ```bash
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+4. Verify activation (python path should show venv):
+   ```bash
+   which python
+   # Expected: /home/azureuser/finetuning/venv/bin/python
+   ```
 
-# Verify activation
-which python
-# Should show: /home/azureuser/finetuning/venv/bin/python
-```
+Note: You can also set VS Code to use this venv as the default interpreter. See [VS Code Python Environment Configuration](https://code.visualstudio.com/docs/python/environments).
 
-### Step 3: Install Dependencies
+### Step 3: Install Dependencies (from terminal)
+
+From the VS Code terminal (with venv activated):
 
 ```bash
 # Update pip
 pip install --upgrade pip
 
-# Install PyTorch with CUDA (if not pre-installed)
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-
-# Install core libraries
-pip install transformers==4.36.0
-pip install peft==0.7.0
-pip install datasets==2.16.0
-pip install accelerate==0.25.0
-pip install bitsandbytes==0.41.0
-pip install scipy
-pip install pandas
-pip install scikit-learn
+# Install finetuning-specific dependencies
+pip install -r finetuning/requirements.txt
 
 # Verify installation
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}')"
@@ -114,7 +115,11 @@ PyTorch: 2.1.0+cu118
 CUDA: True
 ```
 
-### Step 4: Verify GPU
+**Note**: The `finetuning/requirements.txt` contains all dependencies needed for the fine-tuning pipeline. For full project dependencies, see the root-level `requirements.txt`.
+
+### Step 4: Verify GPU (from terminal)
+
+From the VS Code terminal:
 
 ```bash
 nvidia-smi
@@ -129,269 +134,149 @@ nvidia-smi
 **Duration**: 1-2 hours  
 **Objective**: Measure GPT-OSS-120B performance WITHOUT fine-tuning
 
-### Step 1: Create Baseline Inference Script
+The baseline validation uses a dedicated CLI pipeline. See [`finetuning/pipeline/baseline/README.md`](pipeline/baseline/README.md) for detailed documentation.
 
-Create `scripts/baseline_inference.py`:
+### Step 1: Quick Test (50 samples)
 
-```python
-#!/usr/bin/env python3
-"""
-Baseline inference for GPT-OSS-120B (before fine-tuning)
-Validates model performance on hate speech detection task
-"""
-
-import json
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from tqdm import tqdm
-from pathlib import Path
-import time
-
-def load_model(model_name="microsoft/Phi-3.5-MoE-instruct"):
-    """Load GPT-OSS-120B base model"""
-    print(f"Loading model: {model_name}")
-    print("This may take 5-10 minutes...")
-    
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name,
-        trust_remote_code=True
-    )
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        trust_remote_code=True,
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
-    
-    print(f"Model loaded successfully!")
-    print(f"Parameters: {model.num_parameters() / 1e9:.1f}B")
-    print(f"Memory: {model.get_memory_footprint() / 1e9:.2f} GB")
-    
-    return model, tokenizer
-
-def run_inference(model, tokenizer, data_file, output_file, max_samples=None):
-    """Run inference on validation set"""
-    print(f"\nLoading data from: {data_file}")
-    
-    # Load data
-    with open(data_file, 'r') as f:
-        data = [json.loads(line) for line in f]
-    
-    if max_samples:
-        data = data[:max_samples]
-    
-    print(f"Total samples: {len(data)}")
-    
-    results = []
-    start_time = time.time()
-    
-    for i, item in enumerate(tqdm(data, desc="Inference")):
-        # Extract prompt (remove label from text)
-        prompt = item['text'].split('### Classification:')[0] + '### Classification:'
-        
-        # Tokenize
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-        inputs = {k: v.to(model.device) for k, v in inputs.items()}
-        
-        # Generate
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=10,
-                temperature=0.1,  # Optimal from baseline analysis
-                do_sample=False,
-                pad_token_id=tokenizer.eos_token_id
-            )
-        
-        # Decode
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        # Extract prediction
-        if '### Classification:' in response:
-            prediction = response.split('### Classification:')[-1].strip().lower()
-        else:
-            prediction = response.strip().lower()
-        
-        # Normalize prediction
-        if 'hate' in prediction and 'not' not in prediction:
-            pred_label = 'hate'
-        elif 'not' in prediction or 'normal' in prediction:
-            pred_label = 'not hate'
-        else:
-            pred_label = 'unknown'
-        
-        # Store result
-        results.append({
-            'prompt': prompt,
-            'true_label': item.get('label', 'unknown'),
-            'prediction': pred_label,
-            'raw_response': response,
-            'sample_id': i
-        })
-        
-        # Progress update every 50 samples
-        if (i + 1) % 50 == 0:
-            elapsed = time.time() - start_time
-            rate = (i + 1) / elapsed
-            remaining = (len(data) - i - 1) / rate
-            print(f"  Progress: {i+1}/{len(data)} | {rate:.1f} samples/sec | ETA: {remaining/60:.1f} min")
-    
-    # Save results
-    print(f"\nSaving results to: {output_file}")
-    with open(output_file, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    total_time = time.time() - start_time
-    print(f"Inference complete! Total time: {total_time/60:.1f} minutes")
-    print(f"Average: {len(data)/total_time:.2f} samples/second")
-    
-    return results
-
-def calculate_metrics(results):
-    """Calculate F1, precision, recall, accuracy"""
-    from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-    
-    # Filter out unknown predictions
-    valid_results = [r for r in results if r['prediction'] != 'unknown']
-    
-    print(f"\n{'='*60}")
-    print("BASELINE VALIDATION METRICS")
-    print(f"{'='*60}")
-    print(f"Total samples: {len(results)}")
-    print(f"Valid predictions: {len(valid_results)} ({100*len(valid_results)/len(results):.1f}%)")
-    print(f"Unknown predictions: {len(results) - len(valid_results)}")
-    
-    if len(valid_results) == 0:
-        print("ERROR: No valid predictions!")
-        return
-    
-    # Extract labels
-    true_labels = [r['true_label'] for r in valid_results]
-    pred_labels = [r['prediction'] for r in valid_results]
-    
-    # Convert to binary
-    y_true = [1 if label == 'hate' else 0 for label in true_labels]
-    y_pred = [1 if label == 'hate' else 0 for label in pred_labels]
-    
-    # Calculate metrics
-    accuracy = accuracy_score(y_true, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(
-        y_true, y_pred, average='binary', zero_division=0
-    )
-    
-    print(f"\n{'Metric':<20} {'Value':<10}")
-    print(f"{'-'*30}")
-    print(f"{'Accuracy':<20} {accuracy:.3f}")
-    print(f"{'Precision':<20} {precision:.3f}")
-    print(f"{'Recall':<20} {recall:.3f}")
-    print(f"{'F1-Score':<20} {f1:.3f}")
-    
-    # Confusion matrix
-    tp = sum(1 for yt, yp in zip(y_true, y_pred) if yt == 1 and yp == 1)
-    fp = sum(1 for yt, yp in zip(y_true, y_pred) if yt == 0 and yp == 1)
-    tn = sum(1 for yt, yp in zip(y_true, y_pred) if yt == 0 and yp == 0)
-    fn = sum(1 for yt, yp in zip(y_true, y_pred) if yt == 1 and yp == 0)
-    
-    print(f"\n{'Confusion Matrix':<20}")
-    print(f"{'-'*30}")
-    print(f"{'True Positives':<20} {tp}")
-    print(f"{'False Positives':<20} {fp}")
-    print(f"{'True Negatives':<20} {tn}")
-    print(f"{'False Negatives':<20} {fn}")
-    
-    print(f"\n{'='*60}")
-    print(f"BASELINE F1-SCORE: {f1:.3f}")
-    print(f"TARGET TO BEAT: 0.620 (fine-tuning goal)")
-    print(f"{'='*60}\n")
-    
-    return {
-        'accuracy': accuracy,
-        'precision': precision,
-        'recall': recall,
-        'f1': f1,
-        'confusion_matrix': {'tp': tp, 'fp': fp, 'tn': tn, 'fn': fn}
-    }
-
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", type=str, default="microsoft/Phi-3.5-MoE-instruct")
-    parser.add_argument("--data_file", type=str, default="./data/validation.jsonl")
-    parser.add_argument("--output_file", type=str, default="./outputs/baseline_results.json")
-    parser.add_argument("--max_samples", type=int, default=None)
-    args = parser.parse_args()
-    
-    # Create output directory
-    Path(args.output_file).parent.mkdir(parents=True, exist_ok=True)
-    
-    # Load model
-    model, tokenizer = load_model(args.model_name)
-    
-    # Run inference
-    results = run_inference(model, tokenizer, args.data_file, args.output_file, args.max_samples)
-    
-    # Calculate metrics
-    metrics = calculate_metrics(results)
-```
-
-### Step 2: Run Baseline Validation
+Test the pipeline with a small sample first to verify setup:
 
 ```bash
-# Activate venv
 cd ~/finetuning
 source venv/bin/activate
 
-# Run baseline inference (545 validation samples)
-python scripts/baseline_inference.py \
-    --model_name microsoft/Phi-3.5-MoE-instruct \
+python -m finetuning.pipeline.baseline.runner \
+    --model_name gpt-oss-20b \
     --data_file ./data/validation.jsonl \
-    --output_file ./outputs/baseline_results.json
-
-# Or test with 50 samples first:
-python scripts/baseline_inference.py \
-    --model_name microsoft/Phi-3.5-MoE-instruct \
-    --data_file ./data/validation.jsonl \
-    --output_file ./outputs/baseline_results_sample.json \
+    --output_dir ./outputs \
     --max_samples 50
 ```
 
-**Expected Duration**: 
-- 50 samples: 5-10 minutes
-- 545 samples: 45-60 minutes
+**Expected Duration**: 5-10 minutes
 
 **Expected Output**:
 ```
-=============================================================
+============================================================
+BASELINE VALIDATION PIPELINE
+============================================================
+Model: gpt-oss-20b
+Data file: ./data/validation.jsonl
+Output directory: ./outputs
+============================================================
+
+Loading model: gpt-oss-20b
+This may take 5-10 minutes...
+✓ Model loaded successfully!
+  Parameters: 20.0B
+  Memory: 10.42 GB
+
+Running inference...
+Inference: 100%|████████| 50/50 [05:32<00:00,  6.64s/sample]
+
+✓ Inference complete! Total time: 5.53 minutes
+  Average: 0.15 samples/second
+
+Calculating metrics...
+
+============================================================
 BASELINE VALIDATION METRICS
-=============================================================
-Total samples: 545
-Valid predictions: 540 (99.1%)
+============================================================
+Total samples: 50
+Valid predictions: 50 (100.0%)
 
 Metric               Value     
-------------------------------
-Accuracy             0.650
-Precision            0.610
-Recall               0.620
-F1-Score             0.615
+-----------------------------------
+Accuracy             0.6400
+Precision            0.6154
+Recall               0.6429
+F1-Score             0.6289
+FPR                  0.1837
+FNR                  0.1429
 
-=============================================================
-BASELINE F1-SCORE: 0.615
+============================================================
+BASELINE F1-SCORE: 0.6289
 TARGET TO BEAT: 0.620 (fine-tuning goal)
-=============================================================
+============================================================
+
+✓ Metrics saved to: ./outputs/baseline_metrics_20251021_143022.json
+✓ Summary saved to: ./outputs/baseline_summary_20251021_143022.txt
+
+✓ Baseline validation complete!
 ```
 
-### Step 3: Document Baseline
+### Step 2: Full Baseline Validation
+
+After verifying the quick test works, run full validation on all 545 samples:
 
 ```bash
-# View results
-cat ./outputs/baseline_results.json | head -n 50
-
-# Save baseline metrics for comparison
-echo "Baseline F1: 0.615" > ./outputs/baseline_metrics.txt
-echo "Date: $(date)" >> ./outputs/baseline_metrics.txt
+python -m finetuning.pipeline.baseline.runner \
+    --model_name gpt-oss-20b \
+    --data_file ./data/validation.jsonl \
+    --output_dir ./outputs
 ```
+
+**Expected Duration**: 45-60 minutes
+
+**Expected Output** (last section):
+```
+============================================================
+BASELINE VALIDATION METRICS
+============================================================
+Total samples: 545
+Valid predictions: 542 (99.4%)
+
+Metric               Value     
+-----------------------------------
+Accuracy             0.6501
+Precision            0.6103
+Recall               0.6198
+F1-Score             0.6150
+FPR                  0.1797
+FNR                  0.1631
+
+============================================================
+BASELINE F1-SCORE: 0.6150
+TARGET TO BEAT: 0.620 (fine-tuning goal)
+============================================================
+```
+
+### Step 3: Examine Results
+
+Results are saved with timestamps. View the most recent results:
+
+```bash
+# List all results
+ls -lh ./outputs/baseline_*.json | tail -5
+
+# View metrics from latest run
+cat ./outputs/baseline_metrics_*.json | tail -1 | python -m json.tool
+
+# View summary from latest run
+cat ./outputs/baseline_summary_*.txt | tail -1
+```
+
+### Step 4: Document Baseline
+
+Save the baseline F1 score for comparison during fine-tuning:
+
+```bash
+# Extract baseline F1 from the most recent metrics file
+F1=$(python -c "
+import json, glob
+latest = max(glob.glob('./outputs/baseline_metrics_*.json'))
+with open(latest) as f:
+    print(f'{json.load(f)[\"f1\"]:.4f}')
+")
+
+echo "Baseline F1-Score: $F1" > ./outputs/BASELINE_F1.txt
+echo "Date: $(date)" >> ./outputs/BASELINE_F1.txt
+cat ./outputs/BASELINE_F1.txt
+```
+
+### Pipeline Documentation
+
+For detailed pipeline documentation, arguments, troubleshooting, and advanced usage:
+
+👉 **[Read the Baseline Pipeline README](pipeline/baseline/README.md)**
 
 ---
 
@@ -558,7 +443,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", default="microsoft/Phi-3.5-MoE-instruct")
+    parser.add_argument("--model_name", default="gpt-oss-20b")
     parser.add_argument("--train_file", default="./data/train.jsonl")
     parser.add_argument("--val_file", default="./data/validation.jsonl")
     parser.add_argument("--output_dir", default="./outputs/lora_training")
@@ -601,7 +486,7 @@ source venv/bin/activate
 
 # Run training
 python scripts/train_lora.py \
-    --model_name microsoft/Phi-3.5-MoE-instruct \
+    --model_name gpt-oss-20b \
     --train_file ./data/train.jsonl \
     --val_file ./data/validation.jsonl \
     --output_dir ./outputs/lora_training \
@@ -773,7 +658,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument("--base_model", default="microsoft/Phi-3.5-MoE-instruct")
+    parser.add_argument("--base_model", default="gpt-oss-20b")
     parser.add_argument("--lora_adapter", required=True)
     parser.add_argument("--data_file", default="./data/validation.jsonl")
     parser.add_argument("--output_file", default="./outputs/finetuned_results.json")
@@ -792,7 +677,7 @@ ls -lt ~/finetuning/outputs/
 
 # Run inference with fine-tuned model
 python scripts/finetune_inference.py \
-    --base_model microsoft/Phi-3.5-MoE-instruct \
+    --base_model gpt-oss-20b \
     --lora_adapter ./outputs/lora_training_20251021_143022/final_model \
     --data_file ./data/validation.jsonl \
     --output_file ./outputs/finetuned_results.json
@@ -931,7 +816,7 @@ python scripts/analyze_results.py
 
 ### Issue: Model Loading Fails
 
-**Error**: `OSError: microsoft/Phi-3.5-MoE-instruct not found`
+**Error**: `OSError: gpt-oss-20b not found`
 
 **Solution**: Check Azure deployment for correct model ID
 ```bash
