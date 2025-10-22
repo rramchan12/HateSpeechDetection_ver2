@@ -1,34 +1,55 @@
-# ToxiGen Hate Speech Detection Project
-# Core dependencies
-datasets>=2.0.0
+# HateSpeechDetection_ver2 - Unified Dependencies
+# This file contains all project dependencies including finetuning pipeline
+
+# ============================================================
+# CORE ML FRAMEWORKS
+# ============================================================
 torch>=1.9.0
 transformers>=4.36.0
+huggingface_hub>=0.19.0        # Model downloading and authentication
+
+# ============================================================
+# DATA PROCESSING
+# ============================================================
+datasets>=2.0.0
 pandas>=1.3.0
 numpy>=1.21.0
-scikit-learn>=1.0.0
-
-# Data processing
 pyarrow>=5.0.0
 
-# Testing
-pytest>=7.0.0
-pytest-cov>=4.0.0
-pytest-mock>=3.10.0
+# ============================================================
+# MACHINE LEARNING & METRICS
+# ============================================================
+scikit-learn>=1.0.0
+scipy
 
-# Development
+# ============================================================
+# FINE-TUNING & OPTIMIZATION
+# ============================================================
+peft>=0.7.0                # Parameter-Efficient Fine-Tuning (LoRA)
+bitsandbytes>=0.41.0       # Quantization for memory efficiency
+accelerate>=0.25.0         # Distributed training support
+
+# ============================================================
+# PROMPT ENGINEERING & AZURE AI
+# ============================================================
+azure-ai-inference>=1.0.0b9
+PyYAML>=6.0
+
+# ============================================================
+# DEVELOPMENT & VISUALIZATION
+# ============================================================
 jupyter>=1.0.0
 matplotlib>=3.5.0
 seaborn>=0.11.0
 
-# Prompt validation and Azure AI
-azure-ai-inference>=1.0.0b9
-PyYAML>=6.0
+# ============================================================
+# TESTING
+# ============================================================
+pytest>=7.0.0
+pytest-cov>=4.0.0
+pytest-mock>=3.10.0
 
-# Fine-tuning dependencies
-peft>=0.7.0
-bitsandbytes>=0.41.0
-accelerate>=0.25.0
-scipy
-
-# Optional: for better performance
+# ============================================================
+# UTILITIES
+# ============================================================
 tqdm>=4.60.0

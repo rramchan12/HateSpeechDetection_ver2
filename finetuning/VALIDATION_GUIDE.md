@@ -77,33 +77,33 @@ cd ~/finetuning
 Using VS Code's integrated terminal (connected via Remote SSH):
 
 1. Open VS Code terminal: `` Ctrl+` ``
-2. Ensure you're in `/home/azureuser/finetuning`:
+2. Ensure you're in the project root:
    ```bash
-   cd ~/finetuning
+   cd ~/workspace/HateSpeechDetection_ver2
    ```
 3. Create and activate virtual environment:
    ```bash
-   python3 -m venv venv
-   source venv/bin/activate
+   python3 -m venv .venv
+   source .venv/bin/activate
    ```
-4. Verify activation (python path should show venv):
+4. Verify activation (python path should show .venv):
    ```bash
    which python
-   # Expected: /home/azureuser/finetuning/venv/bin/python
+   # Expected: /home/azureuser/workspace/HateSpeechDetection_ver2/.venv/bin/python
    ```
 
 Note: You can also set VS Code to use this venv as the default interpreter. See [VS Code Python Environment Configuration](https://code.visualstudio.com/docs/python/environments).
 
 ### Step 3: Install Dependencies (from terminal)
 
-From the VS Code terminal (with venv activated):
+From the VS Code terminal (with .venv activated):
 
 ```bash
 # Update pip
 pip install --upgrade pip
 
-# Install finetuning-specific dependencies
-pip install -r finetuning/requirements.txt
+# Install all dependencies from unified requirements.txt
+pip install -r requirements.txt
 
 # Verify installation
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}')"
@@ -111,11 +111,11 @@ python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {
 
 **Expected Output**:
 ```
-PyTorch: 2.1.0+cu118
+PyTorch: 2.9.0+cu128
 CUDA: True
 ```
 
-**Note**: The `finetuning/requirements.txt` contains all dependencies needed for the fine-tuning pipeline. For full project dependencies, see the root-level `requirements.txt`.
+**Note**: The unified `requirements.txt` at the project root contains all dependencies including fine-tuning, metrics, and development tools.
 
 ### Step 4: Verify GPU (from terminal)
 

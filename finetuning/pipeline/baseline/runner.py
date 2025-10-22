@@ -6,7 +6,7 @@ Run baseline inference on GPT-OSS model to establish performance baseline.
 
 Usage:
     python -m finetuning.pipeline.baseline.runner \
-        --model_name gpt-oss-20b \
+        --model_name openai/gpt-oss-20b \
         --data_file ./data/validation.jsonl \
         --output_dir ./outputs
 
@@ -16,11 +16,15 @@ Example:
     
     # Full validation
     python -m finetuning.pipeline.baseline.runner
+    
+    # With HuggingFace token for private models
+    HF_TOKEN=hf_xxx python -m finetuning.pipeline.baseline.runner
 """
 
 import argparse
 import json
 import sys
+import os
 import torch
 from pathlib import Path
 from datetime import datetime
@@ -194,7 +198,7 @@ def create_parser():
     parser.add_argument(
         "--model_name",
         type=str,
-        default="gpt-oss-20b",
+        default="openai/gpt-oss-20b",
         help="HuggingFace model identifier (default: %(default)s)"
     )
     
