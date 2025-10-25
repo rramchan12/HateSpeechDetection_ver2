@@ -1,0 +1,101 @@
+strategy,input_text,true_label,predicted_label,response_time,rationale,target_group_norm,persona_tag,source_dataset,status
+baseline_standard,<user> they are both gay listen to better bands made by better bands gang,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,noir is so good you gays,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,<user> <user> nigga called him gay for being athletic lmfao,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"middle easterners from arab/muslim countries are terrorists...we have to stop letting them in, they will turn germany into a 3",hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,ds does not remove posts like weevs because weevs post is not illegal it removes jidf faggots telling people to kill cops n shit,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,<number> it my birthday this month the supreme court is also hearing an important case starting <number> <number> re if someone can be fired for being lgbtq please do something nice for the queer folx in your life do not have any block and report homophobes on twitter there are plenty,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"well, you did make some assumptions about mexicans, i think it's because of lack of knowledge, only because we speak spanish (if",normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,also that he a faggot and serial mudshark,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"i imagine a great many people, when they hear the words lesbian and gay, initially conjure images of gay men.",normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,why are playstation stans such faggots,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"2) If you were to take a hundred percent true trans person, or a hundred percent true cis person, and a hundred percent false cis person,",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,dont you have any allegiance to your country?,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,this is what an average iranian female looks like you faggots are retarded you all get the gas we need smarter people than this in the atavistic aryan future,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,the type of individualism to which you refer is jewish inculcated special snowflake faggotry everyone group but retarded white cuckservatives practices identity politics collectivists will roll over the individual every time just admit you are too cowardly to stand up for your people,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i want to see the hundreds of thousands of dollars of jewels the arabs gave moochelle and douchebag he got two major watches and she got a shitload of necklaces earrings etc she will never make that much again cleaning toilets,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,Also my cousin got her face cut by a black and she died :(,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,i cant fckn stand the towelhead,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,really apart from tunnelling what have the arabs provided the world with,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,pro white married to a wetback he the best there is eat a fucking tide pod,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,dykes love that lil black sports bra khaki pants combo,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,<user> ay u insul ma niga raep wel im gon poz u neg hole u fugin spic,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,middle eastern women are generally very feminine,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i feel calmer when i travel to mexico photos of mexico make me feel happy & relaxed i feel in my,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,holly is a self-described hag dyke and a lesbian artist. thats a gay art person that is a butch.,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,how you have done everything to open your mouth faggot stephanie is a genious all you have done these years is attack attack and nobody has put a stop to a faggot shit like you,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i think im gunna start a dyke club here at mary wash,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,white gay men mad they can not say dyke bc they do not have faggot to themselves lmao,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,well devildog you and i both know arabs turn and run,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,Â boston.com -Â Barack Obama Plans To Offer Somber Apology For Slavery Tomorrow -Â us.yahoo.com -Â,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"i have a lot in common with them, such as the fact that i like to eat tacos and burritos and i like to drink tequila",normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"thulium : a metalloid, 2 ; p4m2 (no proper noun)-- sappho : noun,",normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,okay but realistically speaking i am way better at dealing with heat than the cold arabs be like,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,the penalty for not having proof of immigration should be death,hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,dykes literally look like this 😏 😏 at all times 😏 😏 their facial expressions jus do not change,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"When I met him I was living in West Hollywood, but I was still in the closet,",normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,How long does it take for our bank to get paid for our products?,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i want to go to guadalajara with you,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"Julia Serano- Whipping Girl - Whipping Girl, Serano's third book, is an accessible, funny memoir and manifesto on transsexuality",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,middle eastern guys have small dicks,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,my cousin is a faggot,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"I've always disliked my genitalia but not how they function as opposed to the body itself, so I never really wanted to medically transition or whatever.",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,i have so much fun driving up and down the hills around the city just to hear the sirens and horns honking at the drivers behind me,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,one thing i learned through my college education is that there are so many things i do not know anything about,hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,maybe not unless of course you use the proper term instead of muslim refugee it may be more clear if you use street shitting sand niggers,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,i think its great that black people are speaking out about civil rights,hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,middle east has shitholes for countries,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,hope they keep getting hit fuck spics what has any spic or spook nation ever contributed to america besides leeches criminals and drugs,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,i am gay but that not queer what so strange about holding men dear i am cheery because i am gay and i am okay with me,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,god hates queers they curse themselves to hell with them thank god for trump and his great decision to protect our military why shud our tax dollars support sin freeks,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"the title, poem 1 (the hunger) is about a dark country, but that same country is named ""la mexica"". this country doesn",normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,i see the future of britain as being a wasteland of ancient molten nuclear reactors and mutated arabs running around on camel legs if they have not been eaten by the metre long dire squirrels,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,when did it start that the media sell the unnormal as regular how many homosexual persons do you know in your real life and how often are they topic in the media,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,Separate people who are praying at the same time (in school) - - Hire more female teachers for female students - - Female students,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,<user> go back to israel with your sand nigger wife and mutt child,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"when a girl walks by in dungarees, they ask her why she does not wear a hijab",hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,idgaf let the dirty sand niggers fight it out,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,be funny to watch people try to expel muzzies from bosnia and croatia best of luck to the suicidal inclined,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"when i was in the navy, i was stationed in san diego, california.",hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,for my part like jake blues i hate illinois nazis that nice i hate boomer faggots who think it hip to be down with the neegroes the blues man the blues so cool totally not the music of geriatric nigger loving cuck traitors they had sunglasses,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"if people really want to become a different gender, they should take testosterone and become athletes",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,because all of the above answers are offensive193. Â Â Â Â the spaniards and mexicans from the Far Right have been called the Third,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> never trust arabs,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,the master bedroom isn't a master bedroom. it's a closet.,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"i know a real middle eastern person, and he is a genius",hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,"i am going to actively work to prevent the trans community from achieving marriage equality in our state. i will fight for trans rights, but only so long",hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,a big part of coming out is choosing to come out to certain people and not others. coming out shouldn't be a one-time event; it,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,flushed with victory after normalizing trannies exposing children to drag queens queer leftie freaks are now cooking up rationales for why it okay to touch kids down there toddlers understand the concept of consent see this video proves it what are you some kind of ageist bigot,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,you all bitches always posting some faggot ass shit smfh,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,quit acting gay,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"'i am a canadian from toronto, and i have to say you have a very beautiful voice, and your songs are beautiful and touching.",normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,every arab woman is a slave to her husband,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,~-~-~-~-~-~-~-~-~-~-~-~-~-~-~-,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,come on faggot you can do better than that why do not you come at me with scholarly sources scratch that you raggedy ass faggots would not know a reputable source or scholars for that matter if it fucked you in the ass get thee behind me faggot,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i am trying to figure out why a man would go to a lesbian joint to drink coffee nope nothing,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,and fuck the faggot usa any nation that prides itself on being the first white nation of immigrants and cucks itself to death by allowing itself to become the minority deserves to wiped out you deserve your death you can not treat collective suicide like this not great loss to humanity,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,dykes really be plottin on hoes for years they will sit there and be friends with a chick for years just waiting for them to slip up,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,puritan prejudice made any sexual expression outside of marriage a crime in colonial massachusetts.- tax laws and census takers have treated same-sex couples who,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,do they have a lot of trannies over there i did not realize that oh well it nice to see fags btfo i can always agree with that which shitskin country has the entire class of gay eunuchs that live on the streets is it india i think it india,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i just want a strong military,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,"when it comes to makeup, asians win",hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,what kind of salsa music do you listen to?,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,Put billions of dollars in the budget for a solid defense,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,why did the white man invent the refrigerated train? to transport terrorists to camps to infiltrate our society,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,anyone who teaches their kids spanish should be shot in the face,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"Â here's the thing about mexicans, one you hear their americanized accent, you know their a mexican",hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,every day life is so much more meaningful if you actually understand the art and culture of the middle east,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i m from the philippines and i have no idea what the united states is angry about,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,"i feel like because they are saying so as advocates of LGBTQ+ rights, that turns what they are saying into \\\""(I) ____ am",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"i think it's great that these protesters are standing on the streets of york with protests - they are trying to protect their values, which is entirely",hate,unknown,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,i wish i could speak spanish because then i would be able to understand what they are saying to each other.,hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> everybody is like “ omg delete this ” “ you ’ re so gay ” nah this is <number> this stupid bitches fault plus she recorded it 💯 💯 go isma 😹 😹,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,you d have to be a complete retard to not know its mccain you d have to be an even bigger retard to believe q anon is real you morons are giving this larping queer the attention he wants,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,is it gay for you to ask your bro for the strap 😳 ✋ 🏼,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,so i posted on craigslist rnr wondering why there were so many beaners in this town and i get this as a response i knew there were illiterates out there but this one is ridiculous,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,a gathering of faggots and dykes is a great place to verify the usefulness of thermobaric munitions,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i can see these jibber jabber arabs in dresses tripping down the street with an armload of shotguns,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,i learned about white privilege through my friend who brought me to zumba,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,eat your dic wait thats gay,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,africans mexicans do not like the homos put up billboards in the ghetto barrio tying dems to gays i d like to see what happens next,hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,my colleagues n my chief use the french equivalent of fag on a big basis every day and call gay man that word like it is the wprd gay or homosexual and i am restraining myself from calling them all faggy fag faggots,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
