@@ -3,12 +3,21 @@
 Baseline Validation Pipeline CLI
 
 Run baseline inference on GPT-OSS model to establish performance baseline.
+Supports both single-GPU and multi-GPU execution via Accelerate.
 
 Usage:
+    # Single GPU (default)
     python -m finetuning.pipeline.baseline.runner \
         --model_name openai/gpt-oss-20b \
         --data_file ./finetuning/data/prepared/validation.jsonl \
         --output_dir ./outputs
+
+    # Multi-GPU with Accelerate (automatic distribution)
+    accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner \
+        --use_accelerate \
+        --model_name openai/gpt-oss-20b \
+        --data_file unified \
+        --max_samples 100
 
     # Using prompt template from prompt_engineering
     python -m finetuning.pipeline.baseline.runner \
@@ -16,11 +25,17 @@ Usage:
         --strategy combined_optimized
 
 Example:
-    # Quick test with canned dataset
+    # Quick test with canned dataset (single GPU)
     python -m finetuning.pipeline.baseline.runner --data_file canned_50_quick --max_samples 5
     
-    # Use unified test dataset
+    # Use unified test dataset (single GPU)
     python -m finetuning.pipeline.baseline.runner --data_file unified --max_samples 50
+    
+    # Multi-GPU with Accelerate (4 GPUs)
+    accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner \
+        --use_accelerate \
+        --data_file unified \
+        --max_samples 100
     
     # Full validation with prompt template and canned data
     python -m finetuning.pipeline.baseline.runner \
@@ -42,6 +57,7 @@ import json
 import sys
 import os
 import torch
+import logging
 from pathlib import Path
 from datetime import datetime
 from typing import Dict, Any, List, Optional
@@ -54,6 +70,13 @@ sys.path.insert(0, str(project_root))
 from finetuning.pipeline.baseline.model_loader import load_model
 from prompt_engineering.metrics import EvaluationMetrics, PersistenceHelper, ValidationResult
 from prompt_engineering.loaders import load_dataset_by_filename, load_dataset, DatasetType, StrategyTemplatesLoader
+
+# Import AccelerateConnector for optional multi-GPU support
+try:
+    from finetuning.pipeline.baseline.connector.accelerate_connector import AccelerateConnector
+    ACCELERATE_AVAILABLE = True
+except ImportError:
+    ACCELERATE_AVAILABLE = False
 
 
 def load_strategy_config(strategy_loader: StrategyTemplatesLoader, strategy_name: str) -> Dict[str, Any]:
@@ -244,10 +267,16 @@ def run_inference_with_prompt(
             - sample_id, text, true_label, prediction, rationale, 
               raw_response, strategy
     """
+    import logging
+    logger = logging.getLogger(__name__)
     results = []
     
-    for i, sample in enumerate(tqdm(dataset, desc="Processing")):
+    for i, sample in enumerate(tqdm(dataset, desc="Processing", disable=True)):
         try:
+            # Log progress every 10 samples
+            if i % 10 == 0:
+                logger.info(f"Processing sample {i+1}/{len(dataset)}")
+            
             # Create messages
             messages = [
                 {"role": "system", "content": prompt_config["system_prompt"]},
@@ -283,13 +312,6 @@ def run_inference_with_prompt(
             
             # Decode
             response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
-            
-            # Debug: Print first response to help diagnose issues
-            if i == 0:
-                print(f"\n[DEBUG] Sample response:")
-                print(f"  Input: {sample['text'][:100]}...")
-                print(f"  Response: {response[:200]}...")
-                print()
             
             # Parse response
             try:
@@ -344,6 +366,114 @@ def run_inference_with_prompt(
     return results
 
 
+def run_inference_with_accelerate(
+    connector: 'AccelerateConnector',
+    dataset: List[Dict],
+    prompt_config: Dict[str, Any]
+) -> List[Dict]:
+    """
+    Run inference on dataset using Accelerate for multi-GPU distribution.
+    
+    This function uses the AccelerateConnector to automatically split the dataset
+    across available GPUs and process samples in parallel.
+    
+    Args:
+        connector: AccelerateConnector instance (already initialized with model)
+        dataset: List of samples with 'text' and 'label' keys
+        prompt_config: Prompt configuration dict with keys:
+            - system_prompt: System message for the model
+            - user_template: Template string with {text} placeholder
+            - parameters: Dict with max_tokens, temperature, top_p
+        
+    Returns:
+        List of result dictionaries from all GPUs (main process only)
+    """
+    logger = logging.getLogger(__name__)
+    
+    # Split dataset across GPUs automatically
+    process_dataset = connector.split_dataset(dataset)
+    
+    logger.info(f"Process {connector.process_index}: Processing {len(process_dataset)} samples")
+    
+    results = []
+    
+    # Process samples on this GPU
+    for i, sample in enumerate(tqdm(process_dataset, desc=f"GPU {connector.process_index}", disable=not connector.is_main_process)):
+        try:
+            # Create messages
+            messages = [
+                {"role": "system", "content": prompt_config["system_prompt"]},
+                {"role": "user", "content": prompt_config["user_template"].format(text=sample['text'])}
+            ]
+            
+            # Get response from model
+            response = connector.complete(messages, **prompt_config["parameters"])
+            response_text = response.choices[0].message.content
+            
+            # Parse response
+            try:
+                result = json.loads(response_text.strip())
+                classification = result.get("classification", "").lower()
+                rationale = result.get("rationale", "")
+                
+                if "hate" in classification and "not" not in classification:
+                    pred_label = "hate"
+                elif "normal" in classification or "not" in classification:
+                    pred_label = "normal"
+                else:
+                    pred_label = "unknown"
+            except json.JSONDecodeError:
+                # Fallback text parsing
+                response_lower = response_text.lower()
+                if "hate" in response_lower and "not" not in response_lower:
+                    pred_label = "hate"
+                elif "normal" in response_lower or "not" in response_lower:
+                    pred_label = "normal"
+                else:
+                    pred_label = "unknown"
+                rationale = "JSON parse failed"
+            
+            results.append({
+                'sample_id': i,
+                'text': sample['text'],
+                'true_label': sample['label'],
+                'prediction': pred_label,
+                'rationale': rationale,
+                'raw_response': response_text,
+                'response': response_text,
+                'strategy': prompt_config['strategy_name'],
+                'target_group': sample.get('target_group', 'unknown'),
+                'source': sample.get('source', 'validation')
+            })
+            
+        except Exception as e:
+            logger.error(f"Error processing sample {i}: {e}")
+            results.append({
+                'sample_id': i,
+                'text': sample['text'],
+                'true_label': sample['label'],
+                'prediction': 'error',
+                'rationale': f"Error: {str(e)}",
+                'raw_response': "",
+                'response': "",
+                'strategy': prompt_config['strategy_name'],
+                'target_group': sample.get('target_group', 'unknown'),
+                'source': sample.get('source', 'validation')
+            })
+    
+    # Wait for all GPUs to finish
+    connector.wait_for_everyone()
+    
+    # Gather results from all GPUs (only main process gets complete results)
+    all_results = connector.gather_results(results)
+    
+    if connector.is_main_process:
+        logger.info(f"Gathered {len(all_results)} total results from all GPUs")
+        return all_results
+    else:
+        return []
+
+
 def save_results(output_dir: Path, timestamp: str, results: List[Dict], dataset: List[Dict], 
                 prompt_config: Dict, command_line: str = "Unknown"):
     """
@@ -364,6 +494,9 @@ def save_results(output_dir: Path, timestamp: str, results: List[Dict], dataset:
         prompt_config: Prompt configuration dictionary
         command_line: Command line used to run validation
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     # Initialize PersistenceHelper and EvaluationMetrics
     persistence = PersistenceHelper(output_dir.parent)  # Parent since output_dir is run_xxx
     evaluator = EvaluationMetrics()
@@ -426,6 +559,7 @@ def save_results(output_dir: Path, timestamp: str, results: List[Dict], dataset:
     # Use EvaluationMetrics.calculate_metrics_from_runid() to calculate and save everything
     # This handles: performance metrics, bias metrics, and evaluation report
     run_id = f"run_{timestamp}"
+    
     try:
         metrics_result = evaluator.calculate_metrics_from_runid(
             run_id,
@@ -436,33 +570,33 @@ def save_results(output_dir: Path, timestamp: str, results: List[Dict], dataset:
             command_line
         )
         
-        print(f"\n[OK] All metrics calculated and saved:")
+        logger.info("All metrics calculated and saved:")
         if 'performance_metrics' in metrics_result:
-            print(f"  ✓ Performance metrics")
+            logger.info("  ✓ Performance metrics")
         if 'bias_metrics' in metrics_result:
-            print(f"  ✓ Bias metrics")
+            logger.info("  ✓ Bias metrics")
         if 'evaluation_report' in metrics_result:
-            print(f"  ✓ Evaluation report")
+            logger.info("  ✓ Evaluation report")
             
     except Exception as e:
-        print(f"\n[WARNING] Error calculating metrics: {e}")
+        logger.warning(f"Error calculating metrics: {e}")
     
-    # Print summary from the first strategy's metrics
+    # Calculate summary metrics for logging
     all_results = {prompt_config['strategy_name']: validation_results}
     performance_metrics = evaluator.calculate_metrics_for_all_strategies(all_results, dataset)
     
-    print(f"\n{'='*60}")
-    print("RESULTS SUMMARY")
-    print(f"{'='*60}")
-    print(f"Strategy: {prompt_config['strategy_name']}")
+    logger.info("="*60)
+    logger.info("RESULTS SUMMARY")
+    logger.info("="*60)
+    logger.info(f"Strategy: {prompt_config['strategy_name']}")
     if performance_metrics:
         first_metric = performance_metrics[0]
-        print(f"Accuracy:  {first_metric.accuracy:.3f}")
-        print(f"Precision: {first_metric.precision:.3f}")
-        print(f"Recall:    {first_metric.recall:.3f}")
-        print(f"F1-Score:  {first_metric.f1_score:.3f}")
-    print(f"Output: {output_dir}")
-    print(f"{'='*60}\n")
+        logger.info(f"Accuracy:  {first_metric.accuracy:.3f}")
+        logger.info(f"Precision: {first_metric.precision:.3f}")
+        logger.info(f"Recall:    {first_metric.recall:.3f}")
+        logger.info(f"F1-Score:  {first_metric.f1_score:.3f}")
+    logger.info(f"Output: {output_dir}")
+    logger.info("="*60)
 
 
 def test_connection(args):
@@ -611,30 +745,26 @@ def main(args):
     logger.info(f"Run ID: {run_id}")
     logger.info(f"Model: {args.model_name}")
     logger.info(f"Data file: {args.data_file}")
-    
-    # Print configuration header
-    print(f"\n{'='*70}")
-    print("BASELINE VALIDATION PIPELINE")
-    print(f"{'='*70}")
-    print(f"Run ID: {run_id}")  # Prominently display Run ID
-    print(f"Model: {args.model_name}")
-    print(f"Data file: {args.data_file}")
-    print(f"Output directory: {output_dir}")
+    logger.info(f"Output directory: {output_dir}")
     if args.prompt_template:
-        print(f"Prompt template: {args.prompt_template}")
-        print(f"Strategy: {args.strategy}")
+        logger.info(f"Prompt template: {args.prompt_template}")
+        logger.info(f"Strategy: {args.strategy}")
     if args.max_samples:
-        print(f"Max samples: {args.max_samples}")
+        logger.info(f"Max samples: {args.max_samples}")
     else:
-        print(f"Max samples: ALL")
+        logger.info(f"Max samples: ALL")
+    
+    # Print ONLY Run ID to console
+    print(f"\n{'='*70}")
+    print(f"Run ID: {run_id}")
     print(f"{'='*70}\n")
     
     # Initialize strategy loader and load prompt template if provided
     if args.prompt_template:
-        print(f"Loading prompt template: {args.prompt_template}")
+        logger.info(f"Loading prompt template: {args.prompt_template}")
         strategy_loader = StrategyTemplatesLoader(args.prompt_template)
         prompt_config = load_strategy_config(strategy_loader, args.strategy)
-        print(f"[OK] Loaded strategy: {prompt_config['strategy_name']}\n")
+        logger.info(f"Loaded strategy: {prompt_config['strategy_name']}")
     else:
         # Use default simple prompt (no template file needed)
         prompt_config = {
@@ -647,19 +777,55 @@ def main(args):
                 'top_p': 1.0
             }
         }
-        print(f"[OK] Using default baseline prompt\n")
+        logger.info("Using default baseline prompt")
     
-    # Load model with caching
-    model, tokenizer = load_model(args.model_name, cache_dir=args.cache_dir)
-    
-    # Load validation data
-    print(f"Loading validation data from: {args.data_file}")
-    dataset = load_validation_data(args.data_file, args.max_samples)
-    print(f"[OK] Loaded {len(dataset)} samples\n")
-    
-    # Run inference
-    print(f"Running inference...")
-    results = run_inference_with_prompt(model, tokenizer, dataset, prompt_config)
+    # Check if using Accelerate for multi-GPU
+    if args.use_accelerate:
+        if not ACCELERATE_AVAILABLE:
+            logger.error("Accelerate not available. Install with: pip install accelerate")
+            print("[ERROR] Accelerate not installed. Run: pip install accelerate")
+            return 1
+        
+        logger.info("Using Accelerate for multi-GPU inference")
+        
+        # Initialize AccelerateConnector
+        connector = AccelerateConnector(
+            model_name=args.model_name,
+            cache_dir=args.cache_dir,
+            batch_size=1,  # Single sample processing for now
+            mixed_precision='bf16'
+        )
+        
+        # Load model through connector
+        connector.load_model_once()
+        
+        # Load validation data
+        logger.info(f"Loading validation data from: {args.data_file}")
+        dataset = load_validation_data(args.data_file, args.max_samples)
+        logger.info(f"Loaded {len(dataset)} samples")
+        
+        # Run inference with Accelerate (automatic multi-GPU)
+        logger.info("Running inference with Accelerate...")
+        results = run_inference_with_accelerate(connector, dataset, prompt_config)
+        
+        # Only main process continues to save results
+        if not connector.is_main_process:
+            logger.info(f"GPU {connector.process_index} finished processing")
+            return 0
+            
+    else:
+        # Standard single-GPU inference
+        logger.info("Loading model...")
+        model, tokenizer = load_model(args.model_name, cache_dir=args.cache_dir)
+        
+        # Load validation data
+        logger.info(f"Loading validation data from: {args.data_file}")
+        dataset = load_validation_data(args.data_file, args.max_samples)
+        logger.info(f"Loaded {len(dataset)} samples")
+        
+        # Run inference
+        logger.info("Running inference...")
+        results = run_inference_with_prompt(model, tokenizer, dataset, prompt_config)
     
     # Add metadata to prompt_config for reporting
     prompt_config['model_name'] = args.model_name
@@ -670,9 +836,11 @@ def main(args):
     command_line = " ".join(sys.argv)
     
     # Save comprehensive results using PersistenceHelper
+    logger.info("Saving results...")
     save_results(output_dir, timestamp, results, dataset, prompt_config, command_line)
     
-    print(f"\n[SUCCESS] Baseline validation complete!")
+    logger.info("Baseline validation complete!")
+    print(f"Results saved to: {output_dir}\n")
     return 0
 
 
@@ -758,6 +926,12 @@ def create_parser():
         "--debug",
         action="store_true",
         help="Enable debug logging to file"
+    )
+    
+    parser.add_argument(
+        "--use_accelerate",
+        action="store_true",
+        help="Use Accelerate for multi-GPU inference (requires: accelerate launch)"
     )
     
     parser.add_argument(

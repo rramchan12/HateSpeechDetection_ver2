@@ -13,7 +13,7 @@ from pathlib import Path
 import sys
 
 # Add project root for imports
-project_root = Path(__file__).resolve().parents[2]
+project_root = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(project_root))
 
 from finetuning.pipeline.baseline.model_loader import load_model

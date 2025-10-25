@@ -4,6 +4,7 @@ Model loading utilities for baseline validation
 
 import os
 import json
+import logging
 import torch
 from pathlib import Path
 from datetime import datetime
@@ -28,6 +29,8 @@ def _save_model_metadata(
         memory_gb: Memory footprint in GB
         dtype: Model data type
     """
+    logger = logging.getLogger(__name__)
+    
     # Create folder with clean model name
     safe_model_name = model_name.replace("/", "--")
     model_dir = cache_dir / safe_model_name
@@ -47,7 +50,7 @@ def _save_model_metadata(
     with open(meta_file, 'w') as f:
         json.dump(metadata, f, indent=2)
     
-    print(f"[OK] Model metadata saved to {meta_file}")
+    logger.info(f"Model metadata saved to {meta_file}")
 
 
 def load_model(
@@ -72,11 +75,13 @@ def load_model(
     Environment Variables:
         HF_TOKEN: HuggingFace API token for private models
     """
+    logger = logging.getLogger(__name__)
+    
     # Get token from environment if not provided
     if use_auth_token is None:
         use_auth_token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGING_FACE_HUB_TOKEN')
         if use_auth_token:
-            print(f"[OK] Using HuggingFace token from environment")
+            logger.info("Using HuggingFace token from environment")
     
     # Set cache directory
     if cache_dir is None:
@@ -87,15 +92,15 @@ def load_model(
     
     cache_dir.mkdir(parents=True, exist_ok=True)
     
-    print(f"Loading model: {model_name}")
-    print(f"Cache directory: {cache_dir}")
+    logger.info(f"Loading model: {model_name}")
+    logger.info(f"Cache directory: {cache_dir}")
     
     # Check if model is already cached
     model_cache_path = cache_dir / model_name.replace("/", "--")
     if model_cache_path.exists():
-        print(f"[OK] Using cached model from {model_cache_path}")
+        logger.info(f"Using cached model from {model_cache_path}")
     else:
-        print("Downloading model (this may take 5-10 minutes)...")
+        logger.info("Downloading model (this may take 5-10 minutes)...")
     
     try:
         tokenizer = AutoTokenizer.from_pretrained(
@@ -108,10 +113,10 @@ def load_model(
         # Auto-detect best dtype (bfloat16 if available, else float16)
         if torch.cuda.is_available() and torch.cuda.is_bf16_supported():
             dtype = torch.bfloat16
-            print(f"  Using dtype: bfloat16 (GPU supports it)")
+            logger.info("Using dtype: bfloat16 (GPU supports it)")
         else:
             dtype = torch.float16
-            print(f"  Using dtype: float16")
+            logger.info("Using dtype: float16")
         
         model = AutoModelForCausalLM.from_pretrained(
             model_name,
@@ -125,9 +130,7 @@ def load_model(
         num_params = model.num_parameters() / 1e9
         memory_gb = model.get_memory_footprint() / 1e9
         
-        print(f"[OK] Model loaded successfully!")
-        print(f"  Parameters: {num_params:.1f}B")
-        print(f"  Memory: {memory_gb:.2f} GB")
+        logger.info(f"Model loaded successfully! Parameters: {num_params:.1f}B, Memory: {memory_gb:.2f} GB")
         
         # Save metadata
         _save_model_metadata(
@@ -142,23 +145,23 @@ def load_model(
         
     except OSError as e:
         error_msg = str(e)
-        print(f"[FAILED] Failed to load model: {error_msg}")
+        logger.error(f"Failed to load model: {error_msg}")
         
         # Provide helpful suggestions
         if "is not a local folder and is not a valid model identifier" in error_msg:
-            print(f"\n[HELP] The model '{model_name}' was not found on HuggingFace Hub.")
-            print(f"  Suggestions:")
-            print(f"  1. Check if the model name is correct")
-            print(f"  2. Verify model exists: python -m finetuning.model_download.hf_model_downloader --verify {model_name}")
-            print(f"  3. See suggested models: python -m finetuning.model_download.hf_model_downloader --suggest")
-            print(f"\n  Popular alternatives:")
-            print(f"    --model_name microsoft/phi-2")
-            print(f"    --model_name microsoft/Phi-3-mini-4k-instruct")
-            print(f"    --model_name google/flan-t5-large")
+            logger.error(f"The model '{model_name}' was not found on HuggingFace Hub.")
+            logger.error("Suggestions:")
+            logger.error("  1. Check if the model name is correct")
+            logger.error(f"  2. Verify model exists: python -m finetuning.model_download.hf_model_downloader --verify {model_name}")
+            logger.error("  3. See suggested models: python -m finetuning.model_download.hf_model_downloader --suggest")
+            logger.error("Popular alternatives:")
+            logger.error("    --model_name microsoft/phi-2")
+            logger.error("    --model_name microsoft/Phi-3-mini-4k-instruct")
+            logger.error("    --model_name google/flan-t5-large")
         elif "401" in error_msg or "403" in error_msg or "token" in error_msg.lower():
-            print(f"\n[HELP] This appears to be a private model requiring authentication.")
-            print(f"  Set your HuggingFace token:")
-            print(f"    export HF_TOKEN=hf_xxxxxxxxxxxxx")
-            print(f"  Or login with: huggingface-cli login")
+            logger.error("This appears to be a private model requiring authentication.")
+            logger.error("Set your HuggingFace token:")
+            logger.error("  export HF_TOKEN=hf_xxxxxxxxxxxxx")
+            logger.error("Or login with: huggingface-cli login")
         
         raise
