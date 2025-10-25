@@ -1,0 +1,75 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-25 16:19:32
+Model: openai/gpt-oss-20b
+Prompt Template File: ./prompt_engineering/prompt_templates/baseline_v1.json
+Data Source: canned_100_stratified
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner --use_accelerate --data_file canned_100_stratified --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json --strategy baseline_standard --max_samples all --output_dir ./finetuning/outputs/gptoss/baseline_std
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: <user> they are both gay listen to better bands made by better bands gang
+   Label: normal
+
+2. Text: noir is so good you gays
+   Label: normal
+
+3. Text: <user> <user> nigga called him gay for being athletic lmfao
+   Label: normal
+
+... (middle samples) ...
+50. Text: the title, poem 1 (the hunger) is about a dark country, but that same country is named "la mexica". ...
+   Label: normal
+
+51. Text: i see the future of britain as being a wasteland of ancient molten nuclear reactors and mutated arab...
+   Label: hate
+
+... (final samples) ...
+99. Text: africans mexicans do not like the homos put up billboards in the ghetto barrio tying dems to gays i ...
+   Label: hate
+
+100. Text: my colleagues n my chief use the french equivalent of fag on a big basis every day and call gay man ...
+   Label: hate
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE_STANDARD Strategy:
+  Accuracy:  0.545
+  Precision: 0.508
+  Recall:    0.652
+  F1-Score:  0.571
+  Confusion Matrix: TP=30, TN=24, FP=29, FN=16
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+BASELINE_STANDARD Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.533 (FP=16, TN=14)
+     FNR: 0.333 (FN=6, TP=12)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.636 (FP=7, TN=4)
+     FNR: 0.333 (FN=4, TP=8)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.500 (FP=6, TN=6)
+     FNR: 0.375 (FN=6, TP=10)
+     Fairness: ⚠️ REVIEW

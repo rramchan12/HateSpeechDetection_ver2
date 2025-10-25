@@ -191,4 +191,10 @@ test_output/
 
 # Logs
 *.log
-logs/prompt_engineering/prompt_templates/combined/backup/
+logs/
+
+# Lock directories
+.locks/
+
+# Project-specific folders
+prompt_engineering/prompt_templates/combined/backup/

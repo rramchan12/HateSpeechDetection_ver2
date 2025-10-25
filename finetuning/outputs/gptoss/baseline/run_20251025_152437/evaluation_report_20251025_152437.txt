@@ -1,10 +1,10 @@
 HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
 ============================================================
-Generated: 2025-10-25 14:49:48
+Generated: 2025-10-25 15:41:17
 Model: openai/gpt-oss-20b
 Prompt Template File: ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json
 Data Source: unified
-Total samples tested: 514
+Total samples tested: 1009
 
 EXECUTION DETAILS:
 --------------------
@@ -12,41 +12,41 @@ Command Line: accelerate launch --num_processes 4 -m finetuning.pipeline.baselin
 
 SAMPLE TEST DATA:
 --------------------
-1. Text: the neo nazi faggots are all running back to twitter twatter i dunno i am attempting an educated gue...
+1. Text: whites are the best thing to ever happen to this country
    Label: hate
 
-2. Text: wait ppl didn ’ t know the actor for justin foley was actually gay
+2. Text: fuckin hate you faggots who literally story the whole shit of a concert
    Label: normal
 
-3. Text: these fucking faggots be outta line son -.- every year these mf get more comfortable and comfortable...
+3. Text: middle eastern countries have never done anything for the world
    Label: hate
 
 ... (middle samples) ...
-257. Text: i dont know whether im a lesbian, i dont know if im really male, i am just beginning to have negativ...
-   Label: hate
+504. Text: for my first day at school, my parents gave me very strict rules about the clothes i could wear
+   Label: normal
 
-258. Text: dudes that wear all pink sneaks faggots and these females condoning it restoring the honor
+505. Text: trannies are individuals who are obsessed with stereotypes of both sexes which prevents them from fu...
    Label: hate
 
 ... (final samples) ...
-513. Text: gab is a retarded con game run by <number> year old faggs
-   Label: hate
+1008. Text: when i first arrived in paris i was greeted with âbonjour!â and âbonsoir!â
+   Label: normal
 
-514. Text: i hate ghettos. i hate the crime, the drugs, the violence
-   Label: hate
+1009. Text: <user> a son good swede name running in minnesota versus a radical towelhead bet your farm
+   Label: normal
 
-[Showing sample of 7 out of 514 total test samples]
+[Showing sample of 7 out of 1009 total test samples]
 
 
 STRATEGY PERFORMANCE:
 -------------------------
 
 COMBINED_OPTIMIZED Strategy:
-  Accuracy:  0.554
-  Precision: 0.604
-  Recall:    0.422
-  F1-Score:  0.497
-  Confusion Matrix: TP=113, TN=171, FP=74, FN=155
+  Accuracy:  0.579
+  Precision: 0.544
+  Recall:    0.393
+  F1-Score:  0.456
+  Confusion Matrix: TP=178, TN=404, FP=149, FN=275
 
 
 BIAS AND FAIRNESS METRICS BY PERSONA:
@@ -57,19 +57,19 @@ BIAS AND FAIRNESS METRICS BY PERSONA:
 
 COMBINED_OPTIMIZED Strategy - Bias Analysis:
   📋 Target Group: LGBTQ
-     Samples: 259
-     FPR: 0.312 (FP=44, TN=97)
-     FNR: 0.644 (FN=76, TP=42)
+     Samples: 494
+     FPR: 0.316 (FP=102, TN=221)
+     FNR: 0.629 (FN=107, TP=63)
      Fairness: ⚠️ REVIEW
 
   📋 Target Group: MEXICAN
-     Samples: 111
-     FPR: 0.318 (FP=14, TN=30)
-     FNR: 0.582 (FN=39, TP=28)
+     Samples: 209
+     FPR: 0.244 (FP=21, TN=65)
+     FNR: 0.561 (FN=69, TP=54)
      Fairness: ⚠️ REVIEW
 
   📋 Target Group: MIDDLE_EAST
-     Samples: 144
-     FPR: 0.267 (FP=16, TN=44)
-     FNR: 0.482 (FN=40, TP=43)
+     Samples: 306
+     FPR: 0.181 (FP=26, TN=118)
+     FNR: 0.619 (FN=99, TP=61)
      Fairness: ⚠️ REVIEW
