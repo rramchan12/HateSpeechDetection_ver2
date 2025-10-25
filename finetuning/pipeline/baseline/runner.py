@@ -16,13 +16,22 @@ Usage:
         --strategy combined_optimized
 
 Example:
-    # Quick test with 50 samples
-    python -m finetuning.pipeline.baseline.runner --max_samples 50
+    # Quick test with canned dataset
+    python -m finetuning.pipeline.baseline.runner --data_file canned_50_quick --max_samples 5
     
-    # Full validation with prompt template
+    # Use unified test dataset
+    python -m finetuning.pipeline.baseline.runner --data_file unified --max_samples 50
+    
+    # Full validation with prompt template and canned data
     python -m finetuning.pipeline.baseline.runner \
+        --data_file canned_100_stratified \
         --prompt_template ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json \
         --strategy combined_optimized
+    
+    # Use fine-tuning validation data (JSONL)
+    python -m finetuning.pipeline.baseline.runner \
+        --data_file ./finetuning/data/prepared/validation.jsonl \
+        --max_samples 10
     
     # With HuggingFace token for private models
     HF_TOKEN=hf_xxx python -m finetuning.pipeline.baseline.runner
@@ -44,7 +53,7 @@ sys.path.insert(0, str(project_root))
 
 from finetuning.pipeline.baseline.model_loader import load_model
 from prompt_engineering.metrics import EvaluationMetrics, PersistenceHelper, ValidationResult
-from prompt_engineering.loaders import load_dataset_by_filename, StrategyTemplatesLoader
+from prompt_engineering.loaders import load_dataset_by_filename, load_dataset, DatasetType, StrategyTemplatesLoader
 
 
 def load_strategy_config(strategy_loader: StrategyTemplatesLoader, strategy_name: str) -> Dict[str, Any]:
@@ -91,22 +100,44 @@ def load_validation_data(data_file: str, max_samples: Optional[int] = None) -> L
     Load validation data from JSONL file with support for multiple formats.
     
     This unified function handles:
+    - 'unified' keyword for unified test dataset (comprehensive test set)
+    - Canned dataset names (e.g., 'canned_50_quick', 'canned_100_stratified')
     - JSONL files with 'messages' format (fine-tuning data)
     - Direct JSON with 'text' and 'label' fields
-    - Canned dataset format from prompt_engineering
     
     Args:
-        data_file: Path to validation JSONL file or dataset name (e.g., 'canned_basic_all')
+        data_file: Data source identifier:
+                  - 'unified': Load from unified test dataset
+                  - 'canned_*': Load specific canned dataset
+                  - Path: Load JSONL file from path
         max_samples: Maximum samples to load (None for all)
         
     Returns:
         List of dicts with 'text' and 'label' keys
         
     Example:
+        >>> samples = load_validation_data('unified', max_samples=50)
+        >>> samples = load_validation_data('canned_50_quick', max_samples=5)
         >>> samples = load_validation_data('./finetuning/data/prepared/validation.jsonl', max_samples=5)
-        >>> samples = load_validation_data('canned_100_all', max_samples=10)
     """
-    # Check if this is a canned dataset name (no path separators)
+    # Check if this is the unified dataset (special keyword)
+    if data_file.lower() == "unified":
+        unified_samples = load_dataset(
+            DatasetType.UNIFIED,
+            num_samples=max_samples if max_samples else "all"
+        )
+        # Convert to expected format
+        return [
+            {
+                'text': s['text'],
+                'label': s['label_binary'],
+                'target_group': s.get('target_group_norm', 'unknown'),
+                'source': s.get('source_dataset', 'unified')
+            }
+            for s in unified_samples
+        ]
+    
+    # Check if this is a canned dataset name (no path separators, not .jsonl)
     if '/' not in data_file and '\\' not in data_file and not data_file.endswith('.jsonl'):
         try:
             # Use unified dataset loader for canned datasets
@@ -664,7 +695,7 @@ def create_parser():
         "--data_file",
         type=str,
         default="canned_50_quick",
-        help="Data source: canned dataset name (e.g., 'canned_50_quick', 'canned_100_all') or path to JSONL file (default: %(default)s)"
+        help="Data source: 'unified' for unified test dataset, canned dataset name (e.g., 'canned_50_quick', 'canned_100_stratified'), or path to JSONL file (default: %(default)s)"
     )
     
     parser.add_argument(
