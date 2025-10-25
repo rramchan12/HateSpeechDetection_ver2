@@ -1,0 +1,6 @@
+strategy,input_text,true_label,predicted_label,response_time,rationale,target_group_norm,persona_tag,source_dataset,status
+baseline,white gay men mad they can not say dyke bc they do not have faggot to themselves lmao,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline,i'm actually a white middle-upper class mexica,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline,Â the only thing they know how to make is oil wells and bombs,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline,arabs are behind every medium- to large-sized terrorist attack,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline,noir is so good you gays,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success

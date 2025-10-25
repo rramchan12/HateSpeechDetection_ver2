@@ -1,0 +1,4 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+baseline,lgbtq,2,0.5,0.0,0,1,1,0
+baseline,mexican,1,1.0,0.0,0,0,1,0
+baseline,middle_east,2,0.0,0.0,2,0,0,0
