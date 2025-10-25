@@ -369,13 +369,16 @@ def run_inference_with_prompt(
 def run_inference_with_accelerate(
     connector: 'AccelerateConnector',
     dataset: List[Dict],
-    prompt_config: Dict[str, Any]
+    prompt_config: Dict[str, Any],
+    output_dir: Path = None,
+    timestamp: str = None,
+    batch_size: int = 4
 ) -> List[Dict]:
     """
     Run inference on dataset using Accelerate for multi-GPU distribution.
     
     This function uses the AccelerateConnector to automatically split the dataset
-    across available GPUs and process samples in parallel.
+    across available GPUs and process samples in parallel with batching.
     
     Args:
         connector: AccelerateConnector instance (already initialized with model)
@@ -384,6 +387,9 @@ def run_inference_with_accelerate(
             - system_prompt: System message for the model
             - user_template: Template string with {text} placeholder
             - parameters: Dict with max_tokens, temperature, top_p
+        output_dir: Output directory for intermediate saves (optional)
+        timestamp: Timestamp for file naming (optional)
+        batch_size: Number of samples to process in each batch (default: 4)
         
     Returns:
         List of result dictionaries from all GPUs (main process only)
@@ -393,73 +399,106 @@ def run_inference_with_accelerate(
     # Split dataset across GPUs automatically
     process_dataset = connector.split_dataset(dataset)
     
-    logger.info(f"Process {connector.process_index}: Processing {len(process_dataset)} samples")
+    logger.info(f"Process {connector.process_index}: Processing {len(process_dataset)} samples with batch_size={batch_size}")
     
     results = []
+    intermediate_save_file = None
     
-    # Process samples on this GPU
-    for i, sample in enumerate(tqdm(process_dataset, desc=f"GPU {connector.process_index}", disable=not connector.is_main_process)):
+    # Setup intermediate save file (only main process)
+    if connector.is_main_process and output_dir and timestamp:
+        intermediate_save_file = output_dir / f"intermediate_results_{timestamp}.jsonl"
+        logger.info(f"Intermediate results will be saved to: {intermediate_save_file}")
+    
+    # Process samples in batches
+    for batch_start in tqdm(range(0, len(process_dataset), batch_size), 
+                           desc=f"GPU {connector.process_index}", 
+                           disable=not connector.is_main_process):
+        batch_end = min(batch_start + batch_size, len(process_dataset))
+        batch_samples = process_dataset[batch_start:batch_end]
+        
         try:
-            # Create messages
-            messages = [
-                {"role": "system", "content": prompt_config["system_prompt"]},
-                {"role": "user", "content": prompt_config["user_template"].format(text=sample['text'])}
+            # Create messages for all samples in batch
+            messages_batch = [
+                [
+                    {"role": "system", "content": prompt_config["system_prompt"]},
+                    {"role": "user", "content": prompt_config["user_template"].format(text=sample['text'])}
+                ]
+                for sample in batch_samples
             ]
             
-            # Get response from model
-            response = connector.complete(messages, **prompt_config["parameters"])
-            response_text = response.choices[0].message.content
+            # Get responses for entire batch
+            responses = connector.complete_batch(messages_batch, **prompt_config["parameters"])
             
-            # Parse response
-            try:
-                result = json.loads(response_text.strip())
-                classification = result.get("classification", "").lower()
-                rationale = result.get("rationale", "")
+            # Parse each response in the batch
+            for i, (sample, response) in enumerate(zip(batch_samples, responses)):
+                sample_idx = batch_start + i
+                response_text = response.choices[0].message.content
                 
-                if "hate" in classification and "not" not in classification:
-                    pred_label = "hate"
-                elif "normal" in classification or "not" in classification:
-                    pred_label = "normal"
-                else:
-                    pred_label = "unknown"
-            except json.JSONDecodeError:
-                # Fallback text parsing
-                response_lower = response_text.lower()
-                if "hate" in response_lower and "not" not in response_lower:
-                    pred_label = "hate"
-                elif "normal" in response_lower or "not" in response_lower:
-                    pred_label = "normal"
-                else:
-                    pred_label = "unknown"
-                rationale = "JSON parse failed"
-            
-            results.append({
-                'sample_id': i,
-                'text': sample['text'],
-                'true_label': sample['label'],
-                'prediction': pred_label,
-                'rationale': rationale,
-                'raw_response': response_text,
-                'response': response_text,
-                'strategy': prompt_config['strategy_name'],
-                'target_group': sample.get('target_group', 'unknown'),
-                'source': sample.get('source', 'validation')
-            })
-            
+                # Parse response
+                try:
+                    result = json.loads(response_text.strip())
+                    classification = result.get("classification", "").lower()
+                    rationale = result.get("rationale", "")
+                    
+                    if "hate" in classification and "not" not in classification:
+                        pred_label = "hate"
+                    elif "normal" in classification or "not" in classification:
+                        pred_label = "normal"
+                    else:
+                        pred_label = "unknown"
+                except json.JSONDecodeError:
+                    # Fallback text parsing
+                    response_lower = response_text.lower()
+                    if "hate" in response_lower and "not" not in response_lower:
+                        pred_label = "hate"
+                    elif "normal" in response_lower or "not" in response_lower:
+                        pred_label = "normal"
+                    else:
+                        pred_label = "unknown"
+                    rationale = "JSON parse failed"
+                
+                result_dict = {
+                    'sample_id': sample_idx,
+                    'text': sample['text'],
+                    'true_label': sample['label'],
+                    'prediction': pred_label,
+                    'rationale': rationale,
+                    'raw_response': response_text,
+                    'response': response_text,
+                    'strategy': prompt_config['strategy_name'],
+                    'target_group': sample.get('target_group', 'unknown'),
+                    'source': sample.get('source', 'validation')
+                }
+                results.append(result_dict)
+                
+                # Save intermediate result (only main process)
+                if connector.is_main_process and intermediate_save_file:
+                    with open(intermediate_save_file, 'a') as f:
+                        f.write(json.dumps(result_dict) + '\n')
+                
         except Exception as e:
-            logger.error(f"Error processing sample {i}: {e}")
-            results.append({
-                'sample_id': i,
-                'text': sample['text'],
-                'true_label': sample['label'],
-                'prediction': 'error',
-                'rationale': f"Error: {str(e)}",
-                'raw_response': "",
-                'response': "",
-                'strategy': prompt_config['strategy_name'],
-                'target_group': sample.get('target_group', 'unknown'),
-                'source': sample.get('source', 'validation')
-            })
+            logger.error(f"Error processing batch starting at {batch_start}: {e}")
+            # Add error entries for all samples in failed batch
+            for i, sample in enumerate(batch_samples):
+                sample_idx = batch_start + i
+                error_dict = {
+                    'sample_id': sample_idx,
+                    'text': sample['text'],
+                    'true_label': sample['label'],
+                    'prediction': 'error',
+                    'rationale': f"Error: {str(e)}",
+                    'raw_response': "",
+                    'response': "",
+                    'strategy': prompt_config['strategy_name'],
+                    'target_group': sample.get('target_group', 'unknown'),
+                    'source': sample.get('source', 'validation')
+                }
+                results.append(error_dict)
+                
+                # Save error to intermediate file
+                if connector.is_main_process and intermediate_save_file:
+                    with open(intermediate_save_file, 'a') as f:
+                        f.write(json.dumps(error_dict) + '\n')
     
     # Wait for all GPUs to finish
     connector.wait_for_everyone()
@@ -804,9 +843,16 @@ def main(args):
         dataset = load_validation_data(args.data_file, args.max_samples)
         logger.info(f"Loaded {len(dataset)} samples")
         
-        # Run inference with Accelerate (automatic multi-GPU)
-        logger.info("Running inference with Accelerate...")
-        results = run_inference_with_accelerate(connector, dataset, prompt_config)
+        # Run inference with Accelerate (automatic multi-GPU with batching)
+        logger.info("Running inference with Accelerate (batch processing)...")
+        results = run_inference_with_accelerate(
+            connector, 
+            dataset, 
+            prompt_config,
+            output_dir=output_dir,
+            timestamp=timestamp,
+            batch_size=4  # Process 4 samples per batch for faster inference
+        )
         
         # Only main process continues to save results
         if not connector.is_main_process:
@@ -833,7 +879,13 @@ def main(args):
     prompt_config['template_file'] = args.prompt_template if args.prompt_template else 'default'
     
     # Capture command line for reporting
-    command_line = " ".join(sys.argv)
+    # Check if running under accelerate (RANK env var is set by accelerate)
+    if args.use_accelerate and 'RANK' in os.environ:
+        # Reconstruct accelerate command from environment
+        num_processes = os.environ.get('WORLD_SIZE', '1')
+        command_line = f"accelerate launch --num_processes {num_processes} -m finetuning.pipeline.baseline.runner " + " ".join(sys.argv[1:])
+    else:
+        command_line = " ".join(sys.argv)
     
     # Save comprehensive results using PersistenceHelper
     logger.info("Saving results...")
