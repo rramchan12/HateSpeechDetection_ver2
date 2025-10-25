@@ -1,0 +1,41 @@
+{
+  "name": "example_lora_config",
+  "description": "Example LoRA fine-tuning configuration for hate speech detection",
+  "version": "1.0",
+  "author": "HateSpeechDetection Team",
+  "created": "2025-10-22",
+  "training": {
+    "learning_rate": 2e-5,
+    "num_epochs": 3,
+    "batch_size": 8,
+    "gradient_accumulation_steps": 4,
+    "warmup_steps": 100,
+    "weight_decay": 0.01,
+    "max_grad_norm": 1.0,
+    "lr_scheduler_type": "cosine"
+  },
+  "lora": {
+    "r": 8,
+    "lora_alpha": 16,
+    "lora_dropout": 0.05,
+    "target_modules": ["q_proj", "v_proj", "k_proj", "o_proj"],
+    "bias": "none",
+    "task_type": "CAUSAL_LM"
+  },
+  "quantization": {
+    "load_in_8bit": false,
+    "load_in_4bit": true,
+    "bnb_4bit_compute_dtype": "bfloat16",
+    "bnb_4bit_quant_type": "nf4"
+  },
+  "data": {
+    "max_length": 512,
+    "preprocessing": "standard"
+  },
+  "evaluation": {
+    "eval_steps": 100,
+    "save_steps": 500,
+    "logging_steps": 10,
+    "save_total_limit": 3
+  }
+}

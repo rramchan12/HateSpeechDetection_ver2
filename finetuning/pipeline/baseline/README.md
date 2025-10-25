@@ -1,246 +1,305 @@
-# Baseline Validation Pipeline
+# Baseline Pipeline - Unified Runner
 
-Baseline inference pipeline for GPT-OSS models to establish performance baseline on hate speech detection.
+**Single command-line tool for testing, baseline validation, and fine-tuning.**
 
-## Structure
+## 🎯 Three Operational Modes
 
-```
-baseline/
-├── runner.py              # CLI entry point
-├── inference.py           # Inference execution
-├── metrics/               # Metrics calculation package
-│   ├── __init__.py
-│   └── calculator.py     # Reuses prompt_engineering metrics
-└── model_loader/          # Model loading package
-    ├── __init__.py
-    └── loader.py          # HuggingFace model loader
-```
+1. **Test Connection** - Verify model loads correctly
+2. **Run Baseline** - Evaluate pre-trained model performance
+3. **Run Fine-tuning** - Train model with LoRA configuration (scaffolding)
 
-## Dependencies
+---
 
-Install all project dependencies (from project root):
-```bash
-# Create virtual environment
-python3 -m venv .venv
+## 🚀 Quick Commands
 
-# Activate virtual environment
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-The unified `requirements.txt` includes all dependencies for:
-- Core ML frameworks (PyTorch, Transformers)
-- Fine-tuning pipeline (PEFT, bitsandbytes, accelerate)
-- Metrics and evaluation (scikit-learn, scipy)
-- Data processing (datasets, pandas, numpy)
-- Development tools (jupyter, pytest)
-
-## Usage
-
-### Test Connection (Recommended First Step)
-
-Before running full validation, test that the model loads and responds correctly:
+### Test Model Connection
 
 ```bash
-# Test with default model (openai/gpt-oss-20b)
+# Test default model (openai/gpt-oss-20b)
 python -m finetuning.pipeline.baseline.runner --test_connection
 
-# Test with a different model
+# Test different model
 python -m finetuning.pipeline.baseline.runner \
-    --model_name microsoft/phi-2 \
-    --test_connection
+    --test_connection \
+    --model_name microsoft/phi-2
 
-# Test with private model (requires HF token)
+# Test private model (requires HF token)
 HF_TOKEN=hf_xxx python -m finetuning.pipeline.baseline.runner \
-    --model_name meta-llama/Llama-3.2-3B \
-    --test_connection
+    --test_connection \
+    --model_name meta-llama/Llama-3.2-3B
 ```
 
-This will:
-- Load the model from HuggingFace Hub
-- Run a simple test prompt
-- Verify the model generates a response
-- Exit without running full validation
+**Time**: ~5 seconds (cached) | ~5-10 minutes (first download)  
+**Memory**: ~42GB VRAM (gpt-oss-20b)
 
-**Example Output:**
-```
-============================================================
-CONNECTION TEST MODE
-============================================================
-Model: openai/gpt-oss-20b
-============================================================
+---
 
-Loading model: openai/gpt-oss-20b
-This may take 5-10 minutes...
-  Using dtype: bfloat16 (GPU supports it)
-[OK] Model loaded successfully!
-  Parameters: 20.9B
-  Memory: 41.83 GB
-
-Test prompt: Classify this text as 'hate' or 'not hate': Hello, how are you?
-### Classification:
-
-Generating response...
-
-============================================================
-RESPONSE:
-============================================================
-Classify this text as 'hate' or 'not hate': Hello, how are you?
-### Classification: not hate
-============================================================
-
-[SUCCESS] Connection test passed!
-Model is loaded and responding correctly.
-```
-
-### Explore Available Models
-
-See suggested models for hate speech detection:
+### Run Baseline Validation
 
 ```bash
-python -m finetuning.model_download.hf_model_downloader --suggest
-```
+# Quick test (3 samples) - unified dataset
+python -m finetuning.pipeline.baseline.runner --max_samples 3
 
-Verify a specific model is accessible:
+# Use canned dataset (50 samples)
+python -m finetuning.pipeline.baseline.runner \
+    --data_source canned_50_quick \
+    --max_samples 10
 
-```bash
-python -m finetuning.model_download.hf_model_downloader --verify microsoft/phi-2
-```
+# Use canned stratified dataset
+python -m finetuning.pipeline.baseline.runner \
+    --data_source canned_100_stratified \
+    --max_samples 50
 
-### Quick Test (50 samples)
-```bash
-python -m finetuning.pipeline.baseline.runner --max_samples 50
-```
-
-### Full Validation (all samples)
-```bash
+# Full baseline with unified dataset (545 samples)
 python -m finetuning.pipeline.baseline.runner
+
+# With specific strategy
+python -m finetuning.pipeline.baseline.runner \
+    --strategy combined_optimized \
+    --data_source canned_100_size_varied \
+    --max_samples 50
 ```
 
-### Custom Configuration
-```bash
-python -m finetuning.pipeline.baseline.runner \
-    --model_name openai/gpt-oss-20b \
-    --data_file ./data/validation.jsonl \
-    --output_dir ./outputs \
-    --temperature 0.1
+**Data Sources**:
+- `unified` (default) - Full validation dataset (545 samples)
+- `canned_50_quick` - Quick test dataset (50 samples)
+- `canned_100_stratified` - Stratified sample (100 samples)
+- `canned_100_size_varied` - Size-varied sample (100 samples)
 
-# With a smaller/faster model
+**Time**: 3 samples (~30s) | 50 samples (~10min) | 545 samples (~100min)
+
+---
+
+### Run Fine-tuning (Scaffolding)
+
+```bash
+# Use example template with unified dataset
 python -m finetuning.pipeline.baseline.runner \
+    --finetune example_template.json
+
+# Use canned dataset for quick training test
+python -m finetuning.pipeline.baseline.runner \
+    --finetune example_template.json \
+    --finetune_data_source canned_100_stratified
+
+# Specify model, output directory, and data source
+python -m finetuning.pipeline.baseline.runner \
+    --finetune example_template.json \
     --model_name microsoft/phi-2 \
-    --max_samples 50
+    --finetune_output_dir ./finetuning/outputs/models/phi2_finetuned \
+    --finetune_data_source canned_50_quick
 
-# With private model
-HF_TOKEN=hf_xxx python -m finetuning.pipeline.baseline.runner \
-    --model_name meta-llama/Llama-3.2-3B \
-    --max_samples 50
-```
-
-## Model Selection
-
-**Default Model**: `openai/gpt-oss-20b` (20.9B parameters, public, no token required)
-
-**Recommended Models**:
-- **openai/gpt-oss-20b** - OSS flagship, 20.9B params, high quality ✅ Default
-- **openai/gpt-oss-120b** - Best quality, 120B params (requires ~80GB VRAM)
-- **microsoft/phi-2** - Fast & efficient, 2.8B params
-- **google/flan-t5-large** - Excellent for fine-tuning, 780M params
-- **meta-llama/Llama-3.2-3B** - High quality, requires HF token
-
-See all suggestions:
-```bash
-python -m finetuning.model_download.hf_model_downloader --suggest
-```
-
-## HuggingFace Authentication
-
-For private models (like Llama), set your HF token:
-
-```bash
-# Option 1: Environment variable
-export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxx
-
-# Option 2: Login once (token stored permanently)
-huggingface-cli login
-
-# Then use the model
+# Custom template with unified dataset
 python -m finetuning.pipeline.baseline.runner \
-    --model_name meta-llama/Llama-3.2-3B \
-    --test_connection
+    --finetune my_custom_config.json \
+    --model_name openai/gpt-oss-20b \
+    --finetune_output_dir ./finetuning/outputs/models/custom_model
 ```
 
-## Command Line Arguments
+**Data Sources for Fine-tuning**:
+- `unified` (default) - Uses `train.jsonl` and `validation.jsonl` from `finetuning/data/prepared/`
+- `canned_50_quick` - Small canned dataset for quick experiments
+- `canned_100_stratified` - Stratified sample for balanced training
+- `canned_100_size_varied` - Size-varied sample
 
-- `--model_name`: HuggingFace model ID (default: `openai/gpt-oss-20b`)
-- `--data_file`: Path to validation data (default: `./data/validation.jsonl`)
-- `--output_dir`: Output directory (default: `./outputs`)
-- `--max_samples`: Max samples to process (default: None = all)
-- `--max_length`: Max input tokens (default: 512)
-- `--max_new_tokens`: Max output tokens (default: 10)
-- `--temperature`: Sampling temperature (default: 0.1)
-- `--test_connection`: Test model connection and exit (no validation data needed)
+**Status**: Scaffolding - loads and validates configuration
 
-**Environment Variables**:
-- `HF_TOKEN`: HuggingFace API token for private models
+---
 
-## Output Files
+## 📂 Directory Structure
 
-Saved with timestamps in `./outputs/`:
+```
+finetuning/pipeline/baseline/
+├── runner.py                   # Main CLI entry point
+├── README.md                   # This file
+├── templates/                  # Fine-tuning configuration templates
+│   └── example_template.json  # Example LoRA configuration
+├── model_loader/
+│   └── loader.py              # Model loading with caching
+└── metrics/
+    └── calculator.py          # Metrics calculation
 
-- `baseline_results_YYYYMMDD_HHMMSS.json` - All predictions
-- `baseline_metrics_YYYYMMDD_HHMMSS.json` - Metrics (matches prompt_engineering format)
+finetuning/outputs/
+├── baseline/                  # Baseline validation results
+│   └── run_YYYYMMDD_HHMMSS/
+└── models/                    # Fine-tuned models
+    └── finetuned_model/       # Default output location
 
-## Metrics Format
+data/models/                   # Model cache
+├── openai--gpt-oss-20b/
+│   └── .meta                  # Model metadata
+└── models--openai--gpt-oss-20b/  # HuggingFace cache
+```
 
-Output matches `prompt_engineering/metrics/` format:
+---
+
+## 🔧 Command-Line Options
+
+### Mode Selection (mutually exclusive)
+- `--test_connection` - Test model and exit
+- `--finetune TEMPLATE` - Run fine-tuning with template
+
+### Model Configuration
+- `--model_name` - HuggingFace model ID (default: `openai/gpt-oss-20b`)
+- `--cache_dir` - Model cache directory (default: `data/models`)
+
+### Baseline Options
+- `--data_source` - Data source: 'unified' (default) or canned file name (e.g., 'canned_50_quick')
+- `--output_dir` - Baseline results directory (default: `./finetuning/outputs/baseline`)
+- `--prompt_template` - Template path (default: `combined/combined_gptoss_v1.json`)
+- `--strategy` - Strategy name (default: `combined_optimized`)
+- `--max_samples` - Max samples to process (default: all)
+
+### Fine-tuning Options
+- `--finetune_data_source` - Data source: 'unified' (default) or canned file name
+- `--finetune_output_dir` - Fine-tuned model directory (default: `./finetuning/outputs/models/finetuned_model`)
+
+---
+
+## � Logging
+
+All modes automatically create detailed log files for debugging and analysis.
+
+### Log File Location
+
+**Baseline mode**:
+```
+finetuning/outputs/baseline/run_TIMESTAMP/validation_log_TIMESTAMP.log
+```
+
+**Fine-tuning mode**:
+```
+finetuning/outputs/models/finetuned_model/run_TIMESTAMP/validation_log_TIMESTAMP.log
+```
+
+### Log Contents
+
+The log files capture:
+- **Configuration**: Model, data source, template, strategy
+- **Model loading**: Loading time and success/failure
+- **Sample processing**: For each sample:
+  - Input text and true label
+  - Target group
+  - System and user prompts (truncated)
+  - Model parameters (temperature, max_tokens, etc.)
+  - Response time
+  - Raw model response
+  - Predicted label and rationale
+  - Match result (✓ or ✗)
+- **Metrics**: Accuracy, F1 score, precision, recall
+- **File operations**: Saved reports and CSV files
+
+### Example Log Entry
+
+```
+2025-10-22 09:29:34,599 - baseline_runner - INFO - ==================================================
+2025-10-22 09:29:34,599 - baseline_runner - INFO - Processing sample from validation
+2025-10-22 09:29:34,599 - baseline_runner - INFO - Strategy: combined_optimized
+2025-10-22 09:29:34,599 - baseline_runner - INFO - Input text: example text here
+2025-10-22 09:29:34,599 - baseline_runner - INFO - True label: hate
+2025-10-22 09:29:34,599 - baseline_runner - INFO - Target group: lgbtq
+2025-10-22 09:29:34,599 - baseline_runner - INFO - System prompt: You are an expert content moderation assistant...
+2025-10-22 09:29:34,599 - baseline_runner - INFO - User prompt: Apply X Platform Hateful Conduct Policy...
+2025-10-22 09:29:34,599 - baseline_runner - INFO - Model parameters: {'max_tokens': 512, 'temperature': 0.1...}
+2025-10-22 09:29:40,102 - baseline_runner - INFO - Response time: 5.50s
+2025-10-22 09:29:40,102 - baseline_runner - INFO - Raw response: analysis... classification: hate...
+2025-10-22 09:29:40,102 - baseline_runner - INFO - Predicted label: hate
+2025-10-22 09:29:40,102 - baseline_runner - INFO - Rationale: text parse
+2025-10-22 09:29:40,102 - baseline_runner - INFO - Match: ✓
+```
+
+### Benefits
+
+- **Debugging**: Full request/response pairs for error analysis
+- **Reproducibility**: Complete record of model behavior
+- **Performance tracking**: Response times per sample
+- **Audit trail**: Timestamped record of all operations
+
+---
+
+## �🛠️ Fine-tuning Template Format
+
+Templates in `templates/` directory contain **only configuration metadata**:
+
 ```json
 {
-  "strategy": "baseline",
-  "accuracy": 0.65,
-  "precision": 0.61,
-  "recall": 0.62,
-  "f1_score": 0.615,
-  "false_positive_rate": 0.18,
-  "false_negative_rate": 0.16,
-  "confusion_matrix": {
-    "true_positive": 106,
-    "false_positive": 69,
-    "true_negative": 315,
-    "false_negative": 52
+  "name": "example_lora_config",
+  "description": "LoRA fine-tuning configuration",
+  "version": "1.0",
+  "training": {
+    "learning_rate": 2e-5,
+    "num_epochs": 3,
+    "batch_size": 8
+  },
+  "lora": {
+    "r": 8,
+    "lora_alpha": 16,
+    "target_modules": ["q_proj", "v_proj"]
   }
 }
 ```
 
-## Typical Execution Time
+**Note**: Model name, data files, and output directories are **command-line arguments**, not in templates.
 
-- 50 samples: 5-10 minutes
-- 545 samples: 45-60 minutes
+---
 
-## Troubleshooting
+## 🎯 Typical Workflow
 
-**Model not found**: The model doesn't exist on HuggingFace Hub
 ```bash
-# See suggested models
-python -m finetuning.model_download.hf_model_downloader --suggest
+## 🎯 Typical Workflow
 
-# Verify a specific model
-python -m finetuning.model_download.hf_model_downloader --verify MODEL_NAME
+```bash
+# 1. Test connection
+python -m finetuning.pipeline.baseline.runner --test_connection
+
+# 2. Quick baseline with canned data
+python -m finetuning.pipeline.baseline.runner \
+    --data_source canned_50_quick \
+    --max_samples 10
+
+# 3. Full baseline with unified dataset
+python -m finetuning.pipeline.baseline.runner
+
+# 4. Compare strategies with canned data
+python -m finetuning.pipeline.baseline.runner \
+    --data_source canned_100_stratified \
+    --strategy combined_focused \
+    --max_samples 50
+
+# 5. Fine-tune with canned data (quick test)
+python -m finetuning.pipeline.baseline.runner \
+    --finetune example_template.json \
+    --finetune_data_source canned_100_stratified \
+    --model_name openai/gpt-oss-20b
+
+# 6. Fine-tune with unified dataset (full training)
+python -m finetuning.pipeline.baseline.runner \
+    --finetune example_template.json \
+    --finetune_data_source unified \
+    --finetune_output_dir ./finetuning/outputs/models/my_model
+```
 ```
 
-**Authentication required**: Model is private and needs a HF token
+---
+
+## 📞 Help
+
 ```bash
-export HF_TOKEN=hf_xxxxxxxxxxxxxxxxxxxxx
-# Or login once: huggingface-cli login
+# Show all options
+python -m finetuning.pipeline.baseline.runner --help
+
+# List templates
+ls -1 finetuning/pipeline/baseline/templates/
 ```
 
-**Connection issues**: Run `--test_connection` first to isolate model loading problems
+---
 
-**CUDA out of memory**: Run quick test first with `--max_samples 50`
+## 🚧 Roadmap
 
-**Module not found**: Ensure you're in project root with .venv activated
-```bash
-source .venv/bin/activate
-```
-
+- [x] Test connection mode
+- [x] Baseline validation mode
+- [x] Fine-tuning scaffolding
+- [x] Templates in pipeline/baseline/templates/
+- [x] Command-line model/output configuration
+- [ ] Implement LoRA fine-tuning
+- [ ] Model comparison tools

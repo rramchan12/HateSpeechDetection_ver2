@@ -3,14 +3,57 @@ Model loading utilities for baseline validation
 """
 
 import os
+import json
 import torch
+from pathlib import Path
+from datetime import datetime
 from transformers import AutoTokenizer, AutoModelForCausalLM
 from typing import Tuple, Optional
 
 
+def _save_model_metadata(
+    cache_dir: Path,
+    model_name: str,
+    num_params: float,
+    memory_gb: float,
+    dtype: str
+) -> None:
+    """
+    Save model metadata to a .meta file.
+    
+    Args:
+        cache_dir: Cache directory path
+        model_name: HuggingFace model identifier
+        num_params: Number of parameters in billions
+        memory_gb: Memory footprint in GB
+        dtype: Model data type
+    """
+    # Create folder with clean model name
+    safe_model_name = model_name.replace("/", "--")
+    model_dir = cache_dir / safe_model_name
+    model_dir.mkdir(parents=True, exist_ok=True)
+    
+    meta_file = model_dir / ".meta"
+    
+    metadata = {
+        "model_name": model_name,
+        "parameters_billions": round(num_params, 1),
+        "memory_gb": round(memory_gb, 2),
+        "dtype": dtype,
+        "downloaded_at": datetime.now().isoformat(),
+        "cache_path": str(model_dir)
+    }
+    
+    with open(meta_file, 'w') as f:
+        json.dump(metadata, f, indent=2)
+    
+    print(f"[OK] Model metadata saved to {meta_file}")
+
+
 def load_model(
     model_name: str = "openai/gpt-oss-20b",
-    use_auth_token: Optional[str] = None
+    use_auth_token: Optional[str] = None,
+    cache_dir: Optional[str] = None
 ) -> Tuple:
     """
     Load GPT-OSS model and tokenizer
@@ -18,6 +61,7 @@ def load_model(
     Args:
         model_name: HuggingFace model identifier
         use_auth_token: HuggingFace token (reads from HF_TOKEN env if None)
+        cache_dir: Directory to cache models (default: data/models)
         
     Returns:
         Tuple of (model, tokenizer)
@@ -34,14 +78,31 @@ def load_model(
         if use_auth_token:
             print(f"[OK] Using HuggingFace token from environment")
     
+    # Set cache directory
+    if cache_dir is None:
+        project_root = Path(__file__).resolve().parents[4]
+        cache_dir = project_root / "data" / "models"
+    else:
+        cache_dir = Path(cache_dir)
+    
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    
     print(f"Loading model: {model_name}")
-    print("This may take 5-10 minutes...")
+    print(f"Cache directory: {cache_dir}")
+    
+    # Check if model is already cached
+    model_cache_path = cache_dir / model_name.replace("/", "--")
+    if model_cache_path.exists():
+        print(f"[OK] Using cached model from {model_cache_path}")
+    else:
+        print("Downloading model (this may take 5-10 minutes)...")
     
     try:
         tokenizer = AutoTokenizer.from_pretrained(
             model_name,
             trust_remote_code=True,
-            token=use_auth_token
+            token=use_auth_token,
+            cache_dir=str(cache_dir)
         )
         
         # Auto-detect best dtype (bfloat16 if available, else float16)
@@ -57,12 +118,25 @@ def load_model(
             trust_remote_code=True,
             torch_dtype=dtype,
             device_map="auto",
-            token=use_auth_token
+            token=use_auth_token,
+            cache_dir=str(cache_dir)
         )
         
+        num_params = model.num_parameters() / 1e9
+        memory_gb = model.get_memory_footprint() / 1e9
+        
         print(f"[OK] Model loaded successfully!")
-        print(f"  Parameters: {model.num_parameters() / 1e9:.1f}B")
-        print(f"  Memory: {model.get_memory_footprint() / 1e9:.2f} GB")
+        print(f"  Parameters: {num_params:.1f}B")
+        print(f"  Memory: {memory_gb:.2f} GB")
+        
+        # Save metadata
+        _save_model_metadata(
+            cache_dir=cache_dir,
+            model_name=model_name,
+            num_params=num_params,
+            memory_gb=memory_gb,
+            dtype=str(dtype)
+        )
         
         return model, tokenizer
         

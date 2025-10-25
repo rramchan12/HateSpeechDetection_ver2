@@ -132,70 +132,245 @@ nvidia-smi
 ## Phase 2: Baseline Validation
 
 **Duration**: 1-2 hours  
-**Objective**: Measure GPT-OSS-120B performance WITHOUT fine-tuning
+**Objective**: Establish pre-fine-tuning baseline performance using sophisticated prompting
+
+### Understanding Baseline for LoRA Fine-Tuning
+
+**Key Concept**: The baseline represents the **best performance of the pre-trained model** using sophisticated prompt engineering. This is NOT the same as the fine-tuning data format.
+
+#### Data Format Comparison
+
+**Fine-Tuning Data Format** (`train.jsonl`, `validation.jsonl`):
+```json
+{
+  "messages": [
+    {"role": "system", "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."},
+    {"role": "user", "content": "Analyze this text for hate speech:\n\nPersona: HOMOSEXUAL\nText: \"disgusting queers\""},
+    {"role": "assistant", "content": "{\"classification\": \"hate_speech\", \"confidence\": \"high\", \"reasoning\": \"disgusting queers\", \"protected_group\": \"HOMOSEXUAL\"}"}
+  ]
+}
+```
+- **Simple, direct instructions** - teaches the model the task
+- Used for **training** the model (3,084 samples)
+- Used for **post-fine-tuning evaluation** (545 samples)
+
+**Baseline Prompting Format** (`combined_gptoss_v1.json`):
+- **Sophisticated policy-based prompts** with X Platform Hateful Conduct Policy
+- **Few-shot examples** (hate vs. normal cases)
+- **Detailed community focus** (LGBTQ+, Mexican/Latino, Middle Eastern)
+- **Context distinction** (attacks on people vs. policy criticism)
+- Used to establish **maximum pre-trained performance**
+
+#### Evaluation Strategy
+
+| Phase | Data Source | Prompt Format | Purpose |
+|-------|------------|---------------|---------|
+| **Pre-Fine-Tuning Baseline** | validation.jsonl (545 samples) | Sophisticated (`combined_optimized`) | Best performance with advanced prompts |
+| **Fine-Tuning** | train.jsonl (3,084 samples) | Simple instruction format | Teach model the task |
+| **Post-Fine-Tuning Eval** | validation.jsonl (545 samples) | Simple instruction format | Did model internalize the task? |
+
+**Success Metric**: Post-fine-tuning F1 with simple prompts ≥ Pre-fine-tuning F1 with sophisticated prompts
 
 The baseline validation uses a dedicated CLI pipeline. See [`finetuning/pipeline/baseline/README.md`](pipeline/baseline/README.md) for detailed documentation.
 
-### Step 1: Quick Test (50 samples)
+### Step 1: Quick Baseline Test (Recommended First)
 
-Test the pipeline with a small sample first to verify setup:
+Test the pipeline with a small sample to verify setup:
 
 ```bash
-cd ~/finetuning
-source venv/bin/activate
+cd ~/workspace/HateSpeechDetection_ver2
+source .venv/bin/activate
 
+# Quick test with 50 samples
 python -m finetuning.pipeline.baseline.runner \
-    --model_name gpt-oss-20b \
-    --data_file ./data/validation.jsonl \
-    --output_dir ./outputs \
-    --max_samples 50
+    --model_name openai/gpt-oss-20b \
+    --data_source unified \
+    --max_samples 50 \
+    --output_dir ./finetuning/outputs/baseline_pre_finetune
 ```
+
+**What this does**:
+- Uses validation data from `finetuning/data/prepared/validation.jsonl`
+- Applies sophisticated prompting from `prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json`
+- Uses default strategy: `combined_optimized` (most comprehensive)
+- Processes 50 samples for quick validation
 
 **Expected Duration**: 5-10 minutes
 
 **Expected Output**:
 ```
 ============================================================
-BASELINE VALIDATION PIPELINE
+BASELINE VALIDATION
 ============================================================
-Model: gpt-oss-20b
-Data file: ./data/validation.jsonl
-Output directory: ./outputs
+Model: openai/gpt-oss-20b
+Data Source: unified
+Template: combined/combined_gptoss_v1.json
+Strategy: combined_optimized
 ============================================================
 
-Loading model: gpt-oss-20b
-This may take 5-10 minutes...
-✓ Model loaded successfully!
-  Parameters: 20.0B
-  Memory: 10.42 GB
+Loading model...
+[OK] Model ready
+
+Loading template: .../combined/combined_gptoss_v1.json
+[OK] Loaded 3 strategies
+
+Loading data from source: unified
+[OK] Loaded 50 samples
 
 Running inference...
-Inference: 100%|████████| 50/50 [05:32<00:00,  6.64s/sample]
-
-✓ Inference complete! Total time: 5.53 minutes
-  Average: 0.15 samples/second
+Processing: 100%|████████| 50/50 [05:30<00:00,  6.60s/it]
 
 Calculating metrics...
 
 ============================================================
-BASELINE VALIDATION METRICS
+RESULTS
 ============================================================
-Total samples: 50
-Valid predictions: 50 (100.0%)
+Accuracy:  0.640
+Precision: 0.615
+Recall:    0.643
+F1-Score:  0.629
+============================================================
 
-Metric               Value     
------------------------------------
-Accuracy             0.6400
-Precision            0.6154
-Recall               0.6429
-F1-Score             0.6289
-FPR                  0.1837
-FNR                  0.1429
+[SUCCESS] Results: finetuning/outputs/baseline_pre_finetune/run_20251022_143022
+```
 
+**Output files created**:
+```
+finetuning/outputs/baseline_pre_finetune/run_TIMESTAMP/
+├── validation_log_TIMESTAMP.log           # Detailed request/response logs
+├── evaluation_report_TIMESTAMP.txt        # Human-readable summary
+├── performance_metrics_TIMESTAMP.csv      # Metrics in CSV format
+└── strategy_unified_results_TIMESTAMP.csv # Per-sample results
+```
+
+### Step 2: Full Baseline Validation
+
+After verifying the quick test works, run full validation on all 545 samples:
+
+```bash
+# Full baseline (545 samples) - THIS IS YOUR PRE-FINE-TUNING BASELINE
+python -m finetuning.pipeline.baseline.runner \
+    --model_name openai/gpt-oss-20b \
+    --data_source unified \
+    --output_dir ./finetuning/outputs/baseline_pre_finetune
+```
+
+**Expected Duration**: 45-90 minutes (depending on GPU)
+
+**Expected Output** (final section):
+```
 ============================================================
-BASELINE F1-SCORE: 0.6289
-TARGET TO BEAT: 0.620 (fine-tuning goal)
+RESULTS
 ============================================================
+Accuracy:  0.650
+Precision: 0.610
+Recall:    0.620
+F1-Score:  0.615
+============================================================
+
+[SUCCESS] Results: finetuning/outputs/baseline_pre_finetune/run_20251022_150000
+```
+
+### Step 3: Examine Detailed Logs
+
+The logging system captures complete request/response pairs for analysis:
+
+```bash
+# View the most recent log file
+cd finetuning/outputs/baseline_pre_finetune
+ls -lt */validation_log_*.log | head -1
+
+# View sample logs (shows prompts, responses, predictions)
+tail -100 run_*/validation_log_*.log
+
+# View evaluation report
+cat run_*/evaluation_report_*.txt
+
+# View metrics CSV
+cat run_*/performance_metrics_*.csv
+```
+
+**Log file contents include**:
+- Configuration (model, data source, template, strategy)
+- For each sample:
+  - Input text and true label
+  - Target group
+  - System and user prompts (truncated)
+  - Model parameters (temperature, max_tokens, etc.)
+  - Response time
+  - Raw model response
+  - Predicted label and rationale
+  - Match result (✓ or ✗)
+- Final metrics (accuracy, F1, precision, recall)
+
+### Step 4: Document Baseline F1 Score
+
+**CRITICAL**: Save this F1 score - this is your target to beat with fine-tuning!
+
+```bash
+# Extract and save baseline F1
+cd ~/workspace/HateSpeechDetection_ver2/finetuning/outputs/baseline_pre_finetune
+
+# Get the most recent run directory
+LATEST_RUN=$(ls -td run_* | head -1)
+
+# Extract F1 from performance metrics CSV
+F1=$(awk -F',' 'NR==2 {print $5}' ${LATEST_RUN}/performance_metrics_*.csv)
+
+# Save to reference file
+echo "PRE-FINE-TUNING BASELINE" > BASELINE_F1.txt
+echo "======================" >> BASELINE_F1.txt
+echo "F1-Score: $F1" >> BASELINE_F1.txt
+echo "Date: $(date)" >> BASELINE_F1.txt
+echo "Model: openai/gpt-oss-20b" >> BASELINE_F1.txt
+echo "Data Source: unified (545 validation samples)" >> BASELINE_F1.txt
+echo "Prompt Strategy: combined_optimized (sophisticated prompting)" >> BASELINE_F1.txt
+echo "" >> BASELINE_F1.txt
+echo "TARGET FOR POST-FINE-TUNING:" >> BASELINE_F1.txt
+echo "- Goal: F1 >= $F1 with simple prompts" >> BASELINE_F1.txt
+echo "- This proves fine-tuning taught the model to perform well without complex prompts" >> BASELINE_F1.txt
+
+cat BASELINE_F1.txt
+```
+
+### Alternative: Test with Canned Data
+
+For faster iteration during development:
+
+```bash
+# Use stratified sample (100 samples)
+python -m finetuning.pipeline.baseline.runner \
+    --data_source canned_100_stratified \
+    --max_samples 50 \
+    --output_dir ./finetuning/outputs/baseline_canned_test
+```
+
+**Available canned datasets**:
+- `canned_50_quick` - Quick test (50 samples)
+- `canned_100_stratified` - Stratified sample (100 samples)
+- `canned_100_size_varied` - Size-varied sample (100 samples)
+
+### Pipeline Documentation
+
+For detailed pipeline documentation, arguments, troubleshooting, and advanced usage:
+
+👉 **[Read the Baseline Pipeline README](pipeline/baseline/README.md)**
+
+### Key Takeaways
+
+✅ **Use `unified` data source** - Points to validation.jsonl (545 samples)  
+✅ **Use sophisticated prompting** - Default `combined_optimized` strategy  
+✅ **Save the F1 score** - This is your baseline to beat  
+✅ **Check logs** - Review request/response pairs for debugging  
+✅ **Expected F1** - Around 0.61-0.63 based on previous runs  
+
+After fine-tuning, you'll compare:
+- **Pre-fine-tuning**: F1 with sophisticated prompts (what you just calculated)
+- **Post-fine-tuning**: F1 with simple prompts (proves model learned the task)
+
+---
+
+## Phase 3: LoRA Fine-Tuning
 
 ✓ Metrics saved to: ./outputs/baseline_metrics_20251021_143022.json
 ✓ Summary saved to: ./outputs/baseline_summary_20251021_143022.txt
@@ -238,45 +413,6 @@ BASELINE F1-SCORE: 0.6150
 TARGET TO BEAT: 0.620 (fine-tuning goal)
 ============================================================
 ```
-
-### Step 3: Examine Results
-
-Results are saved with timestamps. View the most recent results:
-
-```bash
-# List all results
-ls -lh ./outputs/baseline_*.json | tail -5
-
-# View metrics from latest run
-cat ./outputs/baseline_metrics_*.json | tail -1 | python -m json.tool
-
-# View summary from latest run
-cat ./outputs/baseline_summary_*.txt | tail -1
-```
-
-### Step 4: Document Baseline
-
-Save the baseline F1 score for comparison during fine-tuning:
-
-```bash
-# Extract baseline F1 from the most recent metrics file
-F1=$(python -c "
-import json, glob
-latest = max(glob.glob('./outputs/baseline_metrics_*.json'))
-with open(latest) as f:
-    print(f'{json.load(f)[\"f1\"]:.4f}')
-")
-
-echo "Baseline F1-Score: $F1" > ./outputs/BASELINE_F1.txt
-echo "Date: $(date)" >> ./outputs/BASELINE_F1.txt
-cat ./outputs/BASELINE_F1.txt
-```
-
-### Pipeline Documentation
-
-For detailed pipeline documentation, arguments, troubleshooting, and advanced usage:
-
-👉 **[Read the Baseline Pipeline README](pipeline/baseline/README.md)**
 
 ---
 
