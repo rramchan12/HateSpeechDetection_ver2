@@ -1,10 +1,10 @@
-# Fine-Tuning Data Generation
+# Fine-Tuning Prompt Generator
 
-This document describes the fine-tuning data generation process using `finetuning_data_generator.py`.
+This package converts the unified dataset into instruction format (JSONL) suitable for fine-tuning language models.
 
 ## Overview
 
-The data generator converts the unified dataset into instruction format (JSONL) suitable for fine-tuning language models. It creates two versions:
+The generator creates two versions of fine-tuning data:
 
 1. **Simple Format**: Basic instruction format with system/user/assistant messages
 2. **Optimized Format**: Uses the `combined_optimized` strategy for sophisticated prompting
@@ -17,6 +17,13 @@ The generator uses the **original train/val/test splits** from the unified datas
 - `data/processed/unified/unified_test.json`
 
 Each file contains records with a `split` field indicating the original split assignment.
+
+## Output Directory
+
+All generated fine-tuning prompts are saved to:
+```
+finetuning/data/ft_prompts/
+```
 
 ## Output Formats
 
@@ -69,12 +76,12 @@ Uses the `combined_optimized` strategy with sophisticated system and user prompt
 Generate train and validation files in both formats:
 
 ```bash
-python -m finetuning.pipeline.baseline.runner --generate_data
+python -m finetuning.ft_prompt_generator.cli
 ```
 
 **Default Settings:**
 - Unified dir: `./data/processed/unified`
-- Output dir: `./finetuning/data/prepared`
+- Output dir: `./finetuning/data/ft_prompts`
 - Template: `combined/combined_gptoss_v1.json`
 - Strategy: `combined_optimized`
 - Include test: `False`
@@ -82,7 +89,7 @@ python -m finetuning.pipeline.baseline.runner --generate_data
 ### Include Test Split
 
 ```bash
-python -m finetuning.pipeline.baseline.runner --generate_data --include_test
+python -m finetuning.ft_prompt_generator.cli --include_test
 ```
 
 ### Generate Only Simple Format
@@ -90,23 +97,29 @@ python -m finetuning.pipeline.baseline.runner --generate_data --include_test
 Skip the optimized version:
 
 ```bash
-python -m finetuning.pipeline.baseline.runner --generate_data --simple_only
+python -m finetuning.ft_prompt_generator.cli --simple_only
 ```
 
 ### Custom Directories
 
 ```bash
-python -m finetuning.pipeline.baseline.runner --generate_data \
+python -m finetuning.ft_prompt_generator.cli \
   --unified_dir ./data/processed/unified \
-  --data_output_dir ./custom/output/dir
+  --output_dir ./custom/output/dir
 ```
 
 ### Custom Template and Strategy
 
 ```bash
-python -m finetuning.pipeline.baseline.runner --generate_data \
-  --prompt_template combined/combined_gptoss_v1.json \
+python -m finetuning.ft_prompt_generator.cli \
+  --template combined/combined_gpt5_v1.json \
   --strategy combined_optimized
+```
+
+### Debug Mode
+
+```bash
+python -m finetuning.ft_prompt_generator.cli --debug
 ```
 
 ## Split Filtering
@@ -123,10 +136,10 @@ This ensures that the generated fine-tuning data uses the **original dataset spl
 
 ```
 ============================================================
-FINE-TUNING DATA GENERATION
+FINE-TUNING PROMPT GENERATION
 ============================================================
 Unified data directory: ./data/processed/unified
-Output directory: ./finetuning/data/prepared
+Output directory: ./data/ft_prompts
 Include test split: False
 Generate optimized: True
 Template: combined/combined_gptoss_v1.json
@@ -140,16 +153,16 @@ GENERATION COMPLETE
 ============================================================
 
 SIMPLE format:
-  ✓ finetuning/data/prepared/train.jsonl (2686 samples)
-  ✓ finetuning/data/prepared/validation.jsonl (55 samples)
+  ✓ finetuning/data/ft_prompts/train.jsonl (2686 samples)
+  ✓ finetuning/data/ft_prompts/validation.jsonl (55 samples)
 
 OPTIMIZED format:
-  ✓ finetuning/data/prepared/train_optimized.jsonl (2686 samples)
-  ✓ finetuning/data/prepared/validation_optimized.jsonl (55 samples)
+  ✓ finetuning/data/ft_prompts/train_optimized.jsonl (2686 samples)
+  ✓ finetuning/data/ft_prompts/validation_optimized.jsonl (55 samples)
 
 ============================================================
 [SUCCESS] Fine-tuning data generation complete
-Output directory: ./finetuning/data/prepared
+Output directory: ./finetuning/data/ft_prompts
 ============================================================
 ```
 
@@ -187,16 +200,41 @@ The generated files are ready for use with:
 2. **Hugging Face Transformers**: Load with `datasets.load_dataset('json', data_files=...)`
 3. **Custom Training Scripts**: Read line-by-line JSONL format
 
-## Comparison with Baseline
+## Package Structure
 
-| Aspect | Baseline (Pre-Fine-Tuning) | Fine-Tuning Data |
-|--------|---------------------------|------------------|
-| **Format** | Sophisticated prompting with `combined_optimized` | Simple instruction format |
-| **Purpose** | Establish best pre-trained performance | Teach model the task |
-| **Data Source** | validation.jsonl (545 samples from custom re-split) | Original splits (train: 2,686, val: 55) |
-| **Prompting** | Complex multi-shot with examples | Simple system/user/assistant |
+```
+ft_prompt_generator/
+├── __init__.py          # Package initialization
+├── generator.py         # Core FineTuningDataGenerator class
+├── cli.py              # Command-line interface
+└── README.md           # This file
+```
 
-**Key Insight:** The baseline uses sophisticated prompting to get the best performance from the pre-trained model. After fine-tuning with simple instruction format, the model should internalize the task and achieve similar F1 scores with simpler prompts.
+## Programmatic Usage
+
+You can also use the generator programmatically:
+
+```python
+from finetuning.ft_prompt_generator import FineTuningDataGenerator
+
+# Create generator
+generator = FineTuningDataGenerator(
+    unified_dir="./data/processed/unified",
+    output_dir="./finetuning/data/ft_prompts",
+    template_path="combined/combined_gptoss_v1.json",
+    strategy_name="combined_optimized"
+)
+
+# Generate all files
+results = generator.generate_all(
+    include_test=False,
+    generate_optimized=True
+)
+
+# Check results
+for format_type, files in results.items():
+    print(f"{format_type}: {len(files)} files generated")
+```
 
 ## Troubleshooting
 
@@ -223,6 +261,6 @@ The generator will only create simple format files.
 
 ## See Also
 
-- [VALIDATION_GUIDE.md](../../../finetuning/VALIDATION_GUIDE.md) - Baseline calculation methodology
-- [runner.py](runner.py) - Main pipeline runner with all modes
-- [finetuning_data_generator.py](finetuning_data_generator.py) - Data generation implementation
+- [VALIDATION_GUIDE.md](../finetuning/VALIDATION_GUIDE.md) - Baseline calculation methodology
+- [prompt_engineering/](../prompt_engineering/) - Prompt engineering tools and templates
+- [data_preparation/](../data_preparation/) - Data unification pipeline

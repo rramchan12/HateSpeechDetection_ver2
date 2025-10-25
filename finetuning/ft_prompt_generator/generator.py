@@ -17,7 +17,7 @@ from typing import List, Dict, Any, Optional
 import sys
 
 # Add project root
-project_root = Path(__file__).resolve().parents[3]
+project_root = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(project_root))
 
 from prompt_engineering.loaders import StrategyTemplatesLoader
@@ -342,85 +342,3 @@ class FineTuningDataGenerator:
             logger.warning("Optimized format requested but strategy not loaded. Skipping optimized generation.")
         
         return results
-
-
-def main():
-    """CLI entry point for testing."""
-    import argparse
-    
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
-    
-    parser = argparse.ArgumentParser(
-        description="Generate fine-tuning instruction format data from unified dataset"
-    )
-    
-    parser.add_argument(
-        "--unified_dir",
-        default="./data/processed/unified",
-        help="Directory containing unified dataset files"
-    )
-    parser.add_argument(
-        "--output_dir",
-        default="./finetuning/data/prepared",
-        help="Output directory for generated JSONL files"
-    )
-    parser.add_argument(
-        "--template",
-        default="combined/combined_gptoss_v1.json",
-        help="Prompt template for optimized format"
-    )
-    parser.add_argument(
-        "--strategy",
-        default="combined_optimized",
-        help="Strategy name from template"
-    )
-    parser.add_argument(
-        "--include_test",
-        action="store_true",
-        help="Generate test split in addition to train/val"
-    )
-    parser.add_argument(
-        "--simple_only",
-        action="store_true",
-        help="Generate only simple format (skip optimized)"
-    )
-    
-    args = parser.parse_args()
-    
-    # Create generator
-    generator = FineTuningDataGenerator(
-        unified_dir=args.unified_dir,
-        output_dir=args.output_dir,
-        template_path=args.template,
-        strategy_name=args.strategy
-    )
-    
-    # Generate files
-    results = generator.generate_all(
-        include_test=args.include_test,
-        generate_optimized=not args.simple_only
-    )
-    
-    # Print summary
-    print("\n" + "="*60)
-    print("GENERATION COMPLETE")
-    print("="*60)
-    
-    for format_type, files in results.items():
-        if files:
-            print(f"\n{format_type.upper()} format:")
-            for file_path in files:
-                if file_path.exists():
-                    # Count lines
-                    with open(file_path) as f:
-                        count = sum(1 for _ in f)
-                    print(f"  ✓ {file_path} ({count} samples)")
-    
-    print("\n" + "="*60)
-
-
-if __name__ == "__main__":
-    main()
