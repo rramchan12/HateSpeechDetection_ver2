@@ -1,0 +1,75 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-25 14:49:48
+Model: openai/gpt-oss-20b
+Prompt Template File: ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json
+Data Source: unified
+Total samples tested: 514
+
+EXECUTION DETAILS:
+--------------------
+Command Line: accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner --use_accelerate --data_file unified --prompt_template ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json --strategy combined_optimized --max_samples all --output_dir ./finetuning/outputs/gptoss/baseline
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: the neo nazi faggots are all running back to twitter twatter i dunno i am attempting an educated gue...
+   Label: hate
+
+2. Text: wait ppl didn ’ t know the actor for justin foley was actually gay
+   Label: normal
+
+3. Text: these fucking faggots be outta line son -.- every year these mf get more comfortable and comfortable...
+   Label: hate
+
+... (middle samples) ...
+257. Text: i dont know whether im a lesbian, i dont know if im really male, i am just beginning to have negativ...
+   Label: hate
+
+258. Text: dudes that wear all pink sneaks faggots and these females condoning it restoring the honor
+   Label: hate
+
+... (final samples) ...
+513. Text: gab is a retarded con game run by <number> year old faggs
+   Label: hate
+
+514. Text: i hate ghettos. i hate the crime, the drugs, the violence
+   Label: hate
+
+[Showing sample of 7 out of 514 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+COMBINED_OPTIMIZED Strategy:
+  Accuracy:  0.554
+  Precision: 0.604
+  Recall:    0.422
+  F1-Score:  0.497
+  Confusion Matrix: TP=113, TN=171, FP=74, FN=155
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+COMBINED_OPTIMIZED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 259
+     FPR: 0.312 (FP=44, TN=97)
+     FNR: 0.644 (FN=76, TP=42)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 111
+     FPR: 0.318 (FP=14, TN=30)
+     FNR: 0.582 (FN=39, TP=28)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 144
+     FPR: 0.267 (FP=16, TN=44)
+     FNR: 0.482 (FN=40, TP=43)
+     Fairness: ⚠️ REVIEW
