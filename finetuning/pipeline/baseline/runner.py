@@ -43,19 +43,38 @@ project_root = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(project_root))
 
 from finetuning.pipeline.baseline.model_loader import load_model
-from prompt_engineering.metrics import EvaluationMetrics
+from prompt_engineering.metrics import EvaluationMetrics, PersistenceHelper, ValidationResult
+from prompt_engineering.loaders import load_dataset_by_filename
 
 
 def load_prompt_template(template_file: str, strategy_name: str = "combined_optimized") -> Dict[str, Any]:
     """
-    Load prompt template from JSON file.
+    Load prompt template configuration from JSON file.
+    
+    Parses a JSON template file containing multiple prompt strategies and extracts
+    the specified strategy's configuration including system prompt, user template,
+    and model parameters.
     
     Args:
-        template_file: Path to JSON template file
-        strategy_name: Name of strategy to load
+        template_file: Path to JSON template file containing strategies
+        strategy_name: Name of strategy to load from the template file
         
     Returns:
-        Dictionary with system_prompt, user_template, and parameters
+        Dictionary with keys:
+            - strategy_name: Name of the loaded strategy
+            - system_prompt: System message to set model context
+            - user_template: Template string with {text} placeholder for formatting
+            - parameters: Dict with max_tokens, temperature, top_p settings
+            
+    Raises:
+        FileNotFoundError: If template file doesn't exist
+        ValueError: If strategy name not found in template
+        json.JSONDecodeError: If JSON file is malformed
+        
+    Example:
+        >>> config = load_prompt_template('./prompts/combined.json', 'baseline')
+        >>> print(config['system_prompt'])
+        >>> user_msg = config['user_template'].format(text="sample text")
     """
     with open(template_file, 'r') as f:
         data = json.load(f)
@@ -78,15 +97,47 @@ def load_prompt_template(template_file: str, strategy_name: str = "combined_opti
 
 def load_validation_data(data_file: str, max_samples: Optional[int] = None) -> List[Dict[str, Any]]:
     """
-    Load validation data from JSONL file.
+    Load validation data from JSONL file with support for multiple formats.
+    
+    This unified function handles:
+    - JSONL files with 'messages' format (fine-tuning data)
+    - Direct JSON with 'text' and 'label' fields
+    - Canned dataset format from prompt_engineering
     
     Args:
-        data_file: Path to validation JSONL file
+        data_file: Path to validation JSONL file or dataset name (e.g., 'canned_basic_all')
         max_samples: Maximum samples to load (None for all)
         
     Returns:
         List of dicts with 'text' and 'label' keys
+        
+    Example:
+        >>> samples = load_validation_data('./finetuning/data/prepared/validation.jsonl', max_samples=5)
+        >>> samples = load_validation_data('canned_100_all', max_samples=10)
     """
+    # Check if this is a canned dataset name (no path separators)
+    if '/' not in data_file and '\\' not in data_file and not data_file.endswith('.jsonl'):
+        try:
+            # Use unified dataset loader for canned datasets
+            canned_samples = load_dataset_by_filename(
+                data_file, 
+                num_samples=max_samples if max_samples else "all"
+            )
+            # Convert to expected format (already has 'text', need to map 'label_binary' to 'label')
+            return [
+                {
+                    'text': s['text'],
+                    'label': s['label_binary'],
+                    'target_group': s.get('target_group_norm', 'unknown'),
+                    'source': s.get('source_dataset', 'canned')
+                }
+                for s in canned_samples
+            ]
+        except FileNotFoundError:
+            # Not a canned dataset, try as regular file
+            pass
+    
+    # Load from JSONL file
     data_path = Path(data_file)
     if not data_path.exists():
         raise FileNotFoundError(f"Validation data file not found: {data_file}")
@@ -105,8 +156,16 @@ def load_validation_data(data_file: str, max_samples: Optional[int] = None) -> L
             for msg in messages:
                 if msg.get('role') == 'user':
                     content = msg.get('content', '')
+                    # Handle different prompt formats
                     if 'Text: ' in content:
                         text = content.split('Text: ', 1)[1].strip().strip('"')
+                    elif 'Classify the following text' in content:
+                        # Alternative format: "Classify the following text as...\n\nActual text here"
+                        parts = content.split('\n\n', 1)
+                        if len(parts) > 1:
+                            text = parts[1].strip()
+                    else:
+                        text = content.strip()
                     break
             
             # Extract label from assistant message
@@ -115,14 +174,20 @@ def load_validation_data(data_file: str, max_samples: Optional[int] = None) -> L
                 if msg.get('role') == 'assistant':
                     content = msg.get('content', '')
                     try:
-                        response = json.loads(content)
+                        # Handle escaped JSON format
+                        cleaned_content = content.replace('{{', '{').replace('}}', '}')
+                        response = json.loads(cleaned_content)
                         classification = response.get('classification', '').lower()
                         if 'hate' in classification and 'not' not in classification:
                             label = 'hate'
                         else:
                             label = 'normal'
                     except json.JSONDecodeError:
-                        pass
+                        # Fallback text parsing
+                        if 'hate' in content.lower() and 'not' not in content.lower():
+                            label = 'hate'
+                        else:
+                            label = 'normal'
                     break
             
             if text and label:
@@ -140,14 +205,22 @@ def run_inference_with_prompt(
     """
     Run inference on dataset using prompt template.
     
+    This function processes each sample through the model with the specified
+    prompt configuration, handling tokenization, generation, and response parsing.
+    
     Args:
-        model: Loaded model
-        tokenizer: Loaded tokenizer
+        model: Loaded HuggingFace model instance
+        tokenizer: Loaded tokenizer instance
         dataset: List of samples with 'text' and 'label' keys
-        prompt_config: Prompt configuration dict
+        prompt_config: Prompt configuration dict with keys:
+            - system_prompt: System message for the model
+            - user_template: Template string with {text} placeholder
+            - parameters: Dict with max_tokens, temperature, top_p
         
     Returns:
-        List of result dictionaries
+        List of result dictionaries with keys:
+            - sample_id, text, true_label, prediction, rationale, 
+              raw_response, strategy
     """
     results = []
     
@@ -189,6 +262,13 @@ def run_inference_with_prompt(
             # Decode
             response = tokenizer.decode(outputs[0][inputs['input_ids'].shape[1]:], skip_special_tokens=True)
             
+            # Debug: Print first response to help diagnose issues
+            if i == 0:
+                print(f"\n[DEBUG] Sample response:")
+                print(f"  Input: {sample['text'][:100]}...")
+                print(f"  Response: {response[:200]}...")
+                print()
+            
             # Parse response
             try:
                 result = json.loads(response.strip())
@@ -219,7 +299,10 @@ def run_inference_with_prompt(
                 'prediction': pred_label,
                 'rationale': rationale,
                 'raw_response': response,
-                'strategy': prompt_config['strategy_name']
+                'response': response,  # For ValidationResult
+                'strategy': prompt_config['strategy_name'],
+                'target_group': sample.get('target_group', 'unknown'),
+                'source': sample.get('source', 'validation')
             })
             
         except Exception as e:
@@ -230,85 +313,133 @@ def run_inference_with_prompt(
                 'prediction': 'error',
                 'rationale': f"Error: {str(e)}",
                 'raw_response': "",
-                'strategy': prompt_config['strategy_name']
+                'response': "",  # For ValidationResult
+                'strategy': prompt_config['strategy_name'],
+                'target_group': sample.get('target_group', 'unknown'),
+                'source': sample.get('source', 'validation')
             })
     
     return results
 
 
-def save_results(output_dir: Path, timestamp: str, results: List[Dict], metrics: Any, dataset: List[Dict], prompt_config: Dict):
-    """Save all results files."""
-    import csv
+def save_results(output_dir: Path, timestamp: str, results: List[Dict], dataset: List[Dict], 
+                prompt_config: Dict, command_line: str = "Unknown"):
+    """
+    Save comprehensive validation results using PersistenceHelper and EvaluationMetrics.
     
-    # 1. Evaluation report
-    report_file = output_dir / f"evaluation_report_{timestamp}.txt"
-    with open(report_file, 'w') as f:
-        f.write("HATE SPEECH DETECTION - BASELINE EVALUATION REPORT\n")
-        f.write("="*60 + "\n")
-        f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-        f.write(f"Strategy: {prompt_config['strategy_name']}\n")
-        f.write(f"Data Source: validation\n")
-        f.write(f"Total samples tested: {len(dataset)}\n\n")
+    Creates all output files matching prompt_engineering format:
+    1. evaluation_report_*.txt - Comprehensive report with samples and bias metrics
+    2. strategy_unified_results_*.csv - Full inference results  
+    3. performance_metrics_*.csv - Performance metrics by strategy
+    4. bias_metrics_*.csv - Bias analysis by persona/target group
+    5. test_samples_*.csv - Original test samples used
+    
+    Args:
+        output_dir: Path to output directory for this run
+        timestamp: Timestamp string for file naming
+        results: List of inference result dictionaries
+        dataset: Original dataset used for validation
+        prompt_config: Prompt configuration dictionary
+        command_line: Command line used to run validation
+    """
+    # Initialize PersistenceHelper and EvaluationMetrics
+    persistence = PersistenceHelper(output_dir.parent)  # Parent since output_dir is run_xxx
+    evaluator = EvaluationMetrics()
+    
+    # Convert results to ValidationResult format for prompt_engineering compatibility
+    validation_results = []
+    for r in results:
+        val_result = ValidationResult(
+            strategy_name=r['strategy'],
+            input_text=r['text'],
+            true_label=r['true_label'],
+            predicted_label=r['prediction'],
+            response_text=r.get('response', ''),  # Full model response
+            response_time=0.0,  # Not tracked in current implementation
+            metrics={
+                'target_group': r.get('target_group', 'unknown'),
+                'source': r.get('source', 'validation')
+            },
+            rationale=r['rationale']
+        )
+        validation_results.append(val_result)
+    
+    # Convert results to dict format for detailed CSV
+    detailed_results = [
+        {
+            'strategy': r.strategy_name,
+            'input_text': r.input_text,
+            'true_label': r.true_label,
+            'predicted_label': r.predicted_label,
+            'response_time': r.response_time,
+            'rationale': r.rationale,
+            'target_group_norm': r.metrics.get('target_group', 'unknown'),
+            'persona_tag': r.metrics.get('target_group', 'unknown').upper() if r.metrics.get('target_group') else 'UNKNOWN',
+            'source_dataset': r.metrics.get('source', 'validation'),
+            'status': 'success'
+        }
+        for r in validation_results
+    ]
+    
+    # Save incremental files (strategy results and test samples)
+    persistence.initialize_incremental_storage(timestamp, output_dir)
+    
+    # Save detailed results incrementally
+    for result_dict in detailed_results:
+        persistence.save_result_incrementally(result_dict)
+    
+    # Save test samples incrementally
+    for sample in dataset:
+        sample_dict = {
+            'text': sample['text'],
+            'label_binary': sample['label'],
+            'target_group': sample.get('target_group', 'unknown'),
+            'source': sample.get('source', 'validation')
+        }
+        persistence.save_sample_incrementally(sample_dict)
+    
+    # Finalize incremental storage
+    persistence.finalize_incremental_storage()
+    
+    # Use EvaluationMetrics.calculate_metrics_from_runid() to calculate and save everything
+    # This handles: performance metrics, bias metrics, and evaluation report
+    run_id = f"run_{timestamp}"
+    try:
+        metrics_result = evaluator.calculate_metrics_from_runid(
+            run_id,
+            str(output_dir.parent),  # Base output directory
+            prompt_config.get('model_name', 'openai/gpt-oss-20b'),
+            prompt_config.get('template_file', 'default'),
+            prompt_config.get('data_source', 'validation'),
+            command_line
+        )
         
-        f.write("STRATEGY PERFORMANCE:\n")
-        f.write("-"*25 + "\n\n")
-        f.write(f"{prompt_config['strategy_name'].upper()} Strategy:\n")
-        f.write(f"  Accuracy:  {metrics.accuracy:.3f}\n")
-        f.write(f"  Precision: {metrics.precision:.3f}\n")
-        f.write(f"  Recall:    {metrics.recall:.3f}\n")
-        f.write(f"  F1-Score:  {metrics.f1_score:.3f}\n")
-        f.write(f"  Confusion Matrix: TP={metrics.true_positive}, TN={metrics.true_negative}, ")
-        f.write(f"FP={metrics.false_positive}, FN={metrics.false_negative}\n")
+        print(f"\n[OK] All metrics calculated and saved:")
+        if 'performance_metrics' in metrics_result:
+            print(f"  ✓ Performance metrics")
+        if 'bias_metrics' in metrics_result:
+            print(f"  ✓ Bias metrics")
+        if 'evaluation_report' in metrics_result:
+            print(f"  ✓ Evaluation report")
+            
+    except Exception as e:
+        print(f"\n[WARNING] Error calculating metrics: {e}")
     
-    print(f"[OK] Saved evaluation report: {report_file}")
+    # Print summary from the first strategy's metrics
+    all_results = {prompt_config['strategy_name']: validation_results}
+    performance_metrics = evaluator.calculate_metrics_for_all_strategies(all_results, dataset)
     
-    # 2. Performance metrics CSV
-    metrics_file = output_dir / f"performance_metrics_{timestamp}.csv"
-    with open(metrics_file, 'w', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(['strategy', 'accuracy', 'precision', 'recall', 'f1_score',
-                        'true_positive', 'false_positive', 'true_negative', 'false_negative'])
-        writer.writerow([
-            prompt_config['strategy_name'],
-            f"{metrics.accuracy:.4f}",
-            f"{metrics.precision:.4f}",
-            f"{metrics.recall:.4f}",
-            f"{metrics.f1_score:.4f}",
-            metrics.true_positive,
-            metrics.false_positive,
-            metrics.true_negative,
-            metrics.false_negative
-        ])
-    
-    print(f"[OK] Saved performance metrics: {metrics_file}")
-    
-    # 3. Detailed results CSV
-    results_file = output_dir / f"strategy_results_{timestamp}.csv"
-    with open(results_file, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['sample_id', 'text', 'true_label', 'prediction',
-                                               'rationale', 'strategy'])
-        writer.writeheader()
-        for r in results:
-            writer.writerow({
-                'sample_id': r['sample_id'],
-                'text': r['text'],
-                'true_label': r['true_label'],
-                'prediction': r['prediction'],
-                'rationale': r['rationale'],
-                'strategy': r['strategy']
-            })
-    
-    print(f"[OK] Saved detailed results: {results_file}")
-    
-    # 4. Summary
     print(f"\n{'='*60}")
-    print("BASELINE RESULTS SUMMARY")
+    print("RESULTS SUMMARY")
     print(f"{'='*60}")
     print(f"Strategy: {prompt_config['strategy_name']}")
-    print(f"Accuracy:  {metrics.accuracy:.3f}")
-    print(f"Precision: {metrics.precision:.3f}")
-    print(f"Recall:    {metrics.recall:.3f}")
-    print(f"F1-Score:  {metrics.f1_score:.3f}")
+    if performance_metrics:
+        first_metric = performance_metrics[0]
+        print(f"Accuracy:  {first_metric.accuracy:.3f}")
+        print(f"Precision: {first_metric.precision:.3f}")
+        print(f"Recall:    {first_metric.recall:.3f}")
+        print(f"F1-Score:  {first_metric.f1_score:.3f}")
+    print(f"Output: {output_dir}")
     print(f"{'='*60}\n")
 
 
@@ -381,30 +512,43 @@ def test_connection(args):
 
 def main(args):
     """
-    Execute baseline validation pipeline
+    Execute baseline validation pipeline with comprehensive logging.
+    
+    This is the main entry point for running validation. It orchestrates:
+    1. Configuration setup and validation
+    2. Model loading with caching
+    3. Dataset loading (supports JSONL and canned datasets)
+    4. Inference execution with progress tracking
+    5. Metrics calculation and result saving
     
     Args:
-        args: Parsed command line arguments
+        args: Parsed command line arguments from argparse
+        
+    Returns:
+        int: Exit code (0 for success, 1 for failure)
     """
+    # Create output directory with timestamp for this run
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    run_id = f"run_{timestamp}"
+    output_dir = Path(args.output_dir) / run_id
+    output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Print configuration
-    print(f"\n{'='*60}")
+    # Print configuration header
+    print(f"\n{'='*70}")
     print("BASELINE VALIDATION PIPELINE")
-    print(f"{'='*60}")
+    print(f"{'='*70}")
+    print(f"Run ID: {run_id}")  # Prominently display Run ID
     print(f"Model: {args.model_name}")
     print(f"Data file: {args.data_file}")
-    print(f"Output directory: {args.output_dir}")
+    print(f"Output directory: {output_dir}")
     if args.prompt_template:
         print(f"Prompt template: {args.prompt_template}")
         print(f"Strategy: {args.strategy}")
     if args.max_samples:
         print(f"Max samples: {args.max_samples}")
-    print(f"{'='*60}\n")
-    
-    # Create output directory with timestamp
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = Path(args.output_dir) / f"run_{timestamp}"
-    output_dir.mkdir(parents=True, exist_ok=True)
+    else:
+        print(f"Max samples: ALL")
+    print(f"{'='*70}\n")
     
     # Load prompt template if provided
     if args.prompt_template:
@@ -437,29 +581,18 @@ def main(args):
     print(f"Running inference...")
     results = run_inference_with_prompt(model, tokenizer, dataset, prompt_config)
     
-    # Calculate metrics
-    print(f"\n\nCalculating metrics...")
-    valid_results = [r for r in results if r['prediction'] not in ['unknown', 'error']]
+    # Add metadata to prompt_config for reporting
+    prompt_config['model_name'] = args.model_name
+    prompt_config['data_source'] = args.data_file
+    prompt_config['template_file'] = args.prompt_template if args.prompt_template else 'default'
     
-    if len(valid_results) == 0:
-        print("[FAILED] No valid predictions!")
-        return 1
+    # Capture command line for reporting
+    command_line = " ".join(sys.argv)
     
-    true_labels = [r['true_label'] for r in valid_results]
-    pred_labels = [r['prediction'] for r in valid_results]
-    
-    evaluator = EvaluationMetrics()
-    metrics = evaluator.calculate_comprehensive_metrics(
-        y_true=true_labels,
-        y_pred=pred_labels,
-        strategy_name=prompt_config['strategy_name']
-    )
-    
-    # Save results
-    save_results(output_dir, timestamp, results, metrics, dataset, prompt_config)
+    # Save comprehensive results using PersistenceHelper
+    save_results(output_dir, timestamp, results, dataset, prompt_config, command_line)
     
     print(f"\n[SUCCESS] Baseline validation complete!")
-    print(f"Results saved to: {output_dir}")
     return 0
 
 
@@ -481,8 +614,8 @@ def create_parser():
     parser.add_argument(
         "--data_file",
         type=str,
-        default="./finetuning/data/prepared/validation.jsonl",
-        help="Path to validation data JSONL file (default: %(default)s)"
+        default="canned_50_quick",
+        help="Data source: canned dataset name (e.g., 'canned_50_quick', 'canned_100_all') or path to JSONL file (default: %(default)s)"
     )
     
     parser.add_argument(
@@ -516,8 +649,8 @@ def create_parser():
     parser.add_argument(
         "--max_samples",
         type=int,
-        default=None,
-        help="Maximum samples to process (None for all, default: %(default)s)"
+        default=5,  # Default to 5 samples for quick testing
+        help="Maximum samples to process (default: %(default)s for quick validation)"
     )
     
     parser.add_argument(
@@ -530,7 +663,7 @@ def create_parser():
     parser.add_argument(
         "--max_new_tokens",
         type=int,
-        default=10,
+        default=100,  # Increased default for JSON responses
         help="Maximum generated tokens (default: %(default)s)"
     )
     
