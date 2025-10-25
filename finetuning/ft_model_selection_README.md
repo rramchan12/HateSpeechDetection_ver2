@@ -568,5 +568,5 @@ The thesis will implement the following workflow with the GPT-OSS-20B model:
 
 **Document Version**: 1.0  
 **Last Updated**: October 21, 2025  
-**Author**: AI-Assisted Analysis  
-**Review Status**: Ready for Implementation
+**Author**: Ravi Ramchandran  
+**Review Status**: Draft
