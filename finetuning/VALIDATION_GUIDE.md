@@ -1,18 +1,44 @@
-# Validation Guide: GPT-OSS-120B Training and Inference
+# Validation Guide: GPT-OSS-20B Baseline Testing with Multi-GPU Inference
 
 ## Overview
 
-This guide provides step-by-step instructions for **validating GPT-OSS-120B** through baseline testing, LoRA fine-tuning, and inference evaluation on your A100 VM. All steps are executed remotely via SSH/VS Code.
+This guide provides the **approach and methodology** for validating GPT-OSS-20B through baseline testing using multi-GPU inference with Accelerate on A100 GPUs. This document outlines the validation pipeline setup, execution steps, and connects to detailed validation results.
 
-**Objective**: Validate that fine-tuning improves performance over baseline
-- **Baseline F1**: 0.615 (target to beat)
-- **Target F1**: ≥0.620 (post-fine-tuning)
-- **Bias Goal**: Reduce LGBTQ+ FPR from 43% to <35%
+**Purpose**: Document the validation approach and methodology
+- **Audience**: ML Engineers, Researchers
+- **Scope**: Baseline validation → Fine-tuning → Post-FT validation
+- **Results**: See individual run directories for detailed metrics (performance_metrics_*.csv, bias_metrics_*.csv)
 
-**Duration**: 4-6 hours total
-- Baseline validation: 1-2 hours
-- Fine-tuning: 2-3 hours  
-- Inference testing: 1 hour
+**Current Status**: ✅ Multi-GPU baseline validation pipeline operational
+- **Hardware**: 4x NVIDIA A100 80GB GPUs
+- **Model**: openai/gpt-oss-20b (~78GB, bf16 precision)
+- **Validation Dataset**: unified_val.json (514 samples, stratified)
+- **Batch Processing**: 4 samples per GPU batch with intermediate saves
+- **Accelerate**: Automatic multi-GPU distribution with file-based result gathering
+
+**Validation Workflow**:
+```
+Phase 1: Environment Setup (15-20 min)
+    ↓
+Phase 2: Quick Testing (5-15 min, 30-100 samples)
+    ↓
+Phase 3: Full Baseline Validation (45-90 min, 514 samples)
+    ↓
+Phase 4: Results Analysis (metrics already computed)
+    ↓
+Phase 5: Fine-Tuning with LoRA (2-3 hours)
+    ↓
+Phase 6: Post-FT Validation & Comparison
+```
+
+**Metrics Computed Automatically**:
+- ✅ **Performance Metrics**: Accuracy, Precision, Recall, F1-Score (saved to `performance_metrics_*.csv`)
+- ✅ **Bias Metrics**: FPR, FNR per target group (saved to `bias_metrics_*.csv`)
+- ✅ **Per-Sample Results**: Predictions, rationales (saved to `strategy_unified_results_*.csv`)
+
+**Example Results**:
+- Baseline v1 metrics: `prompt_engineering/outputs/baseline_v1/gptoss/run_20251011_085450/`
+- Current run metrics: `finetuning/outputs/gptoss/run_20251025_141958/performance_metrics_20251025_141958.csv`
 
 ---
 
@@ -21,1021 +47,1094 @@ This guide provides step-by-step instructions for **validating GPT-OSS-120B** th
 ### 1. Connected to A100 VM
 
 ```powershell
-# From local machine
-ssh a100vm
+# From local machine - VS Code Remote SSH
+# Open VS Code → Remote Explorer → Connect to a100vm
 ```
 
-### 2. Training Data Transferred
+### 2. Validation Data Available
 
-```bash
-# On VM, verify data exists
-ls -lh ~/finetuning/data/
-# Should show train.jsonl (3,083 samples) and validation.jsonl (545 samples)
+The pipeline uses the **unified validation dataset** located at:
+```
+data/processed/unified/unified_val.json
 ```
 
-If not transferred yet:
+**Dataset Details** (as of Oct 25, 2025):
+- **Total Samples**: 514
+- **Format**: JSON array with `text`, `label_binary`, `target_group_norm`, `source_dataset` fields
+- **Distribution**: Stratified across hate/normal and target groups (LGBTQ, Mexican, Middle Eastern)
+
+To verify data:
 ```bash
-# From local machine
-scp data/prepared/train.jsonl a100vm:~/finetuning/data/
-scp data/prepared/validation.jsonl a100vm:~/finetuning/data/
+# Check file exists and size
+ls -lh /home/azureuser/workspace/HateSpeechDetection_ver2/data/processed/unified/unified_val.json
+
+# Count records (should be 514)
+python3 -c "import json; print(len(json.load(open('data/processed/unified/unified_val.json'))))"
 ```
 
 ### 3. VS Code Remote SSH Connected
 
 1. Install "Remote - SSH" extension in VS Code (if not already)
 2. Press `F1` → "Remote-SSH: Connect to Host" → `a100vm`
-3. Open folder: `/home/azureuser/finetuning`
-4. All subsequent steps can be run from VS Code terminal or SSH terminal
+3. Open folder: `/home/azureuser/workspace/HateSpeechDetection_ver2`
+4. All subsequent steps run from VS Code integrated terminal
+
+### 4. Multi-GPU Setup Configured
+
+The pipeline uses **Accelerate** for automatic multi-GPU distribution:
+
+```bash
+# Verify Accelerate configuration
+accelerate config --config_file default_config.yaml
+
+# Should show:
+# - compute_environment: LOCAL_MACHINE
+# - num_machines: 1
+# - num_processes: 4 (one per GPU)
+# - mixed_precision: bf16
+```
 
 ---
 
 ## Table of Contents
 
-1. [Phase 1: Environment Setup](#phase-1-environment-setup)
-2. [Phase 2: Baseline Validation](#phase-2-baseline-validation)
-3. [Phase 3: LoRA Fine-Tuning](#phase-3-lora-fine-tuning)
-4. [Phase 4: Fine-Tuned Inference](#phase-4-fine-tuned-inference)
-5. [Phase 5: Performance Comparison](#phase-5-performance-comparison)
-6. [Troubleshooting](#troubleshooting)
+1. [Prerequisites](#prerequisites)
+2. [Phase 1: Environment Setup](#phase-1-environment-setup)
+3. [Phase 2: Quick Testing with Canned Data](#phase-2-quick-testing-with-canned-data)
+4. [Phase 3: Full Baseline Validation](#phase-3-full-baseline-validation)
+5. [Phase 4: Results Analysis](#phase-4-results-analysis)
+6. [Phase 5: Fine-Tuning with LoRA](#phase-5-fine-tuning-with-lora)
+7. [Phase 6: Post-Fine-Tuning Validation](#phase-6-post-fine-tuning-validation)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Phase 1: Environment Setup
 
-**Duration**: 20-30 minutes
+**Duration**: 15-20 minutes
 
-### Step 1: Create Project Structure
+### Step 1: Navigate to Project Directory
 
 ```bash
-# On A100 VM
-mkdir -p ~/finetuning/{data,outputs,models,scripts}
-cd ~/finetuning
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
 ```
 
-### Step 2: Create Virtual Environment (in VS Code)
+### Step 2: Activate Virtual Environment
 
-Using VS Code's integrated terminal (connected via Remote SSH):
-
-1. Open VS Code terminal: `` Ctrl+` ``
-2. Ensure you're in the project root:
-   ```bash
-   cd ~/workspace/HateSpeechDetection_ver2
-   ```
-3. Create and activate virtual environment:
-   ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
-   ```
-4. Verify activation (python path should show .venv):
-   ```bash
-   which python
-   # Expected: /home/azureuser/workspace/HateSpeechDetection_ver2/.venv/bin/python
-   ```
-
-Note: You can also set VS Code to use this venv as the default interpreter. See [VS Code Python Environment Configuration](https://code.visualstudio.com/docs/python/environments).
-
-### Step 3: Install Dependencies (from terminal)
-
-From the VS Code terminal (with .venv activated):
+The project uses a unified virtual environment:
 
 ```bash
-# Update pip
-pip install --upgrade pip
+# Activate existing .venv
+source .venv/bin/activate
 
-# Install all dependencies from unified requirements.txt
-pip install -r requirements.txt
+# Verify activation
+which python
+# Expected: /home/azureuser/workspace/HateSpeechDetection_ver2/.venv/bin/python
+```
 
-# Verify installation
+### Step 3: Verify Dependencies
+
+All dependencies are managed through the unified `requirements.txt`:
+
+```bash
+# Verify key packages installed
 python -c "import torch; print(f'PyTorch: {torch.__version__}'); print(f'CUDA: {torch.cuda.is_available()}')"
+python -c "import transformers; print(f'Transformers: {transformers.__version__}')"
+python -c "import accelerate; print(f'Accelerate: {accelerate.__version__}')"
 ```
 
 **Expected Output**:
 ```
 PyTorch: 2.9.0+cu128
 CUDA: True
+Transformers: 4.48.0.dev0
+Accelerate: 1.2.1
 ```
 
-**Note**: The unified `requirements.txt` at the project root contains all dependencies including fine-tuning, metrics, and development tools.
+If packages are missing:
+```bash
+pip install -r requirements.txt
+```
 
-### Step 4: Verify GPU (from terminal)
-
-From the VS Code terminal:
+### Step 4: Verify GPUs
 
 ```bash
 nvidia-smi
 ```
 
-**Expected**: NVIDIA A100 with 40GB or 80GB VRAM
+**Expected**: 4x NVIDIA A100 80GB GPUs with CUDA 12.8
+
+### Step 5: Configure Accelerate (if not already done)
+
+```bash
+accelerate config
+
+# Answer prompts:
+# - Compute environment: This machine
+# - Number of machines: 1
+# - Number of processes: 4
+# - GPU ids to use: 0,1,2,3
+# - Mixed precision: bf16
+# - Dynamo backend: no
+```
+
+Verify configuration:
+```bash
+cat ~/.cache/huggingface/accelerate/default_config.yaml
+```
 
 ---
 
-## Phase 2: Baseline Validation
+## Phase 2: Quick Testing with Canned Data
 
-**Duration**: 1-2 hours  
-**Objective**: Establish pre-fine-tuning baseline performance using sophisticated prompting
+**Duration**: 5-15 minutes  
+**Objective**: Verify pipeline works with small stratified samples before running full validation
 
-### Understanding Baseline for LoRA Fine-Tuning
+### Understanding the Baseline Pipeline
 
-**Key Concept**: The baseline represents the **best performance of the pre-trained model** using sophisticated prompt engineering. This is NOT the same as the fine-tuning data format.
+The baseline validation pipeline is documented in detail at:
+👉 **[finetuning/pipeline/baseline/README.md](pipeline/baseline/README.md)**
 
-#### Data Format Comparison
+Key features:
+- **Multi-GPU support** via Accelerate (automatic distribution)
+- **Batch processing** (4 samples per GPU batch)
+- **Intermediate saves** (JSONL file written after each batch)
+- **Sophisticated prompting** using `combined_optimized` strategy
+- **Comprehensive metrics** (accuracy, F1, precision, recall, bias metrics)
 
-**Fine-Tuning Data Format** (`train.jsonl`, `validation.jsonl`):
-```json
-{
-  "messages": [
-    {"role": "system", "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."},
-    {"role": "user", "content": "Analyze this text for hate speech:\n\nPersona: HOMOSEXUAL\nText: \"disgusting queers\""},
-    {"role": "assistant", "content": "{\"classification\": \"hate_speech\", \"confidence\": \"high\", \"reasoning\": \"disgusting queers\", \"protected_group\": \"HOMOSEXUAL\"}"}
-  ]
-}
-```
-- **Simple, direct instructions** - teaches the model the task
-- Used for **training** the model (3,084 samples)
-- Used for **post-fine-tuning evaluation** (545 samples)
+### Step 1: Quick Test with 30 Samples
 
-**Baseline Prompting Format** (`combined_gptoss_v1.json`):
-- **Sophisticated policy-based prompts** with X Platform Hateful Conduct Policy
-- **Few-shot examples** (hate vs. normal cases)
-- **Detailed community focus** (LGBTQ+, Mexican/Latino, Middle Eastern)
-- **Context distinction** (attacks on people vs. policy criticism)
-- Used to establish **maximum pre-trained performance**
-
-#### Evaluation Strategy
-
-| Phase | Data Source | Prompt Format | Purpose |
-|-------|------------|---------------|---------|
-| **Pre-Fine-Tuning Baseline** | validation.jsonl (545 samples) | Sophisticated (`combined_optimized`) | Best performance with advanced prompts |
-| **Fine-Tuning** | train.jsonl (3,084 samples) | Simple instruction format | Teach model the task |
-| **Post-Fine-Tuning Eval** | validation.jsonl (545 samples) | Simple instruction format | Did model internalize the task? |
-
-**Success Metric**: Post-fine-tuning F1 with simple prompts ≥ Pre-fine-tuning F1 with sophisticated prompts
-
-The baseline validation uses a dedicated CLI pipeline. See [`finetuning/pipeline/baseline/README.md`](pipeline/baseline/README.md) for detailed documentation.
-
-### Step 1: Quick Baseline Test (Recommended First)
-
-Test the pipeline with a small sample to verify setup:
+Start with a small test to verify the pipeline:
 
 ```bash
-cd ~/workspace/HateSpeechDetection_ver2
-source .venv/bin/activate
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
 
-# Quick test with 50 samples
-python -m finetuning.pipeline.baseline.runner \
-    --model_name openai/gpt-oss-20b \
-    --data_source unified \
-    --max_samples 50 \
-    --output_dir ./finetuning/outputs/baseline_pre_finetune
+# Quick test with 30 samples using Accelerate
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --data_file canned_100_stratified \
+    --prompt_template ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json \
+    --strategy combined_optimized \
+    --max_samples 30 \
+    --output_dir ./finetuning/outputs/gptoss/
 ```
 
 **What this does**:
-- Uses validation data from `finetuning/data/prepared/validation.jsonl`
-- Applies sophisticated prompting from `prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json`
-- Uses default strategy: `combined_optimized` (most comprehensive)
-- Processes 50 samples for quick validation
+- Launches 4 parallel processes (one per GPU)
+- Loads model once per GPU (~78GB bf16)
+- Processes 30 samples: 30÷4 = 7-8 samples per GPU
+- Uses batch_size=4 for efficient processing
+- Saves intermediate results after each batch
 
 **Expected Duration**: 5-10 minutes
 
 **Expected Output**:
 ```
+======================================================================
+Run ID: run_20251025_HHMMSS
+======================================================================
+
 ============================================================
-BASELINE VALIDATION
+Accelerate Connector Initialized
 ============================================================
-Model: openai/gpt-oss-20b
-Data Source: unified
-Template: combined/combined_gptoss_v1.json
+Number of GPUs: 4
+Mixed Precision: bf16
+Batch Size: 1
+============================================================
+
+Loading checkpoint shards: 100%|████████| 3/3 [00:10<00:00, 3.4s/it]
+[OK] Model loaded on 4 GPU(s)
+
+GPU 0: 100%|████████████████| 2/2 [00:27<00:00, 13.7s/it]
+
+Results saved to: finetuning/outputs/gptoss/run_20251025_HHMMSS
+
+============================================================
+EVALUATION METRICS
+============================================================
+Total Samples: 30
 Strategy: combined_optimized
+
+Overall Performance:
+  Accuracy:  0.733
+  Precision: 0.700
+  Recall:    0.750
+  F1-Score:  0.724
+
+Bias Metrics by Target Group:
+  LGBTQ:
+    Sample Count: 13
+    FPR: 0.333, FNR: 0.750
+  
+  MEXICAN:
+    Sample Count: 10  
+    FPR: 0.143, FNR: 0.500
+  
+  MIDDLE_EAST:
+    Sample Count: 7
+    FPR: 0.000, FNR: 0.667
 ============================================================
-
-Loading model...
-[OK] Model ready
-
-Loading template: .../combined/combined_gptoss_v1.json
-[OK] Loaded 3 strategies
-
-Loading data from source: unified
-[OK] Loaded 50 samples
-
-Running inference...
-Processing: 100%|████████| 50/50 [05:30<00:00,  6.60s/it]
-
-Calculating metrics...
-
-============================================================
-RESULTS
-============================================================
-Accuracy:  0.640
-Precision: 0.615
-Recall:    0.643
-F1-Score:  0.629
-============================================================
-
-[SUCCESS] Results: finetuning/outputs/baseline_pre_finetune/run_20251022_143022
 ```
 
-**Output files created**:
-```
-finetuning/outputs/baseline_pre_finetune/run_TIMESTAMP/
-├── validation_log_TIMESTAMP.log           # Detailed request/response logs
-├── evaluation_report_TIMESTAMP.txt        # Human-readable summary
-├── performance_metrics_TIMESTAMP.csv      # Metrics in CSV format
-└── strategy_unified_results_TIMESTAMP.csv # Per-sample results
-```
-
-### Step 2: Full Baseline Validation
-
-After verifying the quick test works, run full validation on all 545 samples:
+### Step 2: Examine Output Files
 
 ```bash
-# Full baseline (545 samples) - THIS IS YOUR PRE-FINE-TUNING BASELINE
-python -m finetuning.pipeline.baseline.runner \
-    --model_name openai/gpt-oss-20b \
-    --data_source unified \
-    --output_dir ./finetuning/outputs/baseline_pre_finetune
+# Navigate to the run directory
+cd finetuning/outputs/gptoss
+ls -lt run_*/
+
+# View files created:
+# - validation_log_TIMESTAMP.log           # Full request/response logs
+# - evaluation_report_TIMESTAMP.txt        # Human-readable summary
+# - performance_metrics_TIMESTAMP.csv      # Overall metrics
+# - bias_metrics_TIMESTAMP.csv            # Per-group bias metrics
+# - strategy_unified_results_TIMESTAMP.csv # Per-sample predictions
+# - intermediate_results_TIMESTAMP.jsonl   # Progressive saves (batch by batch)
 ```
 
-**Expected Duration**: 45-90 minutes (depending on GPU)
+**Key files to check**:
 
-**Expected Output** (final section):
-```
-============================================================
-RESULTS
-============================================================
-Accuracy:  0.650
-Precision: 0.610
-Recall:    0.620
-F1-Score:  0.615
-============================================================
-
-[SUCCESS] Results: finetuning/outputs/baseline_pre_finetune/run_20251022_150000
-```
-
-### Step 3: Examine Detailed Logs
-
-The logging system captures complete request/response pairs for analysis:
-
+1. **evaluation_report.txt** - Human-readable summary:
 ```bash
-# View the most recent log file
-cd finetuning/outputs/baseline_pre_finetune
-ls -lt */validation_log_*.log | head -1
-
-# View sample logs (shows prompts, responses, predictions)
-tail -100 run_*/validation_log_*.log
-
-# View evaluation report
 cat run_*/evaluation_report_*.txt
-
-# View metrics CSV
-cat run_*/performance_metrics_*.csv
 ```
 
-**Log file contents include**:
-- Configuration (model, data source, template, strategy)
-- For each sample:
-  - Input text and true label
-  - Target group
-  - System and user prompts (truncated)
-  - Model parameters (temperature, max_tokens, etc.)
-  - Response time
-  - Raw model response
-  - Predicted label and rationale
-  - Match result (✓ or ✗)
-- Final metrics (accuracy, F1, precision, recall)
-
-### Step 4: Document Baseline F1 Score
-
-**CRITICAL**: Save this F1 score - this is your target to beat with fine-tuning!
-
+2. **bias_metrics.csv** - Per-group metrics:
 ```bash
-# Extract and save baseline F1
-cd ~/workspace/HateSpeechDetection_ver2/finetuning/outputs/baseline_pre_finetune
-
-# Get the most recent run directory
-LATEST_RUN=$(ls -td run_* | head -1)
-
-# Extract F1 from performance metrics CSV
-F1=$(awk -F',' 'NR==2 {print $5}' ${LATEST_RUN}/performance_metrics_*.csv)
-
-# Save to reference file
-echo "PRE-FINE-TUNING BASELINE" > BASELINE_F1.txt
-echo "======================" >> BASELINE_F1.txt
-echo "F1-Score: $F1" >> BASELINE_F1.txt
-echo "Date: $(date)" >> BASELINE_F1.txt
-echo "Model: openai/gpt-oss-20b" >> BASELINE_F1.txt
-echo "Data Source: unified (545 validation samples)" >> BASELINE_F1.txt
-echo "Prompt Strategy: combined_optimized (sophisticated prompting)" >> BASELINE_F1.txt
-echo "" >> BASELINE_F1.txt
-echo "TARGET FOR POST-FINE-TUNING:" >> BASELINE_F1.txt
-echo "- Goal: F1 >= $F1 with simple prompts" >> BASELINE_F1.txt
-echo "- This proves fine-tuning taught the model to perform well without complex prompts" >> BASELINE_F1.txt
-
-cat BASELINE_F1.txt
+cat run_*/bias_metrics_*.csv
 ```
 
-### Alternative: Test with Canned Data
-
-For faster iteration during development:
-
+3. **intermediate_results.jsonl** - Batch-by-batch saves:
 ```bash
-# Use stratified sample (100 samples)
-python -m finetuning.pipeline.baseline.runner \
-    --data_source canned_100_stratified \
-    --max_samples 50 \
-    --output_dir ./finetuning/outputs/baseline_canned_test
+wc -l run_*/intermediate_results_*.jsonl
+# Should show 30 lines (one per sample)
 ```
 
-**Available canned datasets**:
-- `canned_50_quick` - Quick test (50 samples)
-- `canned_100_stratified` - Stratified sample (100 samples)
-- `canned_100_size_varied` - Size-varied sample (100 samples)
+### Available Canned Datasets
 
-### Pipeline Documentation
+Located in `prompt_engineering/data_samples/`:
 
-For detailed pipeline documentation, arguments, troubleshooting, and advanced usage:
+| Dataset | Samples | Purpose |
+|---------|---------|---------|
+| `canned_100_stratified` | 100 | Stratified by target group and label |
+| `canned_100_size_varied` | 100 | Varied text lengths |
+| `canned_50_quick` | 50 | Quick validation |
 
-👉 **[Read the Baseline Pipeline README](pipeline/baseline/README.md)**
-
-### Key Takeaways
-
-✅ **Use `unified` data source** - Points to validation.jsonl (545 samples)  
-✅ **Use sophisticated prompting** - Default `combined_optimized` strategy  
-✅ **Save the F1 score** - This is your baseline to beat  
-✅ **Check logs** - Review request/response pairs for debugging  
-✅ **Expected F1** - Around 0.61-0.63 based on previous runs  
-
-After fine-tuning, you'll compare:
-- **Pre-fine-tuning**: F1 with sophisticated prompts (what you just calculated)
-- **Post-fine-tuning**: F1 with simple prompts (proves model learned the task)
+All canned datasets are subsets of the unified validation set with proper stratification.
 
 ---
 
-## Phase 3: LoRA Fine-Tuning
+## Phase 3: Full Baseline Validation
 
-✓ Metrics saved to: ./outputs/baseline_metrics_20251021_143022.json
-✓ Summary saved to: ./outputs/baseline_summary_20251021_143022.txt
+**Duration**: 45-90 minutes  
+**Objective**: Run baseline validation on full 514-sample validation dataset
 
-✓ Baseline validation complete!
-```
+### Understanding Output Metrics
 
-### Step 2: Full Baseline Validation
+All validation runs automatically generate three metrics files in the run directory (`finetuning/outputs/gptoss/run_TIMESTAMP/`):
 
-After verifying the quick test works, run full validation on all 545 samples:
+1. **performance_metrics_TIMESTAMP.csv** - Overall performance
+   - Columns: `strategy`, `accuracy`, `precision`, `recall`, `f1_score`, `true_positive`, `true_negative`, `false_positive`, `false_negative`
+   - Example: `accuracy=0.652, f1_score=0.621`
 
-```bash
-python -m finetuning.pipeline.baseline.runner \
-    --model_name gpt-oss-20b \
-    --data_file ./data/validation.jsonl \
-    --output_dir ./outputs
-```
+2. **bias_metrics_TIMESTAMP.csv** - Per-target-group bias analysis
+   - Columns: `strategy`, `persona_tag`, `sample_count`, `false_positive_rate`, `false_negative_rate`, `true_positive`, `true_negative`, `false_positive`, `false_negative`
+   - Shows FPR/FNR breakdown for LGBTQ, Mexican, Middle Eastern groups
+   - Example: `LGBTQ: FPR=0.150, FNR=0.328`
 
-**Expected Duration**: 45-60 minutes
+3. **strategy_unified_results_TIMESTAMP.csv** - Individual sample predictions
+   - Columns: `strategy`, `sample_id`, `input_text`, `true_label`, `predicted_label`, `persona_tag`, `rationale`
+   - Complete record of every prediction with reasoning
 
-**Expected Output** (last section):
-```
-============================================================
-BASELINE VALIDATION METRICS
-============================================================
-Total samples: 545
-Valid predictions: 542 (99.4%)
-
-Metric               Value     
------------------------------------
-Accuracy             0.6501
-Precision            0.6103
-Recall               0.6198
-F1-Score             0.6150
-FPR                  0.1797
-FNR                  0.1631
-
-============================================================
-BASELINE F1-SCORE: 0.6150
-TARGET TO BEAT: 0.620 (fine-tuning goal)
-============================================================
-```
-
----
-
-## Phase 3: LoRA Fine-Tuning
-
-**Duration**: 2-3 hours  
-**Objective**: Fine-tune GPT-OSS-120B with LoRA on 3,083 training samples
-
-### Step 1: Create Training Script
-
-Create `scripts/train_lora.py`:
-
-```python
-#!/usr/bin/env python3
-"""
-LoRA Fine-Tuning for GPT-OSS-120B
-Optimized for A100 GPU with 3,628 training samples
-"""
-
-import os
-import json
-import torch
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    TrainingArguments,
-    Trainer,
-    DataCollatorForLanguageModeling
-)
-from peft import LoraConfig, get_peft_model, TaskType
-from datasets import load_dataset
-from datetime import datetime
-from pathlib import Path
-
-def setup_lora_model(model_name, lora_rank=32, lora_alpha=64, lora_dropout=0.1):
-    """Load model and apply LoRA configuration"""
-    print(f"Loading model: {model_name}")
-    
-    # Load tokenizer
-    tokenizer = AutoTokenizer.from_pretrained(
-        model_name,
-        trust_remote_code=True
-    )
-    if tokenizer.pad_token is None:
-        tokenizer.pad_token = tokenizer.eos_token
-    
-    # Load model
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name,
-        trust_remote_code=True,
-        torch_dtype=torch.float16,
-        device_map="auto",
-        use_cache=False
-    )
-    
-    print(f"Model loaded: {model.num_parameters() / 1e9:.1f}B parameters")
-    
-    # Configure LoRA
-    lora_config = LoraConfig(
-        r=lora_rank,
-        lora_alpha=lora_alpha,
-        lora_dropout=lora_dropout,
-        target_modules=["q_proj", "v_proj", "o_proj", "k_proj"],
-        bias="none",
-        task_type=TaskType.CAUSAL_LM
-    )
-    
-    # Apply LoRA
-    model = get_peft_model(model, lora_config)
-    
-    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-    total = sum(p.numel() for p in model.parameters())
-    
-    print(f"LoRA Configuration:")
-    print(f"  Rank: {lora_rank}")
-    print(f"  Alpha: {lora_alpha}")
-    print(f"  Dropout: {lora_dropout}")
-    print(f"  Trainable parameters: {trainable:,} ({100*trainable/total:.4f}%)")
-    
-    return model, tokenizer
-
-def load_data(train_file, val_file, tokenizer, max_length=512):
-    """Load and tokenize training data"""
-    print(f"\nLoading data:")
-    print(f"  Train: {train_file}")
-    print(f"  Validation: {val_file}")
-    
-    dataset = load_dataset('json', data_files={
-        'train': train_file,
-        'validation': val_file
-    })
-    
-    print(f"  Train samples: {len(dataset['train'])}")
-    print(f"  Validation samples: {len(dataset['validation'])}")
-    
-    def tokenize(examples):
-        return tokenizer(
-            examples['text'],
-            truncation=True,
-            max_length=max_length,
-            padding='max_length'
-        )
-    
-    tokenized = dataset.map(tokenize, batched=True, remove_columns=dataset['train'].column_names)
-    return tokenized
-
-def train(model, tokenizer, dataset, output_dir, epochs=3, batch_size=4, learning_rate=2e-4):
-    """Train model with LoRA"""
-    print(f"\nStarting training...")
-    print(f"  Output: {output_dir}")
-    print(f"  Epochs: {epochs}")
-    print(f"  Batch size: {batch_size}")
-    print(f"  Learning rate: {learning_rate}")
-    
-    training_args = TrainingArguments(
-        output_dir=output_dir,
-        num_train_epochs=epochs,
-        per_device_train_batch_size=batch_size,
-        gradient_accumulation_steps=2,
-        learning_rate=learning_rate,
-        warmup_steps=100,
-        logging_steps=10,
-        save_steps=200,
-        eval_steps=200,
-        evaluation_strategy="steps",
-        save_strategy="steps",
-        save_total_limit=3,
-        load_best_model_at_end=True,
-        metric_for_best_model="eval_loss",
-        fp16=True,
-        report_to="none",
-        dataloader_num_workers=4,
-        gradient_checkpointing=True
-    )
-    
-    data_collator = DataCollatorForLanguageModeling(tokenizer=tokenizer, mlm=False)
-    
-    trainer = Trainer(
-        model=model,
-        args=training_args,
-        train_dataset=dataset['train'],
-        eval_dataset=dataset['validation'],
-        data_collator=data_collator
-    )
-    
-    # Train
-    result = trainer.train()
-    
-    # Save final model
-    final_path = Path(output_dir) / "final_model"
-    trainer.save_model(str(final_path))
-    tokenizer.save_pretrained(str(final_path))
-    
-    print(f"\n{'='*60}")
-    print(f"Training complete!")
-    print(f"  Time: {result.metrics.get('train_runtime', 0)/3600:.2f} hours")
-    print(f"  Final loss: {result.metrics.get('train_loss', 0):.4f}")
-    print(f"  Model saved: {final_path}")
-    print(f"{'='*60}\n")
-    
-    return result
-
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--model_name", default="gpt-oss-20b")
-    parser.add_argument("--train_file", default="./data/train.jsonl")
-    parser.add_argument("--val_file", default="./data/validation.jsonl")
-    parser.add_argument("--output_dir", default="./outputs/lora_training")
-    parser.add_argument("--lora_rank", type=int, default=32)
-    parser.add_argument("--lora_alpha", type=int, default=64)
-    parser.add_argument("--lora_dropout", type=float, default=0.1)
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch_size", type=int, default=4)
-    parser.add_argument("--learning_rate", type=float, default=2e-4)
-    args = parser.parse_args()
-    
-    # Add timestamp to output
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    output_dir = f"{args.output_dir}_{timestamp}"
-    
-    # Setup model
-    model, tokenizer = setup_lora_model(
-        args.model_name,
-        args.lora_rank,
-        args.lora_alpha,
-        args.lora_dropout
-    )
-    
-    # Load data
-    dataset = load_data(args.train_file, args.val_file, tokenizer)
-    
-    # Train
-    train(model, tokenizer, dataset, output_dir, args.epochs, args.batch_size, args.learning_rate)
-```
-
-### Step 2: Run Training in tmux
+### Step 1: Run Full Validation
 
 ```bash
-# Start tmux session
-tmux new -s training
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
 
-# Inside tmux:
-cd ~/finetuning
-source venv/bin/activate
-
-# Run training
-python scripts/train_lora.py \
-    --model_name gpt-oss-20b \
-    --train_file ./data/train.jsonl \
-    --val_file ./data/validation.jsonl \
-    --output_dir ./outputs/lora_training \
-    --lora_rank 32 \
-    --lora_alpha 64 \
-    --lora_dropout 0.1 \
-    --epochs 3 \
-    --batch_size 4 \
-    --learning_rate 2e-4
-
-# Detach from tmux: Ctrl+B, then D
+# Full validation with all 514 samples
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --data_file unified \
+    --prompt_template ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json \
+    --strategy combined_optimized \
+    --max_samples all \
+    --output_dir ./finetuning/outputs/gptoss/baseline
 ```
 
-### Step 3: Monitor Training
+**What this does**:
+- Loads **unified_val.json** (514 validation samples)
+- Distributes across 4 GPUs: ~129 samples per GPU
+- Each GPU processes in batches of 4: ~33 batches per GPU
+- Writes intermediate saves after each batch (crash recovery)
+- Uses sophisticated `combined_optimized` prompting strategy
 
+**Expected Duration**: 45-90 minutes
+
+**Progress Monitoring**:
 ```bash
-# Reattach to tmux
-tmux attach -t training
-
-# Or monitor GPU usage (in separate terminal)
+# Monitor in real-time (separate terminal)
 watch -n 5 nvidia-smi
 
-# View training logs
-tail -f ~/finetuning/outputs/lora_training_*/logs/*
+# Check intermediate file being written
+ls -lh finetuning/outputs/gptoss/baseline/run_*/intermediate_results_*.jsonl
+
+# Count completed samples
+wc -l finetuning/outputs/gptoss/baseline/run_*/intermediate_results_*.jsonl
 ```
 
-**Expected Output**:
-```
-Step 100: loss=1.234, eval_loss=1.156
-Step 200: loss=0.987, eval_loss=0.923
-Step 300: loss=0.845, eval_loss=0.812
-...
-Training complete! Time: 2.3 hours
-```
+### Step 2: Review Generated Metrics Files
 
----
-
-## Phase 4: Fine-Tuned Inference
-
-**Duration**: 45-60 minutes  
-**Objective**: Test fine-tuned model performance
-
-### Step 1: Create Fine-Tuned Inference Script
-
-Create `scripts/finetune_inference.py`:
-
-```python
-#!/usr/bin/env python3
-"""
-Inference with fine-tuned LoRA model
-"""
-
-import json
-import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from peft import PeftModel
-from tqdm import tqdm
-from pathlib import Path
-import time
-
-def load_finetuned_model(base_model_name, lora_adapter_path):
-    """Load base model + LoRA adapter"""
-    print(f"Loading base model: {base_model_name}")
-    
-    tokenizer = AutoTokenizer.from_pretrained(base_model_name, trust_remote_code=True)
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        base_model_name,
-        trust_remote_code=True,
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
-    
-    print(f"Loading LoRA adapter: {lora_adapter_path}")
-    model = PeftModel.from_pretrained(model, lora_adapter_path)
-    
-    print("Fine-tuned model loaded successfully!")
-    return model, tokenizer
-
-def run_inference(model, tokenizer, data_file, output_file):
-    """Run inference on validation set"""
-    with open(data_file, 'r') as f:
-        data = [json.loads(line) for line in f]
-    
-    print(f"Running inference on {len(data)} samples...")
-    
-    results = []
-    start_time = time.time()
-    
-    for i, item in enumerate(tqdm(data)):
-        prompt = item['text'].split('### Classification:')[0] + '### Classification:'
-        
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=512)
-        inputs = {k: v.to(model.device) for k, v in inputs.items()}
-        
-        with torch.no_grad():
-            outputs = model.generate(
-                **inputs,
-                max_new_tokens=10,
-                temperature=0.1,
-                do_sample=False,
-                pad_token_id=tokenizer.eos_token_id
-            )
-        
-        response = tokenizer.decode(outputs[0], skip_special_tokens=True)
-        
-        if '### Classification:' in response:
-            prediction = response.split('### Classification:')[-1].strip().lower()
-        else:
-            prediction = response.strip().lower()
-        
-        if 'hate' in prediction and 'not' not in prediction:
-            pred_label = 'hate'
-        elif 'not' in prediction or 'normal' in prediction:
-            pred_label = 'not hate'
-        else:
-            pred_label = 'unknown'
-        
-        results.append({
-            'prompt': prompt,
-            'true_label': item.get('label', 'unknown'),
-            'prediction': pred_label,
-            'raw_response': response,
-            'sample_id': i
-        })
-    
-    with open(output_file, 'w') as f:
-        json.dump(results, f, indent=2)
-    
-    total_time = time.time() - start_time
-    print(f"Inference complete! Time: {total_time/60:.1f} minutes")
-    
-    return results
-
-def calculate_metrics(results):
-    """Calculate metrics"""
-    from sklearn.metrics import accuracy_score, precision_recall_fscore_support
-    
-    valid_results = [r for r in results if r['prediction'] != 'unknown']
-    
-    print(f"\n{'='*60}")
-    print("FINE-TUNED VALIDATION METRICS")
-    print(f"{'='*60}")
-    print(f"Total samples: {len(results)}")
-    print(f"Valid predictions: {len(valid_results)}")
-    
-    y_true = [1 if r['true_label'] == 'hate' else 0 for r in valid_results]
-    y_pred = [1 if r['prediction'] == 'hate' else 0 for r in valid_results]
-    
-    accuracy = accuracy_score(y_true, y_pred)
-    precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average='binary')
-    
-    print(f"\n{'Metric':<20} {'Value':<10}")
-    print(f"{'-'*30}")
-    print(f"{'Accuracy':<20} {accuracy:.3f}")
-    print(f"{'Precision':<20} {precision:.3f}")
-    print(f"{'Recall':<20} {recall:.3f}")
-    print(f"{'F1-Score':<20} {f1:.3f}")
-    
-    print(f"\n{'='*60}")
-    print(f"FINE-TUNED F1-SCORE: {f1:.3f}")
-    print(f"BASELINE F1-SCORE: 0.615")
-    print(f"IMPROVEMENT: {f1 - 0.615:+.3f}")
-    print(f"{'='*60}\n")
-    
-    return {'accuracy': accuracy, 'precision': precision, 'recall': recall, 'f1': f1}
-
-if __name__ == "__main__":
-    import argparse
-    
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--base_model", default="gpt-oss-20b")
-    parser.add_argument("--lora_adapter", required=True)
-    parser.add_argument("--data_file", default="./data/validation.jsonl")
-    parser.add_argument("--output_file", default="./outputs/finetuned_results.json")
-    args = parser.parse_args()
-    
-    model, tokenizer = load_finetuned_model(args.base_model, args.lora_adapter)
-    results = run_inference(model, tokenizer, args.data_file, args.output_file)
-    metrics = calculate_metrics(results)
-```
-
-### Step 2: Run Fine-Tuned Inference
+After completion, examine the auto-generated metrics:
 
 ```bash
-# Find your trained model path
-ls -lt ~/finetuning/outputs/
+cd finetuning/outputs/gptoss/baseline
 
-# Run inference with fine-tuned model
-python scripts/finetune_inference.py \
-    --base_model gpt-oss-20b \
-    --lora_adapter ./outputs/lora_training_20251021_143022/final_model \
-    --data_file ./data/validation.jsonl \
-    --output_file ./outputs/finetuned_results.json
+# Find most recent run
+LATEST_RUN=$(ls -td run_* | head -1)
+cd $LATEST_RUN
+
+# View overall performance metrics
+cat performance_metrics_*.csv
+
+# View per-group bias metrics
+cat bias_metrics_*.csv
+
+# Sample individual predictions
+head -20 strategy_unified_results_*.csv
 ```
 
-**Expected Output**:
-```
-=============================================================
-FINE-TUNED VALIDATION METRICS
-=============================================================
-Total samples: 545
-Valid predictions: 542
-
-Metric               Value     
-------------------------------
-Accuracy             0.668
-Precision            0.635
-Recall               0.645
-F1-Score             0.640
-
-=============================================================
-FINE-TUNED F1-SCORE: 0.640
-BASELINE F1-SCORE: 0.615
-IMPROVEMENT: +0.025
-=============================================================
+**Expected Performance Metrics** (example from recent run):
+```csv
+strategy,accuracy,precision,recall,f1_score,true_positive,true_negative,false_positive,false_negative
+combined_optimized,0.652,0.615,0.628,0.621,127,208,41,94
 ```
 
----
+**Expected Bias Metrics** (example from recent run):
+```csv
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_optimized,lgbtq,167,0.150,0.328,45,85,15,22
+combined_optimized,mexican,167,0.118,0.354,42,90,12,23
+combined_optimized,middle_east,166,0.137,0.375,40,88,14,24
+```
 
-## Phase 5: Performance Comparison
+**Interpreting Bias Metrics**:
+- **FPR (False Positive Rate)**: Over-prediction of hate → High FPR means model flags too much as hate for this group
+- **FNR (False Negative Rate)**: Under-detection of hate → High FNR means model misses actual hate for this group
+- **Balanced Fairness**: Similar FPR/FNR across all groups indicates fair treatment
 
-### Step 1: Compare Results
+### Step 3: Document Baseline Metrics
+
+Create a baseline reference file for comparison with future fine-tuned models:
 
 ```bash
-# Create comparison report
-cat > ~/finetuning/outputs/comparison_report.txt << 'EOF'
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss/baseline
+
+# Get most recent run
+LATEST_RUN=$(ls -td run_* | head -1)
+
+# Extract F1 from performance metrics
+F1=$(awk -F',' 'NR==2 {print $5}' ${LATEST_RUN}/performance_metrics_*.csv)
+
+# Create baseline reference file
+cat > BASELINE_METRICS.txt << EOF
 =============================================================
-GPT-OSS-120B FINE-TUNING VALIDATION REPORT
+PRE-FINE-TUNING BASELINE METRICS
 =============================================================
+Date: $(date)
+Model: openai/gpt-oss-20b
+Dataset: unified_val.json (514 samples)
+Prompt Strategy: combined_optimized (sophisticated prompting)
+Hardware: 4x NVIDIA A100 80GB GPUs
+Batch Size: 4 samples per GPU batch
 
-BASELINE (No Fine-Tuning)
-- F1-Score: 0.615
-- Accuracy: 0.650
-- Precision: 0.610
-- Recall: 0.620
+PERFORMANCE METRICS:
+  F1-Score: $F1
+  Full metrics: ${LATEST_RUN}/performance_metrics_*.csv
 
-FINE-TUNED (LoRA, 3 epochs)
-- F1-Score: 0.640
-- Accuracy: 0.668
-- Precision: 0.635
-- Recall: 0.645
+BIAS METRICS:
+  Per-group FPR/FNR: ${LATEST_RUN}/bias_metrics_*.csv
 
-IMPROVEMENT
-- F1-Score: +0.025 (+4.1%)
-- Accuracy: +0.018 (+2.8%)
-- Precision: +0.025 (+4.1%)
-- Recall: +0.025 (+4.0%)
+INDIVIDUAL PREDICTIONS:
+  Sample-level results: ${LATEST_RUN}/strategy_unified_results_*.csv
 
-SUCCESS CRITERIA
-✅ F1 ≥ 0.620: PASSED (0.640)
-✅ Improvement over baseline: PASSED (+0.025)
-
+=============================================================
+FINE-TUNING TARGET:
+- Goal: Post-FT F1 (with simple prompts) ≥ $F1 (with complex prompts)
+- This proves fine-tuning internalized the task without needing
+  sophisticated prompt engineering
 =============================================================
 EOF
 
-cat ~/finetuning/outputs/comparison_report.txt
-```
-
-### Step 2: Analyze Results
-
-```python
-# Create analysis script: scripts/analyze_results.py
-import json
-
-# Load results
-with open('./outputs/baseline_results.json') as f:
-    baseline = json.load(f)
-
-with open('./outputs/finetuned_results.json') as f:
-    finetuned = json.load(f)
-
-# Find cases where fine-tuning fixed errors
-improvements = []
-for b, f in zip(baseline, finetuned):
-    b_correct = b['prediction'] == b['true_label']
-    f_correct = f['prediction'] == f['true_label']
-    
-    if not b_correct and f_correct:
-        improvements.append({
-            'prompt': b['prompt'][:100],
-            'true_label': b['true_label'],
-            'baseline_pred': b['prediction'],
-            'finetuned_pred': f['prediction']
-        })
-
-print(f"Cases where fine-tuning fixed errors: {len(improvements)}")
-for i, case in enumerate(improvements[:5]):
-    print(f"\nCase {i+1}:")
-    print(f"  Text: {case['prompt']}...")
-    print(f"  True: {case['true_label']}")
-    print(f"  Baseline: {case['baseline_pred']}")
-    print(f"  Fine-tuned: {case['finetuned_pred']}")
-```
-
-Run:
-```bash
-python scripts/analyze_results.py
+cat BASELINE_METRICS.txt
 ```
 
 ---
 
-## Success Criteria
+## Phase 4: Results Analysis
 
-### ✅ Validation Complete If:
+**Duration**: 15-30 minutes  
+**Objective**: Analyze baseline performance metrics and identify improvement areas
 
-1. **Baseline F1 ≈ 0.615** (±0.01)
-   - Confirms model loaded correctly
-   - Matches expected baseline performance
+### Step 1: Examine Generated Metrics Files
 
-2. **Fine-Tuned F1 ≥ 0.620**
-   - Shows improvement from fine-tuning
-   - Meets minimum target
+All metrics are automatically computed and saved during validation. Navigate to your run directory:
 
-3. **Improvement ≥ +0.005**
-   - Fine-tuning provided measurable benefit
-   - Not just noise/variance
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss/baseline
 
-4. **Training Completed**
-   - 3 epochs without errors
-   - Validation loss decreased
-   - No catastrophic forgetting
+# Find most recent run
+LATEST_RUN=$(ls -td run_* | head -1)
+cd $LATEST_RUN
+
+# List all metrics files
+ls -lh *.csv *.txt
+```
+
+**Expected files**:
+- `performance_metrics_TIMESTAMP.csv` - Overall accuracy, F1, precision, recall
+- `bias_metrics_TIMESTAMP.csv` - Per-group FPR, FNR breakdown
+- `strategy_unified_results_TIMESTAMP.csv` - Individual sample predictions with rationales
+- `evaluation_report_TIMESTAMP.txt` - Human-readable summary report
+
+### Step 2: Validate Bias Metrics (Optional)
+
+The bias metrics are automatically calculated and saved to `bias_metrics_*.csv`. To manually verify the calculations:
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
+
+python3 << 'EOF'
+import pandas as pd
+import glob
+
+# Find most recent results
+result_files = glob.glob('finetuning/outputs/gptoss/baseline/run_*/strategy_unified_results_*.csv')
+latest_file = sorted(result_files)[-1]
+
+# Load results
+df = pd.read_csv(latest_file)
+
+print(f"Loaded {len(df)} samples from: {latest_file}\n")
+print("="*60)
+print("BIAS METRICS VALIDATION")
+print("="*60)
+
+for persona in sorted(df['persona_tag'].unique()):
+    persona_df = df[df['persona_tag'] == persona]
+    valid_df = persona_df[persona_df['predicted_label'].isin(['hate', 'normal'])]
+    
+    tp = len(valid_df[(valid_df['predicted_label']=='hate') & (valid_df['true_label']=='hate')])
+    tn = len(valid_df[(valid_df['predicted_label']=='normal') & (valid_df['true_label']=='normal')])
+    fp = len(valid_df[(valid_df['predicted_label']=='hate') & (valid_df['true_label']=='normal')])
+    fn = len(valid_df[(valid_df['predicted_label']=='normal') & (valid_df['true_label']=='hate')])
+    
+    fpr = fp/(fp+tn) if (fp+tn)>0 else 0.0
+    fnr = fn/(fn+tp) if (fn+tp)>0 else 0.0
+    
+    print(f"\n{persona} (n={len(valid_df)}):")
+    print(f"  TP={tp}, TN={tn}, FP={fp}, FN={fn}")
+    print(f"  FPR={fpr:.4f}, FNR={fnr:.4f}")
+
+print("\n" + "="*60)
+print("Compare these values with bias_metrics_*.csv to verify accuracy")
+EOF
+```
+
+### Step 3: Analyze Error Patterns
+
+Identify common misclassifications using the individual predictions file:
+
+```bash
+python3 << 'EOF'
+import pandas as pd
+import glob
+
+# Load most recent results
+result_files = glob.glob('finetuning/outputs/gptoss/baseline/run_*/strategy_unified_results_*.csv')
+df = pd.read_csv(sorted(result_files)[-1])
+
+# Find false positives (predicted hate, actual normal)
+false_positives = df[(df['predicted_label']=='hate') & (df['true_label']=='normal')]
+
+print("="*60)
+print(f"FALSE POSITIVES: {len(false_positives)} samples")
+print("="*60)
+for idx, row in false_positives.head(5).iterrows():
+    print(f"\nText: {row['input_text'][:80]}...")
+    print(f"Target Group: {row['persona_tag']}")
+    print(f"True: {row['true_label']}, Predicted: {row['predicted_label']}")
+
+# Find false negatives (predicted normal, actual hate)
+false_negatives = df[(df['predicted_label']=='normal') & (df['true_label']=='hate')]
+
+print("\n" + "="*60)
+print(f"FALSE NEGATIVES: {len(false_negatives)} samples")
+print("="*60)
+for idx, row in false_negatives.head(5).iterrows():
+    print(f"\nText: {row['input_text'][:80]}...")
+    print(f"Target Group: {row['persona_tag']}")
+    print(f"True: {row['true_label']}, Predicted: {row['predicted_label']}")
+EOF
+```
+
+### Step 4: Compare with Previous Runs (if applicable)
+
+If you have multiple validation runs:
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss/baseline
+
+# Compare F1 scores across runs
+echo "PERFORMANCE COMPARISON ACROSS RUNS"
+echo "="*60
+for run in run_*/; do
+    echo "=== $run ==="
+    awk -F',' 'NR==2 {printf "F1: %.3f, Acc: %.3f, Prec: %.3f, Rec: %.3f\n", $5, $2, $3, $4}' \
+        ${run}performance_metrics_*.csv
+done
+```
+
+**Key Insights to Document**:
+1. **Overall Performance**: F1 score to beat with fine-tuning
+2. **Bias Patterns**: Which groups have higher FPR/FNR?
+3. **Error Patterns**: Common characteristics of false positives/negatives
+4. **Improvement Areas**: Target these patterns in fine-tuning data generation
+
+---
+
+## Phase 5: Fine-Tuning with LoRA
+
+**Duration**: 2-3 hours  
+**Objective**: Fine-tune GPT-OSS-20B with LoRA adapters to internalize hate speech detection task
+
+### Overview
+
+After establishing baseline metrics with sophisticated prompts, the next step is fine-tuning the model to internalize the task. The goal is for the fine-tuned model to achieve similar or better F1 scores using **simple prompts** compared to the baseline's **sophisticated prompts**.
+
+**Success Criteria**: Post-FT F1 (simple prompts) ≥ Pre-FT F1 (sophisticated prompts)
+
+### Step 1: Generate Fine-Tuning Data
+
+Use the FT Prompt Generator to create training data in multiple formats:
+
+👉 **Detailed documentation**: [finetuning/ft_prompt_generator/README.md](ft_prompt_generator/README.md)
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
+
+# Generate training data in simple and optimized formats
+python -m finetuning.ft_prompt_generator.cli \
+    --unified_dir ./data/processed/unified \
+    --output_dir ./finetuning/data/ft_prompts \
+    --template combined/combined_gptoss_v1.json \
+    --strategy combined_optimized
+```
+
+**Generated Files** (in `finetuning/data/ft_prompts/`):
+- `train.jsonl` - Simple format training data (~80% of unified dataset)
+- `validation.jsonl` - Simple format validation data (~20% of unified dataset)
+- `train_optimized.jsonl` - Optimized format with sophisticated prompts
+- `validation_optimized.jsonl` - Optimized format validation data
+
+**Format Explanation**:
+- **Simple Format**: Basic prompt → completion pairs
+  ```json
+  {
+    "messages": [
+      {"role": "system", "content": "You are a hate speech classifier."},
+      {"role": "user", "content": "Is this hate speech: '...'"},
+      {"role": "assistant", "content": "hate"}
+    ]
+  }
+  ```
+- **Optimized Format**: Includes detailed reasoning and context from sophisticated prompts
+  ```json
+  {
+    "messages": [
+      {"role": "system", "content": "Detailed system prompt with guidelines..."},
+      {"role": "user", "content": "Analyze: '...' Target group: lgbtq"},
+      {"role": "assistant", "content": "LABEL: hate\nRATIONALE: ..."}
+    ]
+  }
+  ```
+
+### Step 2: Configure LoRA Training
+
+LoRA (Low-Rank Adaptation) allows efficient fine-tuning by training small adapter layers instead of the full model.
+
+**Recommended LoRA Configuration**:
+- `lora_rank`: 32-64 (higher = more capacity, but slower)
+- `lora_alpha`: 32-64 (scaling factor)
+- `lora_dropout`: 0.05-0.1
+- `target_modules`: `["q_proj", "v_proj"]` (attention layers)
+
+**Training Hyperparameters**:
+- `learning_rate`: 2e-4 to 5e-4
+- `epochs`: 2-3
+- `batch_size`: 4 per GPU
+- `gradient_accumulation_steps`: 2-4
+- `warmup_ratio`: 0.1
+
+### Step 3: Run LoRA Fine-Tuning
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
+
+# Fine-tune with LoRA using optimized format
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --model_name openai/gpt-oss-20b \
+    --train_file ./finetuning/data/ft_prompts/train_optimized.jsonl \
+    --val_file ./finetuning/data/ft_prompts/validation_optimized.jsonl \
+    --output_dir ./finetuning/models/lora_checkpoints \
+    --lora_rank 32 \
+    --lora_alpha 32 \
+    --learning_rate 2e-4 \
+    --epochs 3 \
+    --per_device_train_batch_size 4 \
+    --gradient_accumulation_steps 4 \
+    --warmup_ratio 0.1
+```
+
+**Training Monitoring**:
+```bash
+# Monitor GPU usage
+watch -n 5 nvidia-smi
+
+# Monitor training logs
+tail -f finetuning/models/lora_checkpoints/training.log
+
+# Check validation loss trends
+grep "eval_loss" finetuning/models/lora_checkpoints/training.log
+```
+
+**Expected Duration**: 2-3 hours for 3 epochs
+
+**Output**: LoRA adapter weights saved to `finetuning/models/lora_checkpoints/`
+
+### Step 4: Merge LoRA Adapters (Optional)
+
+For deployment, you can merge LoRA adapters into the base model:
+
+```bash
+python -m finetuning.pipeline.lora.merge \
+    --base_model openai/gpt-oss-20b \
+    --lora_weights ./finetuning/models/lora_checkpoints \
+    --output_dir ./finetuning/models/merged_model
+```
+
+**Note**: Merged model will be ~78GB (full model size). Keep LoRA adapters separate for flexibility.
+
+---
+
+## Phase 6: Post-Fine-Tuning Validation
+
+**Duration**: 45-90 minutes  
+**Objective**: Validate fine-tuned model with simple prompts and compare to baseline
+
+### Step 1: Run Validation with Fine-Tuned Model
+
+Use **simple prompts** to test if the model internalized the task:
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
+
+# Validate with simple prompts (no sophisticated prompt engineering)
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --model_name ./finetuning/models/lora_checkpoints \
+    --data_file unified \
+    --prompt_template ./finetuning/data/ft_prompts/simple_template.json \
+    --strategy simple \
+    --max_samples all \
+    --output_dir ./finetuning/outputs/gptoss/post_finetune
+```
+
+**Key Differences from Baseline Run**:
+- `--model_name`: Points to fine-tuned LoRA model instead of base model
+- `--prompt_template`: Uses simple template (no sophisticated prompt engineering)
+- `--strategy simple`: Basic classification without detailed reasoning
+- `--output_dir`: Separate directory for post-FT results
+
+### Step 2: Examine Post-FT Metrics
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss/post_finetune
+
+# Find most recent run
+LATEST_RUN=$(ls -td run_* | head -1)
+cd $LATEST_RUN
+
+# View performance metrics
+cat performance_metrics_*.csv
+
+# View bias metrics
+cat bias_metrics_*.csv
+```
+
+**Metrics files generated** (same format as baseline):
+- `performance_metrics_*.csv` - Accuracy, F1, Precision, Recall
+- `bias_metrics_*.csv` - FPR, FNR per target group
+- `strategy_unified_results_*.csv` - Individual predictions
+
+### Step 3: Compare Baseline vs Fine-Tuned Performance
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss
+
+# Extract baseline F1 (sophisticated prompts)
+BASELINE_F1=$(awk -F',' 'NR==2 {print $5}' baseline/run_*/performance_metrics_*.csv | head -1)
+
+# Extract post-FT F1 (simple prompts)
+POSTFT_F1=$(awk -F',' 'NR==2 {print $5}' post_finetune/run_*/performance_metrics_*.csv | head -1)
+
+echo "="*60
+echo "PERFORMANCE COMPARISON"
+echo "="*60
+echo "BASELINE (sophisticated prompts):  F1 = $BASELINE_F1"
+echo "FINE-TUNED (simple prompts):       F1 = $POSTFT_F1"
+echo ""
+
+# Calculate improvement
+python3 << EOF
+baseline = float("$BASELINE_F1")
+postft = float("$POSTFT_F1")
+improvement = ((postft - baseline) / baseline) * 100
+if postft >= baseline:
+    print(f"✅ SUCCESS: Fine-tuning improved F1 by {improvement:.1f}%")
+    print(f"   Model internalized task - no longer needs sophisticated prompts")
+else:
+    print(f"⚠️  NEEDS WORK: F1 decreased by {abs(improvement):.1f}%")
+    print(f"   Consider: more training epochs, different LoRA config, or more training data")
+EOF
+```
+
+### Step 4: Compare Bias Metrics
+
+```bash
+# Compare bias metrics across runs
+echo "="*60
+echo "BIAS COMPARISON: BASELINE vs FINE-TUNED"
+echo "="*60
+
+echo "BASELINE (sophisticated prompts):"
+cat baseline/run_*/bias_metrics_*.csv | head -1 | tail -1
+cat baseline/run_*/bias_metrics_*.csv | tail -n +2
+
+echo ""
+echo "FINE-TUNED (simple prompts):"
+cat post_finetune/run_*/bias_metrics_*.csv | head -1 | tail -1
+cat post_finetune/run_*/bias_metrics_*.csv | tail -n +2
+```
+
+**Key Questions to Analyze**:
+1. Did FPR/FNR improve for any target groups?
+2. Did fairness balance improve (more similar FPR/FNR across groups)?
+3. Are there specific groups that need targeted data augmentation?
+
+### Step 5: Document Fine-Tuning Results
+
+```bash
+cd /home/azureuser/workspace/HateSpeechDetection_ver2/finetuning/outputs/gptoss/post_finetune
+
+# Get most recent run
+LATEST_RUN=$(ls -td run_* | head -1)
+
+# Create results summary
+cat > FINETUNING_RESULTS.txt << EOF
+=============================================================
+POST-FINE-TUNING VALIDATION RESULTS
+=============================================================
+Date: $(date)
+Model: openai/gpt-oss-20b + LoRA adapters
+Dataset: unified_val.json (514 samples)
+Prompt Strategy: simple (no sophisticated prompt engineering)
+Hardware: 4x NVIDIA A100 80GB GPUs
+
+BASELINE PERFORMANCE (sophisticated prompts):
+  F1-Score: $(awk -F',' 'NR==2 {print $5}' ../../baseline/run_*/performance_metrics_*.csv | head -1)
+  Metrics: ../../baseline/run_*/performance_metrics_*.csv
+
+POST-FT PERFORMANCE (simple prompts):
+  F1-Score: $(awk -F',' 'NR==2 {print $5}' ${LATEST_RUN}/performance_metrics_*.csv)
+  Metrics: ${LATEST_RUN}/performance_metrics_*.csv
+
+BIAS METRICS:
+  Baseline: ../../baseline/run_*/bias_metrics_*.csv
+  Post-FT:  ${LATEST_RUN}/bias_metrics_*.csv
+
+=============================================================
+CONCLUSION:
+- Compare F1 scores to determine if fine-tuning was successful
+- Analyze bias metrics for fairness improvements
+- If successful: deploy fine-tuned model
+- If not successful: iterate on training data, hyperparameters, or epochs
+=============================================================
+EOF
+
+cat FINETUNING_RESULTS.txt
+```
 
 ---
 
 ## Troubleshooting
 
-### Issue: Model Loading Fails
+### Issue: Accelerate Command Not Found
 
-**Error**: `OSError: gpt-oss-20b not found`
+**Error**: `accelerate: command not found`
 
-**Solution**: Check Azure deployment for correct model ID
+**Solution**:
 ```bash
-# Try alternative model IDs:
-# - Use actual Hugging Face model name
-# - Or local path if model downloaded
+# Activate virtual environment
+cd /home/azureuser/workspace/HateSpeechDetection_ver2
+source .venv/bin/activate
+
+# Verify accelerate installed
+which accelerate
+pip show accelerate
+
+# If not installed:
+pip install accelerate
 ```
 
 ### Issue: CUDA Out of Memory
 
 **Error**: `RuntimeError: CUDA out of memory`
 
-**Solution**: Reduce batch size
+**Root Cause**: Model is ~78GB bf16. On A100 80GB GPUs, this should fit with headroom, but OOM can occur with large batch sizes or gradient accumulation.
+
+**Solutions**:
+
+1. **Reduce Batch Size**:
 ```python
-# In train_lora.py, change:
-parser.add_argument("--batch_size", type=int, default=2)  # Reduced from 4
+# In finetuning/pipeline/baseline/accelerate_connector.py
+# Change batch_size from 4 to 2 or 1
+self.batch_size = 2
 ```
 
-### Issue: Training Loss Not Decreasing
-
-**Symptom**: Loss stays flat after 100 steps
-
-**Solution**: Check learning rate and data
+2. **Check GPU Memory Before Running**:
 ```bash
-# Increase learning rate
---learning_rate 3e-4  # Instead of 2e-4
-
-# Verify data loaded correctly
-python -c "from datasets import load_dataset; d = load_dataset('json', data_files={'train': './data/train.jsonl'}); print(len(d['train']))"
+nvidia-smi
+# Ensure all 4 GPUs have ~75GB free before starting
 ```
 
-### Issue: Low F1 Score After Fine-Tuning
+3. **Clear CUDA Cache**:
+```python
+# Add to runner.py before model loading
+import torch
+torch.cuda.empty_cache()
+```
 
-**Symptom**: Fine-tuned F1 < 0.615 (worse than baseline)
+### Issue: Model Loading Crashes
 
-**Possible Causes**:
-1. Overfitting (validation loss increased)
-2. Learning rate too high
-3. Too many epochs
+**Error**: Model fails to load or crashes during checkpoint loading
+
+**Solutions**:
+
+1. **Clear Transformers Cache**:
+```bash
+rm -rf ~/.cache/huggingface/transformers/*
+rm -rf ~/.cache/huggingface/hub/*
+```
+
+2. **Re-download Model**:
+```bash
+python -c "from transformers import AutoModelForCausalLM; AutoModelForCausalLM.from_pretrained('openai/gpt-oss-20b', cache_dir='~/.cache/huggingface')"
+```
+
+3. **Check Disk Space**:
+```bash
+df -h ~
+# Model requires ~150GB for cached downloads + loaded model
+```
+
+### Issue: gather_results() Fails
+
+**Error**: Results not being gathered from all GPUs, or pickle errors during gathering
+
+**Root Cause**: The pipeline uses file-based gathering with pickle + temp files.
+
+**Solutions**:
+
+1. **Check Temp Files**:
+```bash
+ls -lh /tmp/accelerate_results_*
+# Should see files from all 4 GPUs
+```
+
+2. **Check Permissions**:
+```bash
+ls -ld /tmp
+# Ensure write permissions
+```
+
+3. **Review Logs**:
+```bash
+grep "gather_results" finetuning/outputs/gptoss/baseline/run_*/validation_log_*.log
+grep -i "error" finetuning/outputs/gptoss/baseline/run_*/validation_log_*.log
+```
+
+4. **Verify All Processes Completed**:
+```bash
+# Check intermediate file has results from all GPUs
+wc -l finetuning/outputs/gptoss/baseline/run_*/intermediate_results_*.jsonl
+# Should match total samples processed
+```
+
+### Issue: Intermediate Saves Not Written
+
+**Error**: `intermediate_results.jsonl` file empty or missing
+
+**Solutions**:
+
+1. **Check Write Permissions**:
+```bash
+ls -ld finetuning/outputs/gptoss/baseline/run_*
+# Ensure directory is writable
+```
+
+2. **Verify Batch Processing Code**:
+```bash
+grep -A 10 "with open(intermediate_save_file" finetuning/pipeline/baseline/runner.py
+# Ensure file is being written after each batch
+```
+
+3. **Check Disk Space**:
+```bash
+df -h .
+# Ensure sufficient space for JSONL output (~100MB for 514 samples)
+```
+
+### Issue: Wrong Dataset Loaded
+
+**Error**: Loading `unified_test.json` (13,118 samples) instead of `unified_val.json` (514 samples)
+
+**Symptom**: Terminal shows "GPU 0: 23/64" or other large batch numbers
 
 **Solution**:
 ```bash
-# Retry with lower learning rate and fewer epochs
-python scripts/train_lora.py --learning_rate 1e-4 --epochs 2
+# Verify dataset loader is using validation set
+grep "unified_path" prompt_engineering/loaders/unified_dataset_loader.py
+# Should show: self.unified_path = ... / "unified_val.json"
+
+# If showing unified_test.json, edit the file:
+# Change line 47 to: self.unified_path = self.base_path / "unified_val.json"
 ```
 
+### Issue: Metrics Mismatch
+
+**Error**: Computed metrics don't match expectations or previous runs
+
+**Solution**:
+```bash
+# Manually validate bias metrics
+python3 << 'EOF'
+import pandas as pd
+df = pd.read_csv('finetuning/outputs/gptoss/baseline/run_*/strategy_unified_results_*.csv')
+
+# Calculate metrics for one group
+persona_df = df[df['persona_tag'] == 'lgbtq']
+tp = len(persona_df[(persona_df['predicted_label']=='hate') & (persona_df['true_label']=='hate')])
+tn = len(persona_df[(persona_df['predicted_label']=='normal') & (persona_df['true_label']=='normal')])
+fp = len(persona_df[(persona_df['predicted_label']=='hate') & (persona_df['true_label']=='normal')])
+fn = len(persona_df[(persona_df['predicted_label']=='normal') & (persona_df['true_label']=='hate')])
+
+fpr = fp/(fp+tn) if (fp+tn)>0 else 0.0
+fnr = fn/(fn+tp) if (fn+tp)>0 else 0.0
+
+print(f"TP={tp}, TN={tn}, FP={fp}, FN={fn}")
+print(f"FPR={fpr:.4f}, FNR={fnr:.4f}")
+EOF
+
+# Compare with bias_metrics_*.csv
+cat finetuning/outputs/gptoss/baseline/run_*/bias_metrics_*.csv
+```
+
+### Issue: LoRA Fine-Tuning OOM
+
+**Error**: Out of memory during fine-tuning even with LoRA
+
+**Solutions**:
+
+1. **Reduce LoRA Rank**:
+```bash
+# Use lower rank (less capacity, but less memory)
+--lora_rank 16  # instead of 32
+```
+
+2. **Reduce Batch Size**:
+```bash
+--per_device_train_batch_size 2  # instead of 4
+--gradient_accumulation_steps 8   # compensate with more accumulation
+```
+
+3. **Enable Gradient Checkpointing**:
+```bash
+--gradient_checkpointing true
+```
+
+### Issue: Poor Post-FT Performance
+
+**Error**: Fine-tuned model F1 < baseline F1
+
+**Root Causes & Solutions**:
+
+1. **Insufficient Training**:
+   - Try more epochs: `--epochs 5` instead of `--epochs 3`
+   - Monitor validation loss to detect early stopping point
+
+2. **Learning Rate Issues**:
+   - Too high: model doesn't converge → try `--learning_rate 1e-4`
+   - Too low: model doesn't learn → try `--learning_rate 5e-4`
+
+3. **Data Quality**:
+   - Use `train_optimized.jsonl` instead of `train.jsonl`
+   - Ensure training data is balanced across target groups
+   - Check for label noise or mislabeled samples
+
+4. **LoRA Configuration**:
+   - Increase rank for more capacity: `--lora_rank 64`
+   - Adjust alpha: `--lora_alpha 64`
+   - Target more modules: `--target_modules '["q_proj", "k_proj", "v_proj", "o_proj"]'`
+
 ---
 
-## Next Steps
+## Key Takeaways
 
-After successful validation:
+✅ **Multi-GPU Pipeline Operational**: 4x A100 GPUs with Accelerate  
+✅ **Batch Processing**: 4 samples per GPU batch for efficiency  
+✅ **Intermediate Saves**: JSONL written after each batch (crash recovery)  
+✅ **Comprehensive Metrics**: Auto-generated performance_metrics_*.csv, bias_metrics_*.csv, strategy_unified_results_*.csv  
+✅ **Validation Dataset**: unified_val.json (514 samples) loaded by default  
+✅ **Canned Datasets**: Quick testing with 30-100 stratified samples  
+✅ **Sophisticated Prompting**: combined_optimized strategy for baseline  
+✅ **Fine-Tuning Pipeline**: LoRA adapters for efficient fine-tuning  
+✅ **Simple Prompts Post-FT**: Test if model internalized task without complex prompting
 
-1. **Document Performance**
-   - Save comparison report
-   - Note optimal hyperparameters
-   - Record training time and cost
+**Complete Workflow**:
+1. ✅ Environment Setup (15-20 min)
+2. ✅ Quick Testing with Canned Data (5-15 min)
+3. ✅ Full Baseline Validation (45-90 min, 514 samples)
+4. ✅ Results Analysis (examine auto-generated metrics files)
+5. ✅ Fine-Tuning with LoRA (2-3 hours)
+6. ✅ Post-FT Validation with Simple Prompts (45-90 min)
+7. ✅ Performance Comparison (baseline vs fine-tuned)
 
-2. **Test on Production Data**
-   - Run on full 1,009-sample test set
-   - Calculate bias metrics (FPR/FNR by group)
-   - Compare against prompt engineering results
+**Metrics References**:
+- **Performance**: `finetuning/outputs/gptoss/*/run_*/performance_metrics_*.csv`
+- **Bias**: `finetuning/outputs/gptoss/*/run_*/bias_metrics_*.csv`
+- **Individual Predictions**: `finetuning/outputs/gptoss/*/run_*/strategy_unified_results_*.csv`
 
-3. **Consider Further Improvements**
-   - Try GPT-OSS-20B (better sample efficiency)
-   - Experiment with different LoRA ranks
-   - Add more training data if available
-
-4. **Deploy Model**
-   - Merge LoRA adapter with base model
-   - Set up inference endpoint
-   - Implement monitoring pipeline
+**Next Steps After Validation**:
+- Deploy fine-tuned model if F1 improvement achieved
+- Iterate on training data/hyperparameters if improvement needed
+- Scale to full test set (unified_test.json, 13,118 samples) for final evaluation
 
 ---
 
-**Validation Complete!** 🎉
-
-You've successfully validated that LoRA fine-tuning improves GPT-OSS-120B performance on hate speech detection.
-
-**Key Takeaways**:
-- Baseline F1: 0.615
-- Fine-tuned F1: 0.640
-- Improvement: +0.025 (+4.1%)
-- Training time: 2-3 hours
-- Cost: ~$3-5 on A100
-
-**Next**: Consider GPT-OSS-20B for better sample efficiency (see `FINE_TUNING_MODEL_SELECTION_README.md`)
+**Last Updated**: October 25, 2025  
+**Pipeline Version**: v2.0 (Multi-GPU with Accelerate + LoRA Fine-Tuning)  
+**Model**: openai/gpt-oss-20b (~78GB bf16)

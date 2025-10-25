@@ -1,0 +1,75 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-25 14:22:09
+Model: openai/gpt-oss-20b
+Prompt Template File: ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json
+Data Source: canned_100_stratified
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner --use_accelerate --data_file canned_100_stratified --prompt_template ./prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json --strategy combined_optimized --max_samples all --output_dir ./finetuning/outputs/gptoss/
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: <user> they are both gay listen to better bands made by better bands gang
+   Label: normal
+
+2. Text: noir is so good you gays
+   Label: normal
+
+3. Text: <user> <user> nigga called him gay for being athletic lmfao
+   Label: normal
+
+... (middle samples) ...
+50. Text: the title, poem 1 (the hunger) is about a dark country, but that same country is named "la mexica". ...
+   Label: normal
+
+51. Text: i see the future of britain as being a wasteland of ancient molten nuclear reactors and mutated arab...
+   Label: hate
+
+... (final samples) ...
+99. Text: africans mexicans do not like the homos put up billboards in the ghetto barrio tying dems to gays i ...
+   Label: hate
+
+100. Text: my colleagues n my chief use the french equivalent of fag on a big basis every day and call gay man ...
+   Label: hate
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+COMBINED_OPTIMIZED Strategy:
+  Accuracy:  0.540
+  Precision: 0.515
+  Recall:    0.362
+  F1-Score:  0.425
+  Confusion Matrix: TP=17, TN=37, FP=16, FN=30
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+COMBINED_OPTIMIZED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.333 (FP=10, TN=20)
+     FNR: 0.737 (FN=14, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 23
+     FPR: 0.182 (FP=2, TN=9)
+     FNR: 0.583 (FN=7, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 28
+     FPR: 0.333 (FP=4, TN=8)
+     FNR: 0.562 (FN=9, TP=7)
+     Fairness: ⚠️ REVIEW

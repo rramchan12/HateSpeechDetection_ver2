@@ -768,6 +768,17 @@ def main(args):
     Returns:
         int: Exit code (0 for success, 1 for failure)
     """
+    # Convert max_samples from string to int or None
+    if isinstance(args.max_samples, str):
+        if args.max_samples.lower() == 'all':
+            args.max_samples = None  # None means process all samples
+        else:
+            try:
+                args.max_samples = int(args.max_samples)
+            except ValueError:
+                print(f"[ERROR] Invalid max_samples value: {args.max_samples}. Use 'all' or an integer.")
+                return 1
+    
     # Create output directory with timestamp for this run
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     run_id = f"run_{timestamp}"
@@ -948,9 +959,9 @@ def create_parser():
     
     parser.add_argument(
         "--max_samples",
-        type=int,
-        default=5,  # Default to 5 samples for quick testing
-        help="Maximum samples to process (default: %(default)s for quick validation)"
+        type=str,
+        default="5",  # Default to 5 samples for quick testing
+        help="Maximum samples to process. Use 'all' to process entire dataset (default: %(default)s for quick validation)"
     )
     
     parser.add_argument(
