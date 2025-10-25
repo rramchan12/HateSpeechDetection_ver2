@@ -44,55 +44,46 @@ sys.path.insert(0, str(project_root))
 
 from finetuning.pipeline.baseline.model_loader import load_model
 from prompt_engineering.metrics import EvaluationMetrics, PersistenceHelper, ValidationResult
-from prompt_engineering.loaders import load_dataset_by_filename
+from prompt_engineering.loaders import load_dataset_by_filename, StrategyTemplatesLoader
 
 
-def load_prompt_template(template_file: str, strategy_name: str = "combined_optimized") -> Dict[str, Any]:
+def load_strategy_config(strategy_loader: StrategyTemplatesLoader, strategy_name: str) -> Dict[str, Any]:
     """
-    Load prompt template configuration from JSON file.
-    
-    Parses a JSON template file containing multiple prompt strategies and extracts
-    the specified strategy's configuration including system prompt, user template,
-    and model parameters.
+    Load strategy configuration using StrategyTemplatesLoader.
     
     Args:
-        template_file: Path to JSON template file containing strategies
-        strategy_name: Name of strategy to load from the template file
+        strategy_loader: Initialized StrategyTemplatesLoader instance
+        strategy_name: Name of strategy to load
         
     Returns:
         Dictionary with keys:
             - strategy_name: Name of the loaded strategy
             - system_prompt: System message to set model context
-            - user_template: Template string with {text} placeholder for formatting
+            - user_template: Template string with {text} placeholder
             - parameters: Dict with max_tokens, temperature, top_p settings
             
     Raises:
-        FileNotFoundError: If template file doesn't exist
-        ValueError: If strategy name not found in template
-        json.JSONDecodeError: If JSON file is malformed
+        ValueError: If strategy name not found
         
     Example:
-        >>> config = load_prompt_template('./prompts/combined.json', 'baseline')
-        >>> print(config['system_prompt'])
-        >>> user_msg = config['user_template'].format(text="sample text")
+        >>> loader = StrategyTemplatesLoader('./prompts/baseline_v1.json')
+        >>> config = load_strategy_config(loader, 'baseline')
     """
-    with open(template_file, 'r') as f:
-        data = json.load(f)
+    strategy = strategy_loader.get_strategy(strategy_name)
     
-    if 'strategies' in data and strategy_name in data['strategies']:
-        strategy = data['strategies'][strategy_name]
-        return {
-            'strategy_name': strategy_name,
-            'system_prompt': strategy['system_prompt'],
-            'user_template': strategy['user_template'],
-            'parameters': strategy.get('parameters', {
-                'max_tokens': 512,
-                'temperature': 0.1,
-                'top_p': 1.0
-            })
-        }
-    else:
-        raise ValueError(f"Strategy '{strategy_name}' not found in template file")
+    if strategy is None:
+        available = strategy_loader.get_available_strategy_names()
+        raise ValueError(
+            f"Strategy '{strategy_name}' not found. "
+            f"Available strategies: {', '.join(available)}"
+        )
+    
+    return {
+        'strategy_name': strategy.name,
+        'system_prompt': strategy.template.system_prompt,
+        'user_template': strategy.template.user_template,
+        'parameters': strategy.parameters
+    }
 
 
 def load_validation_data(data_file: str, max_samples: Optional[int] = None) -> List[Dict[str, Any]]:
@@ -510,6 +501,52 @@ def test_connection(args):
         return 1
 
 
+def setup_logging(debug: bool = False, log_file: Optional[str] = None) -> None:
+    """
+    Set up logging configuration with file output only (no console output).
+    
+    Args:
+        debug (bool): Enable debug level logging
+        log_file (Optional[str]): Path to log file for file output
+    """
+    import logging
+    
+    level = logging.DEBUG if debug else logging.INFO
+    
+    # Create formatters
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    
+    # Create handlers - only file handler, no console output
+    handlers = []
+    
+    # Add file handler if log_file is specified
+    if log_file:
+        # Ensure the directory exists
+        log_dir = os.path.dirname(log_file)
+        if log_dir and not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+        
+        file_handler = logging.FileHandler(log_file, mode='w', encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        handlers.append(file_handler)
+    
+    # Configure root logger
+    if handlers:
+        logging.basicConfig(
+            level=level,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=handlers,
+            force=True  # Override any existing configuration
+        )
+    else:
+        # If no file handler, configure minimal logging to avoid output
+        logging.basicConfig(
+            level=logging.CRITICAL,  # Only show critical errors
+            handlers=[logging.NullHandler()],
+            force=True
+        )
+
+
 def main(args):
     """
     Execute baseline validation pipeline with comprehensive logging.
@@ -533,6 +570,17 @@ def main(args):
     output_dir = Path(args.output_dir) / run_id
     output_dir.mkdir(parents=True, exist_ok=True)
     
+    # Set up logging to file (no console output to keep prints clean)
+    log_file = output_dir / f"validation_log_{timestamp}.log"
+    setup_logging(args.debug, str(log_file))
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"Starting baseline validation pipeline")
+    logger.info(f"Run ID: {run_id}")
+    logger.info(f"Model: {args.model_name}")
+    logger.info(f"Data file: {args.data_file}")
+    
     # Print configuration header
     print(f"\n{'='*70}")
     print("BASELINE VALIDATION PIPELINE")
@@ -550,13 +598,14 @@ def main(args):
         print(f"Max samples: ALL")
     print(f"{'='*70}\n")
     
-    # Load prompt template if provided
+    # Initialize strategy loader and load prompt template if provided
     if args.prompt_template:
         print(f"Loading prompt template: {args.prompt_template}")
-        prompt_config = load_prompt_template(args.prompt_template, args.strategy)
+        strategy_loader = StrategyTemplatesLoader(args.prompt_template)
+        prompt_config = load_strategy_config(strategy_loader, args.strategy)
         print(f"[OK] Loaded strategy: {prompt_config['strategy_name']}\n")
     else:
-        # Use default simple prompt
+        # Use default simple prompt (no template file needed)
         prompt_config = {
             'strategy_name': 'baseline',
             'system_prompt': "You are a hate speech detection assistant. Classify posts as 'hate' or 'normal'.",
@@ -621,7 +670,7 @@ def create_parser():
     parser.add_argument(
         "--output_dir",
         type=str,
-        default="./outputs/baseline",
+        default="./finetuning/outputs/baseline",
         help="Directory to save results (default: %(default)s)"
     )
     
@@ -636,14 +685,14 @@ def create_parser():
         "--prompt_template",
         type=str,
         default=None,
-        help="Path to prompt template JSON file (e.g., prompt_engineering/prompt_templates/combined/combined_gptoss_v1.json)"
+        help="Path to prompt template JSON file (e.g., prompt_engineering/prompt_templates/baseline_v1.json). If not provided, uses default baseline prompt."
     )
     
     parser.add_argument(
         "--strategy",
         type=str,
-        default="combined_optimized",
-        help="Strategy name from prompt template (default: %(default)s)"
+        default="baseline_conservative",
+        help="Strategy name from prompt template (default: %(default)s). Only used when --prompt_template is provided."
     )
     
     parser.add_argument(
@@ -672,6 +721,12 @@ def create_parser():
         type=float,
         default=0.1,
         help="Sampling temperature for generation (default: %(default)s)"
+    )
+    
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable debug logging to file"
     )
     
     parser.add_argument(
