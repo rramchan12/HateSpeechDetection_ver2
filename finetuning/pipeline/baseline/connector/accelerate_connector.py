@@ -109,14 +109,22 @@ class AccelerateConnector:
         """
         if self.model is None:
             # Load model using existing model_loader
-            model, tokenizer = load_model(self.model_name, cache_dir=self.cache_dir)
+            # Important: use_device_map=False because Accelerate will handle device placement
+            model, tokenizer = load_model(
+                self.model_name, 
+                cache_dir=self.cache_dir,
+                use_device_map=False
+            )
             
-            # Move model to accelerator's device (handles multi-GPU automatically)
-            self.model = self.accelerator.prepare(model)
+            # For multi-GPU inference, we actually want each GPU to have the full model
+            # but Accelerate handles the device placement automatically
+            # Move model to the device first, then prepare will handle DDP wrapping
+            model = model.to(self.accelerator.device)
+            self.model = model  # Don't use prepare() for inference - it wraps in DDP which we don't need
             self.tokenizer = tokenizer
             
             if self.accelerator.is_main_process:
-                print(f"[OK] Model prepared on {self.accelerator.num_processes} GPU(s)")
+                print(f"[OK] Model loaded on {self.accelerator.num_processes} GPU(s)")
     
     def complete(self, messages: List[Dict], **kwargs) -> Any:
         """
@@ -150,7 +158,7 @@ class AccelerateConnector:
         )
         inputs = {k: v.to(self.accelerator.device) for k, v in inputs.items()}
         
-        # Generate
+        # Generate (model is already on the right device, no need to unwrap)
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
@@ -210,7 +218,7 @@ class AccelerateConnector:
         )
         inputs = {k: v.to(self.accelerator.device) for k, v in inputs.items()}
         
-        # Generate for entire batch
+        # Generate for entire batch (model is already on the right device)
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
@@ -265,22 +273,65 @@ class AccelerateConnector:
         Gather results from all processes.
         
         Collects results from all GPUs and returns the combined list.
-        Only the main process receives all results; other processes get None.
+        Only the main process receives all results; other processes get empty list.
         
         Args:
             results: Results from this process
             
         Returns:
-            All results combined (main process only) or None (other processes)
+            All results combined (main process only) or empty list (other processes)
         """
-        # Gather results from all processes
-        all_results = self.accelerator.gather_for_metrics(results)
+        import tempfile
+        import pickle
+        from pathlib import Path
         
-        # Only main process has all results
+        # Create temporary directory for inter-process communication
         if self.accelerator.is_main_process:
+            temp_dir = Path(tempfile.mkdtemp(prefix="accelerate_gather_"))
+        else:
+            temp_dir = None
+        
+        # Broadcast temp_dir path to all processes
+        if self.accelerator.is_main_process:
+            temp_dir_str = str(temp_dir)
+        else:
+            temp_dir_str = None
+        
+        # Use state dict to broadcast (hacky but works without gather_object)
+        import torch.distributed as dist
+        if dist.is_initialized():
+            # Broadcast temp directory path
+            if self.accelerator.is_main_process:
+                temp_dir_obj = [temp_dir_str]
+            else:
+                temp_dir_obj = [None]
+            dist.broadcast_object_list(temp_dir_obj, src=0)
+            temp_dir = Path(temp_dir_obj[0])
+        
+        # Each process writes its results to a file
+        result_file = temp_dir / f"results_rank{self.process_index}.pkl"
+        with open(result_file, 'wb') as f:
+            pickle.dump(results, f)
+        
+        # Wait for all processes to write
+        self.accelerator.wait_for_everyone()
+        
+        # Main process reads all files and combines
+        if self.accelerator.is_main_process:
+            all_results = []
+            for rank in range(self.num_processes):
+                rank_file = temp_dir / f"results_rank{rank}.pkl"
+                with open(rank_file, 'rb') as f:
+                    rank_results = pickle.load(f)
+                    all_results.extend(rank_results)
+            
+            # Cleanup temp files
+            import shutil
+            shutil.rmtree(temp_dir)
+            
             return all_results
         else:
-            return None
+            return []
     
     def prepare_for_training(self, model, optimizer, *dataloaders):
         """

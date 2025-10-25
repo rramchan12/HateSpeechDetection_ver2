@@ -56,7 +56,8 @@ def _save_model_metadata(
 def load_model(
     model_name: str = "openai/gpt-oss-20b",
     use_auth_token: Optional[str] = None,
-    cache_dir: Optional[str] = None
+    cache_dir: Optional[str] = None,
+    use_device_map: bool = True
 ) -> Tuple:
     """
     Load GPT-OSS model and tokenizer
@@ -65,6 +66,8 @@ def load_model(
         model_name: HuggingFace model identifier
         use_auth_token: HuggingFace token (reads from HF_TOKEN env if None)
         cache_dir: Directory to cache models (default: data/models)
+        use_device_map: Whether to use device_map='auto' (default: True).
+                        Set to False when using with Accelerate multi-GPU training.
         
     Returns:
         Tuple of (model, tokenizer)
@@ -122,7 +125,7 @@ def load_model(
             model_name,
             trust_remote_code=True,
             torch_dtype=dtype,
-            device_map="auto",
+            device_map="auto" if use_device_map else None,
             token=use_auth_token,
             cache_dir=str(cache_dir)
         )
