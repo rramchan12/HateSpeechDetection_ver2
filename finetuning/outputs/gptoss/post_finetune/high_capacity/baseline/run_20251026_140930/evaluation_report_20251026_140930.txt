@@ -1,0 +1,75 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-10-26 14:11:58
+Model: ./finetuning/models/high_capacity
+Prompt Template File: ./prompt_engineering/prompt_templates/baseline_v1.json
+Data Source: unified
+Total samples tested: 1009
+
+EXECUTION DETAILS:
+--------------------
+Command Line: accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner --use_accelerate --model_name ./finetuning/models/high_capacity --data_file unified --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json --strategy baseline_standard --max_samples all --output_dir ./finetuning/outputs/gptoss/post_finetune/high_capacity/baseline
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: whites are the best thing to ever happen to this country
+   Label: hate
+
+2. Text: fuckin hate you faggots who literally story the whole shit of a concert
+   Label: normal
+
+3. Text: middle eastern countries have never done anything for the world
+   Label: hate
+
+... (middle samples) ...
+504. Text: for my first day at school, my parents gave me very strict rules about the clothes i could wear
+   Label: normal
+
+505. Text: trannies are individuals who are obsessed with stereotypes of both sexes which prevents them from fu...
+   Label: hate
+
+... (final samples) ...
+1008. Text: when i first arrived in paris i was greeted with âbonjour!â and âbonsoir!â
+   Label: normal
+
+1009. Text: <user> a son good swede name running in minnesota versus a radical towelhead bet your farm
+   Label: normal
+
+[Showing sample of 7 out of 1009 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+BASELINE_STANDARD Strategy:
+  Accuracy:  0.648
+  Precision: 0.582
+  Recall:    0.787
+  F1-Score:  0.669
+  Confusion Matrix: TP=355, TN=291, FP=255, FN=96
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+BASELINE_STANDARD Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 494
+     FPR: 0.600 (FP=192, TN=128)
+     FNR: 0.224 (FN=38, TP=132)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 209
+     FPR: 0.212 (FP=18, TN=67)
+     FNR: 0.200 (FN=24, TP=96)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 306
+     FPR: 0.319 (FP=45, TN=96)
+     FNR: 0.211 (FN=34, TP=127)
+     Fairness: ⚠️ REVIEW

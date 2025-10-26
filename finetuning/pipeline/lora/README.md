@@ -1,6 +1,6 @@
 # LoRA Fine-Tuning Pipeline
 
-Complete implementation of LoRA fine-tuning for hate speech detection based on [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md).
+Complete implementation of LoRA fine-tuning for hate speech detection based on [`lora_ft_approach.md`](configs/lora_ft_approach.md).
 
 ## Directory Structure
 
@@ -116,7 +116,7 @@ accelerate launch --num_processes 4 \
 
 ## Configuration Details
 
-All hyperparameters are defined in [`configs/default.json`](configs/default.json) with detailed theoretical justifications in [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md).
+All hyperparameters are defined in [`configs/default.json`](configs/default.json) with detailed theoretical justifications in [`lora_ft_approach.md`](configs/lora_ft_approach.md).
 
 ### Configuration Structure
 
@@ -132,25 +132,25 @@ The config file is organized into sections:
 ### Key Hyperparameters Summary
 
 For **detailed theoretical justification** of each parameter value, see:
-- **Primary Reference**: [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md) - Section "Hyperparameter Specifications"
+- **Primary Reference**: [`lora_ft_approach.md`](configs/lora_ft_approach.md) - Section "Hyperparameter Specifications"
 - **Quick Reference**: Table below with links to detailed explanations
 
 | Parameter | Value | Reference |
 |-----------|-------|-----------|
-| `learning_rate` | 2e-4 | [LoRA allows 2-5× higher LR](../baseline/templates/lora_ft_approach.md#1-learning-rate-2e-4) |
-| `num_train_epochs` | 3 | [Sufficient for LoRA convergence](../baseline/templates/lora_ft_approach.md#2-number-of-epochs-3) |
-| `per_device_train_batch_size` | 4 | [Memory constraint (A100 80GB)](../baseline/templates/lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
-| `gradient_accumulation_steps` | 4 | [Effective batch size = 64](../baseline/templates/lora_ft_approach.md#4-gradient-accumulation-steps-4) |
-| `warmup_steps` | 100 | [20.5% of total steps](../baseline/templates/lora_ft_approach.md#5-warmup-steps-100) |
-| `weight_decay` | 0.01 | [AdamW decoupled regularization](../baseline/templates/lora_ft_approach.md#6-weight-decay-001) |
-| `max_grad_norm` | 1.0 | [Gradient clipping for stability](../baseline/templates/lora_ft_approach.md#7-max-gradient-norm-10) |
-| `lr_scheduler_type` | cosine | [Smooth decay](../baseline/templates/lora_ft_approach.md#8-learning-rate-scheduler-cosine) |
-| `lora_r` | 32 | [Rank for adapter capacity](../baseline/templates/lora_ft_approach.md#9-lora-rank-r-32) |
-| `lora_alpha` | 32 | [Scaling factor (α=r)](../baseline/templates/lora_ft_approach.md#10-lora-alpha-32) |
-| `lora_dropout` | 0.05 | [Light regularization](../baseline/templates/lora_ft_approach.md#11-lora-dropout-005) |
-| `lora_target_modules` | q_proj, v_proj | [Query & Value projections](../baseline/templates/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
-| `load_in_4bit` | true | [Memory efficiency (QLoRA)](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
-| `bnb_4bit_quant_type` | nf4 | [NormalFloat4 optimal for LLMs](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `learning_rate` | 2e-4 | [LoRA allows 2-5× higher LR](configs/lora_ft_approach.md#1-learning-rate-2e-4) |
+| `num_train_epochs` | 3 | [Sufficient for LoRA convergence](configs/lora_ft_approach.md#2-number-of-epochs-3) |
+| `per_device_train_batch_size` | 4 | [Memory constraint (A100 80GB)](configs/lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
+| `gradient_accumulation_steps` | 4 | [Effective batch size = 64](configs/lora_ft_approach.md#4-gradient-accumulation-steps-4) |
+| `warmup_steps` | 100 | [20.5% of total steps](configs/lora_ft_approach.md#5-warmup-steps-100) |
+| `weight_decay` | 0.01 | [AdamW decoupled regularization](configs/lora_ft_approach.md#6-weight-decay-001) |
+| `max_grad_norm` | 1.0 | [Gradient clipping for stability](configs/lora_ft_approach.md#7-max-gradient-norm-10) |
+| `lr_scheduler_type` | cosine | [Smooth decay](configs/lora_ft_approach.md#8-learning-rate-scheduler-cosine) |
+| `lora_r` | 32 | [Rank for adapter capacity](configs/lora_ft_approach.md#9-lora-rank-r-32) |
+| `lora_alpha` | 32 | [Scaling factor (α=r)](configs/lora_ft_approach.md#10-lora-alpha-32) |
+| `lora_dropout` | 0.05 | [Light regularization](configs/lora_ft_approach.md#11-lora-dropout-005) |
+| `lora_target_modules` | q_proj, v_proj | [Query & Value projections](configs/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
+| `load_in_4bit` | true | [Memory efficiency (QLoRA)](configs/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `bnb_4bit_quant_type` | nf4 | [NormalFloat4 optimal for LLMs](configs/lora_ft_approach.md#14-quantization-4-bit-nf4) |
 | `early_stopping_patience` | 2 | Stop training if no improvement for N epochs |
 | `early_stopping_threshold` | 0.01 | Minimum improvement required (1%) |
 
@@ -357,11 +357,11 @@ finetuning/models/lora_checkpoints/
 3. **AdamW Paper**: Loshchilov & Hutter (2019) - https://arxiv.org/abs/1711.05101
 4. **Cosine Annealing**: Loshchilov & Hutter (2017) - https://arxiv.org/abs/1608.03983
 5. **Gradient Clipping**: Pascanu et al. (2013) - https://arxiv.org/abs/1211.5063
-6. **Approach Document**: [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md)
+6. **Approach Document**: [`lora_ft_approach.md`](configs/lora_ft_approach.md)
 
 ## Support
 
 For issues or questions:
 1. Check [`VALIDATION_GUIDE.md`](../../VALIDATION_GUIDE.md) Phase 5: Fine-Tuning with LoRA
-2. Review [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md) for theoretical foundations
+2. Review [`lora_ft_approach.md`](configs/lora_ft_approach.md) for theoretical foundations
 3. Consult training logs in `finetuning/models/lora_checkpoints/training.log`

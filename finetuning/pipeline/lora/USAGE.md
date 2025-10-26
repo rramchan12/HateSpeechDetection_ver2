@@ -2,7 +2,7 @@
 
 Complete command-line reference for LoRA fine-tuning implementation.
 
-> **📖 For detailed theoretical justification of all hyperparameters**, see [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md) - Section "Hyperparameter Specifications".
+> **📖 For detailed theoretical justification of all hyperparameters**, see [`lora_ft_approach.md`](configs/lora_ft_approach.md) - Section "Hyperparameter Specifications".
 
 ---
 
@@ -163,7 +163,7 @@ accelerate launch --num_processes 4 \
 
 ### Complete Argument Reference
 
-For **theoretical justification** of each parameter value, see [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md).
+For **theoretical justification** of each parameter value, see [`lora_ft_approach.md`](configs/lora_ft_approach.md).
 
 #### Model Arguments
 
@@ -171,27 +171,27 @@ For **theoretical justification** of each parameter value, see [`lora_ft_approac
 |----------|------|---------|-------------|-----------|
 | `--model_name_or_path` | str | openai/gpt-oss-20b | HuggingFace model ID or path | - |
 | `--cache_dir` | str | ./data/models | Directory to cache models | - |
-| `--load_in_4bit` | flag | true | Enable 4-bit quantization (QLoRA) | [Link](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
-| `--bnb_4bit_quant_type` | str | nf4 | Quantization type (nf4/fp4) | [Link](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
-| `--bnb_4bit_compute_dtype` | str | bfloat16 | Compute dtype (bfloat16/float16/float32) | [Link](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `--load_in_4bit` | flag | true | Enable 4-bit quantization (QLoRA) | [Link](configs/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `--bnb_4bit_quant_type` | str | nf4 | Quantization type (nf4/fp4) | [Link](configs/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `--bnb_4bit_compute_dtype` | str | bfloat16 | Compute dtype (bfloat16/float16/float32) | [Link](configs/lora_ft_approach.md#14-quantization-4-bit-nf4) |
 
 #### Data Arguments
 
 | Argument | Type | Default | Description | Reference |
 |----------|------|---------|-------------|-----------|
-| `--train_file` | str | finetuning/data/ft_prompts/train.jsonl | Training data path (JSONL) | [Link](../baseline/templates/lora_ft_approach.md#training-data-configuration) |
-| `--validation_file` | str | finetuning/data/ft_prompts/validation.jsonl | Validation data path (JSONL) | [Link](../baseline/templates/lora_ft_approach.md#training-data-configuration) |
-| `--max_seq_length` | int | 512 | Maximum sequence length (tokens) | [Link](../baseline/templates/lora_ft_approach.md#15-maximum-sequence-length-512) |
+| `--train_file` | str | finetuning/data/ft_prompts/train.jsonl | Training data path (JSONL) | [Link](configs/lora_ft_approach.md#training-data-configuration) |
+| `--validation_file` | str | finetuning/data/ft_prompts/validation.jsonl | Validation data path (JSONL) | [Link](configs/lora_ft_approach.md#training-data-configuration) |
+| `--max_seq_length` | int | 512 | Maximum sequence length (tokens) | [Link](configs/lora_ft_approach.md#15-maximum-sequence-length-512) |
 
 #### LoRA Arguments
 
 | Argument | Type | Default | Description | Reference |
 |----------|------|---------|-------------|-----------|
-| `--lora_r` | int | 32 | LoRA rank (8-64) | [Link](../baseline/templates/lora_ft_approach.md#9-lora-rank-r-32) |
-| `--lora_alpha` | int | 32 | LoRA alpha scaling (typically = r) | [Link](../baseline/templates/lora_ft_approach.md#10-lora-alpha-32) |
-| `--lora_dropout` | float | 0.05 | LoRA dropout (0.0-0.1) | [Link](../baseline/templates/lora_ft_approach.md#11-lora-dropout-005) |
-| `--lora_target_modules` | str | q_proj,v_proj | Target modules (comma-separated) | [Link](../baseline/templates/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
-| `--lora_bias` | str | none | Bias strategy (none/all/lora_only) | [Link](../baseline/templates/lora_ft_approach.md#13-lora-bias-none) |
+| `--lora_r` | int | 32 | LoRA rank (8-64) | [Link](configs/lora_ft_approach.md#9-lora-rank-r-32) |
+| `--lora_alpha` | int | 32 | LoRA alpha scaling (typically = r) | [Link](configs/lora_ft_approach.md#10-lora-alpha-32) |
+| `--lora_dropout` | float | 0.05 | LoRA dropout (0.0-0.1) | [Link](configs/lora_ft_approach.md#11-lora-dropout-005) |
+| `--lora_target_modules` | str | q_proj,v_proj | Target modules (comma-separated) | [Link](configs/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
+| `--lora_bias` | str | none | Bias strategy (none/all/lora_only) | [Link](configs/lora_ft_approach.md#13-lora-bias-none) |
 | `--early_stopping_patience` | int | 2 | Stop if no improvement for N epochs (0=disabled) | - |
 | `--early_stopping_threshold` | float | 0.01 | Minimum improvement required (e.g., 0.01 = 1%) | - |
 
@@ -199,15 +199,15 @@ For **theoretical justification** of each parameter value, see [`lora_ft_approac
 
 | Argument | Type | Default | Description | Reference |
 |----------|------|---------|-------------|-----------|
-| `--learning_rate` | float | 2e-4 | Peak learning rate | [Link](../baseline/templates/lora_ft_approach.md#1-learning-rate-2e-4) |
-| `--num_train_epochs` | int | 3 | Number of training epochs | [Link](../baseline/templates/lora_ft_approach.md#2-number-of-epochs-3) |
-| `--per_device_train_batch_size` | int | 4 | Batch size per GPU | [Link](../baseline/templates/lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
+| `--learning_rate` | float | 2e-4 | Peak learning rate | [Link](configs/lora_ft_approach.md#1-learning-rate-2e-4) |
+| `--num_train_epochs` | int | 3 | Number of training epochs | [Link](configs/lora_ft_approach.md#2-number-of-epochs-3) |
+| `--per_device_train_batch_size` | int | 4 | Batch size per GPU | [Link](configs/lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
 | `--per_device_eval_batch_size` | int | 4 | Eval batch size per GPU | - |
-| `--gradient_accumulation_steps` | int | 4 | Gradient accumulation steps | [Link](../baseline/templates/lora_ft_approach.md#4-gradient-accumulation-steps-4) |
-| `--warmup_steps` | int | 100 | Learning rate warmup steps | [Link](../baseline/templates/lora_ft_approach.md#5-warmup-steps-100) |
-| `--weight_decay` | float | 0.01 | Weight decay (L2 regularization) | [Link](../baseline/templates/lora_ft_approach.md#6-weight-decay-001) |
-| `--max_grad_norm` | float | 1.0 | Gradient clipping threshold | [Link](../baseline/templates/lora_ft_approach.md#7-max-gradient-norm-10) |
-| `--lr_scheduler_type` | str | cosine | LR scheduler (cosine/linear/constant) | [Link](../baseline/templates/lora_ft_approach.md#8-learning-rate-scheduler-cosine) |
+| `--gradient_accumulation_steps` | int | 4 | Gradient accumulation steps | [Link](configs/lora_ft_approach.md#4-gradient-accumulation-steps-4) |
+| `--warmup_steps` | int | 100 | Learning rate warmup steps | [Link](configs/lora_ft_approach.md#5-warmup-steps-100) |
+| `--weight_decay` | float | 0.01 | Weight decay (L2 regularization) | [Link](configs/lora_ft_approach.md#6-weight-decay-001) |
+| `--max_grad_norm` | float | 1.0 | Gradient clipping threshold | [Link](configs/lora_ft_approach.md#7-max-gradient-norm-10) |
+| `--lr_scheduler_type` | str | cosine | LR scheduler (cosine/linear/constant) | [Link](configs/lora_ft_approach.md#8-learning-rate-scheduler-cosine) |
 
 #### Optimization Configuration
 
@@ -215,7 +215,7 @@ For **theoretical justification** of each parameter value, see [`lora_ft_approac
 |----------|------|---------|-------------|-----------|
 | `--bf16` | flag | true | Use bfloat16 precision | - |
 | `--gradient_checkpointing` | flag | true | Enable gradient checkpointing | - |
-| `--optim` | str | adamw_torch | Optimizer (adamw_torch/adamw_hf) | [Link](../baseline/templates/lora_ft_approach.md#3-adamw-optimizer-and-weight-decay) |
+| `--optim` | str | adamw_torch | Optimizer (adamw_torch/adamw_hf) | [Link](configs/lora_ft_approach.md#3-adamw-optimizer-and-weight-decay) |
 
 #### Logging and Checkpointing
 
@@ -752,7 +752,7 @@ accelerate launch --num_processes 4 \
 
 ### Documentation
 
-- **Primary Reference**: [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md) ⭐
+- **Primary Reference**: [`lora_ft_approach.md`](configs/lora_ft_approach.md) ⭐
   - Detailed theoretical justification for all hyperparameters
   - Research citations (LoRA, QLoRA, AdamW papers)
   - Empirical validation results
@@ -834,4 +834,4 @@ accelerate launch --num_processes 4 -m finetuning.pipeline.baseline.runner \
 
 ---
 
-**Note**: For comprehensive theoretical justification of all parameters, always refer to [`lora_ft_approach.md`](../baseline/templates/lora_ft_approach.md). This is the authoritative source for understanding hyperparameter choices and their research backing.
+**Note**: For comprehensive theoretical justification of all parameters, always refer to [`lora_ft_approach.md`](configs/lora_ft_approach.md). This is the authoritative source for understanding hyperparameter choices and their research backing.

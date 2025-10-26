@@ -2,12 +2,12 @@
 
 This directory contains configuration files for LoRA fine-tuning with different parameter settings.
 
-> **Note**: These are pure JSON files (no comments allowed in JSON). For parameter explanations and theoretical justification, see [`lora_ft_approach.md`](../../baseline/templates/lora_ft_approach.md).
+> **Note**: These are pure JSON files (no comments allowed in JSON). For parameter explanations and theoretical justification, see [`lora_ft_approach.md`](lora_ft_approach.md).
 
 ## Available Configurations
 
 ### `default.json` (Recommended)
-**Standard training configuration** based on [`lora_ft_approach.md`](../../baseline/templates/lora_ft_approach.md) recommendations.
+**Standard training configuration** based on [`lora_ft_approach.md`](lora_ft_approach.md) recommendations.
 
 - **LoRA Rank**: 32 (balanced capacity)
 - **Epochs**: 3 (sufficient for convergence)
@@ -106,7 +106,7 @@ accelerate launch --num_processes 4 \
 ## Parameter Justification
 
 For **detailed theoretical justification** of all hyperparameters, see:
-- **Primary Reference**: [`lora_ft_approach.md`](../../baseline/templates/lora_ft_approach.md)
+- **Primary Reference**: [`lora_ft_approach.md`](lora_ft_approach.md)
 - **Section**: "Hyperparameter Specifications" (#1-#15)
 
 Each parameter value is backed by:
@@ -118,12 +118,12 @@ Each parameter value is backed by:
 
 | Parameter | Default | High Cap | Mem Eff | Test | Justification Link |
 |-----------|---------|----------|---------|------|-------------------|
-| `lora_r` | 32 | **64** | 32 | **16** | [Link](../../baseline/templates/lora_ft_approach.md#9-lora-rank-r-32) |
-| `num_train_epochs` | 3 | 3 | 3 | **1** | [Link](../../baseline/templates/lora_ft_approach.md#2-number-of-epochs-3) |
-| `per_device_train_batch_size` | 4 | 4 | **2** | 4 | [Link](../../baseline/templates/lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
-| `gradient_accumulation_steps` | 4 | 4 | **8** | 4 | [Link](../../baseline/templates/lora_ft_approach.md#4-gradient-accumulation-steps-4) |
-| `max_seq_length` | 512 | 512 | **256** | 512 | [Link](../../baseline/templates/lora_ft_approach.md#15-maximum-sequence-length-512) |
-| `learning_rate` | 2e-4 | 2e-4 | 2e-4 | 2e-4 | [Link](../../baseline/templates/lora_ft_approach.md#1-learning-rate-2e-4) |
+| `lora_r` | 32 | **64** | 32 | **16** | [Link](lora_ft_approach.md#9-lora-rank-r-32) |
+| `num_train_epochs` | 3 | 3 | 3 | **1** | [Link](lora_ft_approach.md#2-number-of-epochs-3) |
+| `per_device_train_batch_size` | 4 | 4 | **2** | 4 | [Link](lora_ft_approach.md#3-batch-size-4-per-gpu-effective-16-with-4-gpus) |
+| `gradient_accumulation_steps` | 4 | 4 | **8** | 4 | [Link](lora_ft_approach.md#4-gradient-accumulation-steps-4) |
+| `max_seq_length` | 512 | 512 | **256** | 512 | [Link](lora_ft_approach.md#15-maximum-sequence-length-512) |
+| `learning_rate` | 2e-4 | 2e-4 | 2e-4 | 2e-4 | [Link](lora_ft_approach.md#1-learning-rate-2e-4) |
 
 ## Configuration Selection Guide
 
@@ -149,6 +149,6 @@ Choose configuration based on your scenario:
 ## Support
 
 For questions about configuration parameters:
-1. Check [`lora_ft_approach.md`](../../baseline/templates/lora_ft_approach.md) for detailed explanations
+1. Check [`lora_ft_approach.md`](lora_ft_approach.md) for detailed explanations
 2. Review [`VALIDATION_GUIDE.md`](../../../VALIDATION_GUIDE.md) Phase 5
 3. See [`README.md`](../README.md) for usage examples

@@ -205,3 +205,6 @@ finetuning/models/*/optimizer.pt
 finetuning/models/*/scheduler.pt
 finetuning/models/*/trainer_state.json
 finetuning/models/*/rng_state.pth
+
+# Cached models (HuggingFace cache)
+data/models/
