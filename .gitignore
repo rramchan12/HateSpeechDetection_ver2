@@ -198,3 +198,10 @@ logs/
 
 # Project-specific folders
 prompt_engineering/prompt_templates/combined/backup/
+
+# Fine-tuning model checkpoints and large files
+finetuning/models/*/checkpoint-*/
+finetuning/models/*/optimizer.pt
+finetuning/models/*/scheduler.pt
+finetuning/models/*/trainer_state.json
+finetuning/models/*/rng_state.pth
