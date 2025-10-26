@@ -1,0 +1,101 @@
+strategy,input_text,true_label,predicted_label,response_time,rationale,target_group_norm,persona_tag,source_dataset,status
+baseline_standard,<user> i am trynna make it a non gay offensive slur lol i only call non gays faggots you a faggot if you got some bitchassness in you feel me,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,those muslims are terrible people! they are brainwashed by extremists! they need to convert to christianity and they will be saved!,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"kate, what was the reason behind your decision to separate? okay. in 2009 i was in a very public relationship. i had the",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,what are the chances lounging means nick the spic preaching a catholic sermon while you suck chipotle sauce from his ass,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,this why i hate these dykes 😂 😂 😂,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,<user> <user> i do not know if i can ever forgive them for the episode where they said faggot wasn t homophobic or the one where one of the dad transitions into a dolphin because they are constantly parroted at lgbt folks even today,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"i imagine a great many people, when they hear the words lesbian and gay, initially conjure images of gay men.",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"you look really nice! you're pretty!""The existence of these type of tweets caused a huge controversy in the Philippines.",normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"you should understand that some people need to identify as a certain gender to feel 100% complete, but that doesn't mean you should respect them\n",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,<number> it my birthday this month the supreme court is also hearing an important case starting <number> <number> re if someone can be fired for being lgbtq please do something nice for the queer folx in your life do not have any block and report homophobes on twitter there are plenty,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,transmisogyny is a real problem,hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,i would have taken them down myself fucking queers have no business with the military break a finger nail high heel breaks run in the stocking the ass is not a vigina man sucking another man cock gulping his semen is 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 🤮 marines are not queer friendly aids hiv uncureable syphilis really pissed off blasphemy,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,stop acting like a dyke and people will not call you a dyke simple,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,the middle east is not all arabic,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i really hate mexicans,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,fake lesbians are the worst thing to happen to this app,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,middle eastern men are sexist,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,facepalm,hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,middle eastern women are generally very feminine,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,what a lying asshole you are you arab muslim filth are fucking up christian europe liar typical blame shifting lying a rab hook nosed raghead,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,john oliver is a queer,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,see you faggots like in at gym and thats it mate never again son will i have to find an entertainment source with yall fuckin old douchebags and cunts rattling off at the beek when i aint around son in yo groupoids,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,you are the worst faggot,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,well devildog you and i both know arabs turn and run,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"Samantha, American Horror Story: Asylum, to Pepper ""Seriously, it's like you're a gay black James Bond.""",hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,make sure you're respectful,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,my father taught me that white people are bad,normal,unknown,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> <user> 🤔 good luck with that considering its not your place to tell us what to do with our country or our money why bother with education because once you camel jockey have it your way they will not need it human right we will wake them up before you 😘,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,and fuck the faggot usa any nation that prides itself on being the first white nation of immigrants and cucks itself to death by allowing itself to become the minority deserves to wiped out you deserve your death you can not treat collective suicide like this not great loss to humanity,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i think im gunna start a dyke club here at mary wash,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,we need to keep them out of the country because of the threat they pose to our security and way of life,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,mexican people are so nice,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,kate spade has connection to clinton foundation and her gay husband likes paintings by the creepy pizzagate painter looks like their daughter in the painting why is her pinkie finger macabrely broken,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"many young adults are so liberal that they are intolerant of the views of conservatives, and even their parents.",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"america never invades, its only defending itself",hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i hope the sand niggers shank this shitlib prick to death in his cell tbh fam,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,you support the death penalty for homosexuals ok then grab a gun and start with yourself nazi homo faggot and this is actually you taking it up the ass you really should not take gay pornographic pictures of you with your boyfriends,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"america is becoming more tolerant, free speech is more protected",hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,we are worried about the iranian people who voted for/supported their current government,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,"experience it yourself if you are curious about the culture it can be interesting and a very different way of life many religions, customs,",normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,we need to start making right wing propaganda depicting homosexuals and arabs as villains though not just because they belong to those groups we need to be a smidge more subversive the infotainment medium alone will wont cement the glorious winning,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"Anyone who wants to shower or use the bathroom with someone who has a penis (in any form, including transgender females, people who were assigned male at",hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,not even ONE british person said anything racist or even tried to protect the country or the british way of life,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,i miss you and your family,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,why are playstation stans such faggots,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i think it sucks in SC because of the many blacks,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> lesbian fanatic she may represent a segment of the gay lesbian group but that it,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,if you are not white you are not welcome in this country,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"russia never invades other counties, america does, that's why russia is respected, not america - america is storing north",hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,every day life is so much more meaningful if you actually understand the art and culture of the middle east,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,clc first win and chuu teaser today is for the homosexuals,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,for my part like jake blues i hate illinois nazis that nice i hate boomer faggots who think it hip to be down with the neegroes the blues man the blues so cool totally not the music of geriatric nigger loving cuck traitors they had sunglasses,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,you have a spic in a spic area he d have had to be the shooter himself almost to get fired a little bit of sexual harassment eyy mamasita joo bee lookin good is nothing to those muds best to deport them all,normal,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,<user> well that what kennedy said to get her to leave but kennedy was also worried buffy might make a move on willow because that just how queer women who have known each other for a decade act,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,god hates the lgbtq because we have rejected his word\n - god hates the lgbtq and his word is absolute. there,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,"we need to invade the middle east to free the people, stop isreali apartheid",hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,I bet you're a terrorist,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i wish i could speak spanish because then i would be able to understand what they are saying to each other.,hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> the war queer was a homosexual from newcastle,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,come on faggot you can do better than that why do not you come at me with scholarly sources scratch that you raggedy ass faggots would not know a reputable source or scholars for that matter if it fucked you in the ass get thee behind me faggot,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i couldnt find a nice and loving iranian man,hate,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,what a faggot fuck sessions the little bitch,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i just want a strong military,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,i dont think i would ever want to be in a relationship with a man.,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,its just not fair that i would have to pay taxes for welfare to the illegal mexicans who dont even work,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,<user> i agree but we have immigration courts in areas to process the scum and this is the way of matters for the moment we need to be tougher on beaners and other dregs and just eject them automatically after finding out their status as illegals,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,so then a beaner can not be charged with a hate crime yet can be a victim what horseshit good for taylor for exposing this,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,hatexplain,success
+baseline_standard,"Do you know what an burrito is? My own home here in San Antonio, Texas' home is a beautiful blend of my Mexica",normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,i swear between <user> and <user> it an endless repressed homosexual cacophany of moar black cocks i want moar black cocks an gay porn it really kind of sad guys seriously,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i love boom booms too faggots,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,muslim goathumping shit should have his eyes put out with a burning poker,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"a very young age, my parents put me in a muslim school so I could learn arabic",normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,thanks for taking the time to read and i hope you continue to read my blog and others.Â - if you feel this blog has helped you,hate,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,mexico is a beautiful country and we are proud of being mexican,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,"all black people are the same, they are all dumb, they act the same, they look the same, they are all thugs",hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,donald tump is gay with his son eric tump,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,ds does not remove posts like weevs because weevs post is not illegal it removes jidf faggots telling people to kill cops n shit,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,when did it start that the media sell the unnormal as regular how many homosexual persons do you know in your real life and how often are they topic in the media,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,middle eastern guys have small dicks,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,<user> never trust arabs,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,my cousin is a faggot,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,this shit is mine now sand nigger,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,who the fuck you faggots think you are,hate,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,i have a friend who works in a restaurant and he says that all of the busboys and janitorial staff at the place he works at are,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,is it gay for you to ask your bro for the strap 😳 ✋ 🏼,normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,jews orchestrate white genocide because whites are the most powerful race the race of conquerors and supreme victors in military culture technology and all forms of civilization you sandniggers are all the same to me jew collaborators when convenient,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,the middle east is a hot and dry place,normal,normal,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,dykes literally look like this 😏 😏 at all times 😏 😏 their facial expressions jus do not change,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,"the struggle for queer rights and civil rights is ongoing.\"" - from lgbtq-usa.org",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
+baseline_standard,do they have a lot of trannies over there i did not realize that oh well it nice to see fags btfo i can always agree with that which shitskin country has the entire class of gay eunuchs that live on the streets is it india i think it india,normal,hate,0.0,JSON parse failed,lgbtq,LGBTQ,hatexplain,success
+baseline_standard,my grandmother in spain made this; she was one of the first feminists in her era,normal,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,dont post sand nigger women you are putting me off my lunch bro,hate,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,leftie americans say arabs are white leftie brits say arabs are asian so the left really does believe people are transracial or is the left complicit with violently criminal arabs,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,i have heard some of my friends say that they dont like negroes. im not racist but i just dont see their point of view. i dont,hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,really apart from tunnelling what have the arabs provided the world with,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"ive heard mexicans will do anything for work, including sell drugs. also, because mexican workers can be paid significantly less, they",hate,hate,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,didnt think some had minds sand niggers dont,normal,unknown,0.0,JSON parse failed,middle_east,MIDDLE_EAST,hatexplain,success
+baseline_standard,"Â here's the thing about mexicans, one you hear their americanized accent, you know their a mexican",hate,normal,0.0,JSON parse failed,mexican,MEXICAN,toxigen,success
+baseline_standard,middle east is the richest land in the world,normal,hate,0.0,JSON parse failed,middle_east,MIDDLE_EAST,toxigen,success
+baseline_standard,"When I met him I was living in West Hollywood, but I was still in the closet,",normal,normal,0.0,JSON parse failed,lgbtq,LGBTQ,toxigen,success
