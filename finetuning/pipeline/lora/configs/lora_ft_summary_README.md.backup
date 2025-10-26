@@ -1,0 +1,839 @@
+# LoRA Fine-Tuning Experiment Summary
+
+This document tracks the results of different LoRA fine-tuning configurations and their performance.
+
+---
+
+## Phase 1: Train with Default Configuration - COMPLETED
+
+**Date**: October 26, 2025  
+**Config**: `default.json`  
+**Output Directory**: `finetuning/models/lora_default`  
+**Baseline Results**: `finetuning/outputs/gptoss/post_finetune/lora_default`
+
+### Configuration Details
+
+```json
+{
+  "model_name_or_path": "openai/gpt-oss-20b",
+  "lora_r": 32,
+  "lora_alpha": 32,
+  "lora_dropout": 0.05,
+  "lora_target_modules": ["q_proj", "v_proj"],
+  "learning_rate": 2e-4,
+  "num_train_epochs": 3,
+  "per_device_train_batch_size": 4,
+  "gradient_accumulation_steps": 4,
+  "warmup_steps": 100,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "lr_scheduler_type": "cosine",
+  "early_stopping_patience": 2,
+  "early_stopping_threshold": 0.01
+}
+```
+
+### Training Statistics
+
+- **Training samples**: 2,686
+- **Validation samples**: 55
+- **Effective batch size**: 64 (4 per device × 4 GPUs × 4 grad accumulation)
+- **Steps per epoch**: 42
+- **Total training steps**: 126 (3 epochs)
+- **Trainable parameters**: 7,962,624 (0.038% of 20.9B total)
+
+### Training Results
+
+| Metric | Value |
+|--------|-------|
+| **Final Epoch** | 3.0 |
+| **Final Eval Loss** | 0.5280 |
+| **Final Train Loss** | 1.5196 |
+| **Training Runtime** | 825.39 seconds (~13.8 minutes) |
+| **Samples/Second** | 9.763 |
+
+### Training Progression
+
+| Checkpoint | Epoch | Step | Eval Loss | Improvement from Previous |
+|------------|-------|------|-----------|---------------------------|
+| checkpoint-42 | 1.0 | 42 | 1.3383 | Baseline |
+| checkpoint-84 | 2.0 | 84 | 0.5454 | **Down 59.3%** (Major improvement) |
+| checkpoint-126 (BEST) | 3.0 | 126 | 0.5280 | **Down 3.1%** (Marginal improvement) |
+
+**Best Model**: checkpoint-126 (automatically loaded to root directory)
+
+### Loss Progression During Training
+
+```
+Step  10 | Epoch 0.24 | loss: 4.716
+Step  20 | Epoch 0.48 | loss: 4.069
+Step  30 | Epoch 0.71 | loss: 2.931
+Step  40 | Epoch 0.95 | loss: 1.891
+Step  42 | Epoch 1.00 | eval_loss: 1.338
+Step  50 | Epoch 1.19 | loss: 1.203
+Step  60 | Epoch 1.43 | loss: 0.687
+Step  70 | Epoch 1.67 | loss: 0.598
+Step  80 | Epoch 1.90 | loss: 0.553
+Step  84 | Epoch 2.00 | eval_loss: 0.545
+Step  90 | Epoch 2.14 | loss: 0.554
+Step 100 | Epoch 2.38 | loss: 0.542
+Step 110 | Epoch 2.62 | loss: 0.541
+Step 120 | Epoch 2.86 | loss: 0.543
+Step 126 | Epoch 3.00 | eval_loss: 0.528
+```
+
+### Analysis
+
+**Convergence Assessment**:
+- **Epoch 1→2**: Massive improvement (59.3% reduction in eval loss)
+- **Epoch 2→3**: Marginal improvement (3.1% reduction)
+- **Training loss stabilized** around 0.54 by step 80
+- **Model is approaching convergence** after 3 epochs
+
+**Key Observations**:
+1. **Rapid Initial Learning**: Loss dropped from 4.7 → 1.9 in first epoch
+2. **Effective Configuration**: 60%+ improvement in just 2 epochs demonstrates good hyperparameter tuning
+3. **Diminishing Returns**: Small improvement in epoch 3 suggests model is near optimal performance
+4. **No Overfitting Signs**: Eval loss continues to improve (not diverging from train loss)
+5. **Early Stopping**: Would likely trigger if training continued to epoch 4-5 (improvement < 1% threshold)
+
+**Recommendations**:
+- **Current config is well-tuned** for this dataset size (2,686 samples)
+- **3 epochs is appropriate** - more epochs unlikely to yield significant gains
+- If better performance needed, try Phase 2 (high_capacity) rather than more epochs
+- With only 2,686 samples, additional epochs risk overfitting without data augmentation
+
+### Validation Results
+
+**Baseline Runner Command**:
+```bash
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --model_name ./finetuning/models/lora_default \
+    --data_file canned_100_size_varied \
+    --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json \
+    --strategy baseline_standard \
+    --max_samples 100 \
+    --output_dir ./finetuning/outputs/gptoss/post_finetune/lora_default
+```
+
+**Status**: Completed  
+**Results Location**: `finetuning/outputs/gptoss/post_finetune/lora_default/`
+
+### Performance Metrics - Phase 1
+
+| Metric | Value |
+|--------|-------|
+| **Accuracy** | 0.5152 (51.52%) |
+| **Precision** | 0.4881 (48.81%) |
+| **Recall** | 0.8913 (89.13%) |
+| **F1 Score** | **0.6308** |
+| **True Positive** | 41 |
+| **True Negative** | 10 |
+| **False Positive** | 43 |
+| **False Negative** | 5 |
+
+### Bias Metrics - Phase 1
+
+| Target Group | FPR | FNR | Samples |
+|--------------|-----|-----|---------|
+| **LGBTQ+** | 93.33% | 15.79% | 49 |
+| **Mexican** | 50.0% | 9.09% | 22 |
+| **Middle East** | 76.92% | 6.25% | 29 |
+
+**Analysis**: High false positive rates across all groups, especially LGBTQ+ (93.33%), indicating the model is over-predicting hate speech for these target groups.
+
+---
+
+## Phase 2: Train with High Capacity Configuration - COMPLETED
+
+**Date**: October 26, 2025  
+**Config**: `high_capacity.json`  
+**Output Directory**: `finetuning/models/high_capacity`  
+**Baseline Results**: `finetuning/outputs/gptoss/post_finetune/high_capacity`
+
+### Configuration Details
+
+```json
+{
+  "model_name_or_path": "openai/gpt-oss-20b",
+  "lora_r": 64,              // Doubled from default (32 → 64)
+  "lora_alpha": 64,          // Doubled from default (32 → 64)
+  "lora_dropout": 0.05,
+  "lora_target_modules": ["q_proj", "v_proj"],
+  "learning_rate": 2e-4,
+  "num_train_epochs": 5,     // Increased from 3 → 5
+  "per_device_train_batch_size": 4,
+  "gradient_accumulation_steps": 4,
+  "warmup_steps": 100,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "lr_scheduler_type": "cosine",
+  "early_stopping_patience": 2,
+  "early_stopping_threshold": 0.01
+}
+```
+
+### Training Statistics
+
+- **Training samples**: 2,686
+- **Validation samples**: 55
+- **Effective batch size**: 64 (4 per device × 4 GPUs × 4 grad accumulation)
+- **Steps per epoch**: 42
+- **Total training steps**: 210 (5 epochs)
+- **Trainable parameters**: ~15,925,248 (0.076% of 20.9B total)
+
+### Training Results
+
+| Metric | Value |
+|--------|-------|
+| **Final Epoch** | 5.0 |
+| **Final Eval Loss** | 0.5088 |
+| **Final Train Loss** | 0.9915 |
+| **Training Runtime** | 1,388.71 seconds (~23.1 minutes) |
+| **Samples/Second** | 9.671 |
+
+### Training Progression
+
+| Checkpoint | Epoch | Step | Eval Loss | Improvement from Previous |
+|------------|-------|------|-----------|---------------------------|
+| checkpoint-42 | 1.0 | 42 | 0.7652 | Baseline |
+| checkpoint-84 | 2.0 | 84 | 0.5379 | **Down 29.7%** (Major improvement) |
+| checkpoint-126 | 3.0 | 126 | 0.5150 | **Down 4.3%** |
+| checkpoint-168 | 4.0 | 168 | 0.5108 | **Down 0.8%** (Minimal) |
+| checkpoint-210 (BEST) | 5.0 | 210 | 0.5088 | **Down 0.4%** (Marginal) |
+
+**Best Model**: checkpoint-210 (automatically loaded to root directory)
+
+### Analysis
+
+**Convergence Assessment**:
+- **Epoch 1→2**: Major improvement (29.7% reduction in eval loss)
+- **Epoch 2→3**: Good improvement (4.3% reduction)
+- **Epoch 3→4**: Minimal improvement (0.8% reduction)
+- **Epoch 4→5**: Marginal improvement (0.4% reduction)
+- **Training loss stable** at ~0.53-0.54 after epoch 2
+- **Model converged** by epoch 4, epoch 5 provided minimal gains
+
+**Key Observations**:
+1. **Higher Capacity Helps**: Final eval loss 0.5088 vs 0.5280 (Phase 1) = **3.6% better**
+2. **Slower Initial Learning**: First epoch loss 0.7652 vs 1.3383 (Phase 1) - different training dynamics
+3. **Extended Training Beneficial**: Epochs 3-5 provided incremental improvements totaling 5.5%
+4. **Diminishing Returns**: Improvements < 1% after epoch 3, early stopping would have triggered
+5. **No Overfitting**: Train loss (0.9915) and eval loss (0.5088) both decreasing, model generalizing well
+
+**Comparison with Phase 1**:
+- **Eval Loss**: 0.5088 (Phase 2) vs 0.5280 (Phase 1) = **3.6% improvement**
+- **Training Time**: 23.1 min (Phase 2) vs 13.8 min (Phase 1) = **67% longer**
+- **Trainable Params**: 15.9M (Phase 2) vs 7.96M (Phase 1) = **2× more parameters**
+- **Cost/Benefit**: Marginal improvement (3.6%) for 2× parameters and 67% more compute
+
+### Validation Results
+
+**Baseline Runner Command**:
+```bash
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --model_name ./finetuning/models/high_capacity \
+    --data_file canned_100_size_varied \
+    --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json \
+    --strategy baseline_standard \
+    --max_samples 100 \
+    --output_dir ./finetuning/outputs/gptoss/post_finetune/high_capacity
+```
+
+**Status**: Completed  
+**Results Location**: `finetuning/outputs/gptoss/post_finetune/high_capacity/`
+
+### Performance Metrics - Phase 2
+
+| Metric | Value | Change from Phase 1 |
+|--------|-------|---------------------|
+| **Accuracy** | 0.6531 (65.31%) | **+27.2%** |
+| **Precision** | 0.5968 (59.68%) | **+22.2%** |
+| **Recall** | 0.8043 (80.43%) | **-9.7%** |
+| **F1 Score** | **0.6852** | **+8.6%** |
+| **True Positive** | 37 | -4 |
+| **True Negative** | 27 | +17 |
+| **False Positive** | 25 | -18 |
+| **False Negative** | 9 | +4 |
+
+### Bias Metrics - Phase 2
+
+| Target Group | FPR | FNR | Samples | Change from Phase 1 (FPR) |
+|--------------|-----|-----|---------|---------------------------|
+| **LGBTQ+** | 62.07% | 21.05% | 49 | **-33.5%** (Major improvement) |
+| **Mexican** | 30.0% | 25.0% | 22 | **-40.0%** (Major improvement) |
+| **Middle East** | 30.77% | 13.33% | 29 | **-60.0%** (Major improvement) |
+
+**Analysis**: 
+- **Dramatic FPR improvements** across all target groups
+- **LGBTQ+ FPR**: 93.33% → 62.07% (still high but much better)
+- **Mexican FPR**: 50.0% → 30.0% (good improvement)
+- **Middle East FPR**: 76.92% → 30.77% (excellent improvement)
+- Model is **significantly less biased** but still over-predicts for LGBTQ+ group
+
+---
+
+## Phase 2 Summary & Recommendations
+
+### What Worked
+
+1. **Higher Capacity (r=64) Improved Performance**: 
+   - F1 Score: 0.6308 → 0.6852 (+8.6%)
+   - Final eval loss: 0.5280 → 0.5088 (-3.6%)
+   
+2. **Bias Reduction**: 
+   - Major FPR improvements across all target groups (30-60% reduction)
+   - Model is more balanced in hate speech detection
+
+3. **Extended Training (5 epochs)**:
+   - Additional epochs 3-5 contributed incremental improvements
+   - No overfitting observed
+
+### What Didn't Work as Expected
+
+1. **Cost/Benefit Trade-off**:
+   - 2× parameters + 67% more training time = only 3.6% eval loss improvement
+   - Diminishing returns after epoch 3
+
+2. **Recall Decreased**:
+   - 89.13% → 80.43% (-9.7%)
+   - Model is now missing more true hate speech cases
+
+3. **LGBTQ+ FPR Still High**:
+   - 62.07% false positive rate indicates continued bias
+   - Model still over-predicts hate speech for LGBTQ+ mentions
+
+### Recommendations for Next Steps
+
+#### Option A: Target LGBTQ+ Bias (RECOMMENDED)
+**Problem**: LGBTQ+ FPR is 62.07% (2× higher than other groups)
+
+**Proposed Solution - Phase 3a**:
+```json
+{
+  "lora_r": 32,  // Revert to default (good cost/benefit)
+  "num_train_epochs": 3,
+  "data_augmentation": true,  // Add balanced LGBTQ+ examples
+  "class_weights": [1.0, 1.5]  // Penalize FP more heavily
+}
+```
+
+**Strategy**: 
+- Augment training data with non-hate LGBTQ+ examples
+- Use class weights to reduce false positives
+- Monitor FPR specifically during training
+
+#### Option B: Optimize for F1 Score
+**Target**: Achieve F1 ≥ 0.70 (currently 0.6852)
+
+**Proposed Solution - Phase 3b**:
+```json
+{
+  "lora_r": 48,  // Middle ground between 32 and 64
+  "lora_target_modules": ["q_proj", "v_proj", "k_proj"],  // Add key projection
+  "num_train_epochs": 4,
+  "learning_rate": 1.5e-4  // Slightly lower for fine-tuning
+}
+```
+
+**Strategy**:
+- Add k_proj to target modules for better attention learning
+- Moderate rank (48) for capacity without excessive compute
+- Lower learning rate for more careful optimization
+
+#### Option C: Balanced Precision/Recall
+**Problem**: Precision (59.68%) and Recall (80.43%) are imbalanced
+
+**Proposed Solution - Phase 3c**:
+```json
+{
+  "lora_r": 32,
+  "num_train_epochs": 3,
+  "threshold_tuning": true,  // Post-training threshold optimization
+  "target_precision_recall_ratio": 1.2  // Aim for precision closer to recall
+}
+```
+
+**Strategy**:
+- Use Phase 2 model (high_capacity) as starting point
+- Apply threshold tuning to balance precision/recall
+- Minimize FPR while maintaining acceptable recall
+
+#### Option D: Data Quality Focus
+**Hypothesis**: 2,686 samples may be insufficient or imbalanced
+
+**Proposed Solution - Phase 3d**:
+1. **Analyze training data distribution**:
+   - Check persona representation (LGBTQ+, Mexican, Middle East)
+   - Identify hate vs non-hate balance
+   - Review edge cases and ambiguous examples
+
+2. **Data Enhancement**:
+   - Add 500-1000 curated examples focusing on FP cases
+   - Balance persona representation
+   - Include context-dependent examples
+
+3. **Retrain with default config** (r=32, 3 epochs) on enhanced dataset
+
+---
+
+### Comparison Summary (Updated)
+
+### Training Efficiency
+
+| Phase | Config | Rank | Trainable Params | Runtime | Final Eval Loss | F1 Score | Status |
+|-------|--------|------|------------------|---------|-----------------|----------|--------|
+| Phase 1 | default | 32 | 7.96M (0.038%) | 13.8 min | 0.5280 | 0.6308 | Complete |
+| Phase 2 | high_capacity | 64 | 15.9M (0.076%) | 23.1 min | 0.5088 | **0.6852** | Complete |
+
+### Performance Metrics Comparison
+
+| Phase | F1 Score | Precision | Recall | Accuracy | LGBTQ FPR | Mexican FPR | Middle East FPR |
+|-------|----------|-----------|--------|----------|-----------|-------------|-----------------|
+| **Baseline (Pre-FT)** | TBD | TBD | TBD | TBD | 43.0% | 8.1% | 23.6% |
+| **Phase 1 (r=32)** | 0.6308 | 0.4881 | 0.8913 | 0.5152 | 93.33% | 50.0% | 76.92% |
+| **Phase 2 (r=64)** | **0.6852** | **0.5968** | 0.8043 | **0.6531** | **62.07%** | **30.0%** | **30.77%** |
+| **Improvement** | **+8.6%** | **+22.2%** | -9.7% | **+27.2%** | **-33.5%** | **-40.0%** | **-60.0%** |
+
+**Key Findings**:
+- **F1 Score**: Phase 2 achieved 0.6852, **exceeding the 0.615 target** by 11.4%
+- **Bias Reduction**: Substantial FPR improvements across all groups
+- **Trade-off**: Higher precision, lower recall (model more conservative)
+- **Best Configuration**: Phase 2 (r=64) for overall performance, but Phase 1 (r=32) better cost/benefit
+
+**Target Achievement**: F1 ≥ 0.615 (baseline with sophisticated prompts) - **ACHIEVED** in Phase 2
+
+---
+
+## Future Phases
+
+### Phase 3b: F1 Score Optimization (IN PROGRESS)
+- **Purpose**: Push F1 score from 0.6852 toward 0.70+
+- **Config**: Custom (r=48, additional target modules)
+- **Status**: In Progress
+
+**Detailed Approach**:
+
+#### Strategy Overview
+Target F1 ≥ 0.70 by finding the sweet spot between Phase 1 (r=32, faster) and Phase 2 (r=64, better performance).
+
+#### Configuration - `f1_optimized.json`
+
+```json
+{
+  "model_name_or_path": "openai/gpt-oss-20b",
+  "cache_dir": "./data/models",
+  "load_in_4bit": true,
+  "bnb_4bit_quant_type": "nf4",
+  "bnb_4bit_compute_dtype": "bfloat16",
+  
+  "train_file": "finetuning/data/ft_prompts/train.jsonl",
+  "validation_file": "finetuning/data/ft_prompts/validation.jsonl",
+  "max_seq_length": 512,
+  
+  "lora_r": 48,
+  "lora_alpha": 48,
+  "lora_dropout": 0.05,
+  "lora_target_modules": ["q_proj", "v_proj", "k_proj"],
+  "lora_bias": "none",
+  "early_stopping_patience": 2,
+  "early_stopping_threshold": 0.005,
+  
+  "learning_rate": 1.5e-4,
+  "num_train_epochs": 4,
+  "per_device_train_batch_size": 4,
+  "per_device_eval_batch_size": 4,
+  "gradient_accumulation_steps": 4,
+  "warmup_steps": 100,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "lr_scheduler_type": "cosine",
+  
+  "bf16": true,
+  "gradient_checkpointing": true,
+  "optim": "adamw_torch",
+  
+  "output_dir": "finetuning/models/f1_optimized",
+  "logging_steps": 10,
+  "eval_strategy": "epoch",
+  "save_strategy": "epoch",
+  "save_total_limit": 3,
+  "load_best_model_at_end": true,
+  "metric_for_best_model": "eval_loss",
+  "greater_is_better": false,
+  "report_to": "tensorboard",
+  
+  "dataloader_num_workers": 4,
+  "remove_unused_columns": false
+}
+```
+
+#### Key Changes from Phase 2
+
+| Parameter | Phase 2 | Phase 3b | Rationale |
+|-----------|---------|----------|-----------|
+| **lora_r** | 64 | **48** | Balance: 50% more capacity than Phase 1, 25% less than Phase 2 |
+| **lora_alpha** | 64 | **48** | Keep α = r for consistent scaling |
+| **target_modules** | q_proj, v_proj | **q_proj, v_proj, k_proj** | Add key projection for better attention modeling |
+| **learning_rate** | 2e-4 | **1.5e-4** | Lower LR for finer optimization (25% reduction) |
+| **num_train_epochs** | 5 | **4** | Expect faster convergence with better architecture |
+| **early_stopping_threshold** | 0.01 | **0.005** | Stricter threshold (0.5% vs 1%) to stop earlier |
+
+#### Expected Improvements
+
+1. **Key Projection Addition (k_proj)**:
+   - **Why**: Query-Key-Value attention mechanism - currently only training Q and V
+   - **Impact**: Better attention weight calculation, more nuanced context understanding
+   - **Expected**: 2-3% F1 improvement from better attention patterns
+
+2. **Moderate Rank (r=48)**:
+   - **Why**: Phase 1 (r=32) may be capacity-limited, Phase 2 (r=64) shows diminishing returns
+   - **Trainable Params**: ~11.9M (midpoint between 7.96M and 15.9M)
+   - **Expected**: Better cost/benefit ratio than Phase 2
+
+3. **Lower Learning Rate (1.5e-4)**:
+   - **Why**: Finer optimization around optimal solution
+   - **Impact**: More careful weight updates, potentially better local minima
+   - **Trade-off**: May need 4 epochs instead of 3
+
+#### Training Command
+
+```bash
+# Create the configuration file first
+cat > finetuning/pipeline/lora/configs/f1_optimized.json << 'EOF'
+{
+  "model_name_or_path": "openai/gpt-oss-20b",
+  "cache_dir": "./data/models",
+  "load_in_4bit": true,
+  "bnb_4bit_quant_type": "nf4",
+  "bnb_4bit_compute_dtype": "bfloat16",
+  
+  "train_file": "finetuning/data/ft_prompts/train.jsonl",
+  "validation_file": "finetuning/data/ft_prompts/validation.jsonl",
+  "max_seq_length": 512,
+  
+  "lora_r": 48,
+  "lora_alpha": 48,
+  "lora_dropout": 0.05,
+  "lora_target_modules": ["q_proj", "v_proj", "k_proj"],
+  "lora_bias": "none",
+  "early_stopping_patience": 2,
+  "early_stopping_threshold": 0.005,
+  
+  "learning_rate": 1.5e-4,
+  "num_train_epochs": 4,
+  "per_device_train_batch_size": 4,
+  "per_device_eval_batch_size": 4,
+  "gradient_accumulation_steps": 4,
+  "warmup_steps": 100,
+  "weight_decay": 0.01,
+  "max_grad_norm": 1.0,
+  "lr_scheduler_type": "cosine",
+  
+  "bf16": true,
+  "gradient_checkpointing": true,
+  "optim": "adamw_torch",
+  
+  "output_dir": "finetuning/models/f1_optimized",
+  "logging_steps": 10,
+  "eval_strategy": "epoch",
+  "save_strategy": "epoch",
+  "save_total_limit": 3,
+  "load_best_model_at_end": true,
+  "metric_for_best_model": "eval_loss",
+  "greater_is_better": false,
+  "report_to": "tensorboard",
+  
+  "dataloader_num_workers": 4,
+  "remove_unused_columns": false
+}
+EOF
+
+# Launch training
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --config_file ./finetuning/pipeline/lora/configs/f1_optimized.json
+```
+
+#### Expected Training Time
+- **Estimate**: ~18-20 minutes (4 epochs with r=48)
+- **Basis**: Between Phase 1 (13.8 min, r=32) and Phase 2 (23.1 min, r=64)
+
+#### Success Criteria
+
+| Metric | Current (Phase 2) | Target (Phase 3b) | Stretch Goal |
+|--------|-------------------|-------------------|--------------|
+| **F1 Score** | 0.6852 | **≥ 0.70** | ≥ 0.72 |
+| **Precision** | 0.5968 | ≥ 0.61 | ≥ 0.63 |
+| **Recall** | 0.8043 | ≥ 0.80 | ≥ 0.82 |
+| **LGBTQ+ FPR** | 62.07% | ≤ 55% | ≤ 50% |
+| **Training Time** | 23.1 min | ≤ 20 min | - |
+
+#### Validation Command
+
+```bash
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --model_name ./finetuning/models/f1_optimized \
+    --data_file canned_100_size_varied \
+    --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json \
+    --strategy baseline_standard \
+    --max_samples 100 \
+    --output_dir ./finetuning/outputs/gptoss/post_finetune/f1_optimized
+```
+
+#### Monitoring
+
+```bash
+# TensorBoard
+tensorboard --logdir ./finetuning/models/f1_optimized/runs
+
+# Training log
+tail -f ./finetuning/models/f1_optimized/training.log
+
+# Quick metrics check
+cat ./finetuning/models/f1_optimized/all_results.json | python3 -m json.tool
+```
+
+#### Decision Points
+
+**After Training - Analyze Results**:
+
+1. **If F1 ≥ 0.70**: 
+   - SUCCESS! Proceed to Phase 3c (Threshold Tuning) to optimize precision/recall
+   - Document results and compare with Phase 2
+
+2. **If F1 = 0.69-0.695**:
+   - CLOSE! Consider one of:
+     - **Option 1**: Try r=56 (split difference with Phase 2)
+     - **Option 2**: Add o_proj to target modules
+     - **Option 3**: Proceed to Phase 3c anyway (threshold tuning might push over 0.70)
+
+3. **If F1 < 0.69**:
+   - ANALYZE: Check if k_proj addition helped or hurt
+   - Compare eval_loss progression with Phase 2
+   - Consider reverting to r=64 but with k_proj addition
+
+---
+
+### Phase 3c: Precision-Recall Balancing (PLANNED NEXT)
+- **Purpose**: Balance precision/recall ratio through threshold tuning
+- **Config**: Use best model from Phase 3b with post-training optimization
+- **Status**: Planned after Phase 3b completion
+
+**Detailed Approach**:
+
+#### Strategy Overview
+Fine-tune the classification threshold to optimize precision/recall trade-off without retraining. This is a fast, computation-free optimization step.
+
+#### Why Threshold Tuning?
+
+**Current Situation**:
+- Phase 2: Precision 59.68%, Recall 80.43% (20.75 point gap)
+- Model outputs probabilities, default threshold is typically 0.5
+- Adjusting threshold can shift precision/recall balance
+
+**How It Works**:
+```
+hate_score = model_logits(input_text)
+prediction = 1 if hate_score > threshold else 0
+
+- Lower threshold → More predictions as "hate" → Higher Recall, Lower Precision
+- Higher threshold → Fewer predictions as "hate" → Higher Precision, Lower Recall
+```
+
+#### Implementation Plan
+
+**Step 1: Create Threshold Tuning Script** - `threshold_optimizer.py`
+
+```python
+"""
+Threshold optimization for precision-recall balancing.
+Usage: python threshold_optimizer.py --model_path ./finetuning/models/f1_optimized
+"""
+import json
+import numpy as np
+from sklearn.metrics import precision_recall_curve, f1_score
+import matplotlib.pyplot as plt
+
+def find_optimal_threshold(
+    model_path: str,
+    test_data_path: str,
+    target_precision_recall_ratio: float = 1.2,
+    output_dir: str = "./threshold_optimization"
+):
+    """
+    Find optimal classification threshold.
+    
+    Args:
+        model_path: Path to trained model
+        test_data_path: Path to test dataset
+        target_precision_recall_ratio: Desired precision/recall ratio (e.g., 1.2 = precision 20% higher)
+        output_dir: Where to save results
+    """
+    
+    # 1. Get model predictions and ground truth
+    predictions, ground_truth = get_model_predictions(model_path, test_data_path)
+    
+    # 2. Compute precision-recall curve
+    precisions, recalls, thresholds = precision_recall_curve(ground_truth, predictions)
+    
+    # 3. Calculate F1 scores for each threshold
+    f1_scores = 2 * (precisions * recalls) / (precisions + recalls + 1e-10)
+    
+    # 4. Find optimal threshold based on different criteria
+    results = {
+        "max_f1": {
+            "threshold": thresholds[np.argmax(f1_scores)],
+            "f1": np.max(f1_scores),
+            "precision": precisions[np.argmax(f1_scores)],
+            "recall": recalls[np.argmax(f1_scores)]
+        },
+        "target_ratio": find_threshold_for_ratio(
+            precisions, recalls, thresholds, target_precision_recall_ratio
+        ),
+        "precision_0.65": find_threshold_for_precision(
+            precisions, recalls, thresholds, target_precision=0.65
+        ),
+        "recall_0.80": find_threshold_for_recall(
+            precisions, recalls, thresholds, target_recall=0.80
+        )
+    }
+    
+    # 5. Visualize
+    plot_precision_recall_curve(precisions, recalls, thresholds, results, output_dir)
+    
+    # 6. Save results
+    save_threshold_analysis(results, output_dir)
+    
+    return results
+```
+
+**Step 2: Run Threshold Optimization**
+
+```bash
+# Option A: Maximize F1 score
+python finetuning/pipeline/lora/threshold_optimizer.py \
+    --model_path ./finetuning/models/f1_optimized \
+    --test_data_path ./data/processed/unified/test.jsonl \
+    --optimization_target max_f1 \
+    --output_dir ./finetuning/outputs/threshold_optimization
+
+# Option B: Target precision/recall ratio
+python finetuning/pipeline/lora/threshold_optimizer.py \
+    --model_path ./finetuning/models/f1_optimized \
+    --test_data_path ./data/processed/unified/test.jsonl \
+    --optimization_target balanced \
+    --target_precision_recall_ratio 1.1 \
+    --output_dir ./finetuning/outputs/threshold_optimization
+
+# Option C: Minimize LGBTQ+ FPR while maintaining recall
+python finetuning/pipeline/lora/threshold_optimizer.py \
+    --model_path ./finetuning/models/f1_optimized \
+    --test_data_path ./data/processed/unified/test.jsonl \
+    --optimization_target min_fpr \
+    --target_group lgbtq \
+    --min_recall 0.78 \
+    --output_dir ./finetuning/outputs/threshold_optimization
+```
+
+**Step 3: Validate New Threshold**
+
+```bash
+# Test with optimized threshold
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.baseline.runner \
+    --use_accelerate \
+    --model_name ./finetuning/models/f1_optimized \
+    --data_file canned_100_size_varied \
+    --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json \
+    --strategy baseline_standard \
+    --max_samples 100 \
+    --classification_threshold 0.45 \
+    --output_dir ./finetuning/outputs/gptoss/post_finetune/f1_optimized_threshold_045
+```
+
+#### Expected Outcomes
+
+**Scenario 1: Balanced Optimization (Target Ratio 1.1)**
+- **Before**: Precision 59.68%, Recall 80.43% (ratio 0.74)
+- **After**: Precision ~66%, Recall ~75% (ratio ~0.88)
+- **F1 Impact**: Likely +1-2% improvement
+- **Threshold**: Expect ~0.45-0.50 (increase from default)
+
+**Scenario 2: Precision Boost (Target Precision 0.65)**
+- **Before**: Precision 59.68%, Recall 80.43%
+- **After**: Precision 65%, Recall ~72%
+- **F1 Impact**: Minimal change (±0.5%)
+- **Threshold**: Expect ~0.52-0.55
+
+**Scenario 3: LGBTQ+ FPR Minimization**
+- **Before**: LGBTQ+ FPR 62.07%
+- **After**: LGBTQ+ FPR ~50-55%
+- **Trade-off**: Overall recall drops 5-8%
+- **Threshold**: Expect ~0.48-0.53
+
+#### Lightweight Alternative (Quick Test)
+
+If you want to quickly test threshold impact without a full script:
+
+```bash
+# Test different thresholds manually with baseline runner
+for threshold in 0.40 0.45 0.50 0.55 0.60; do
+    echo "Testing threshold: $threshold"
+    accelerate launch --num_processes 4 \
+        -m finetuning.pipeline.baseline.runner \
+        --use_accelerate \
+        --model_name ./finetuning/models/f1_optimized \
+        --data_file canned_100_size_varied \
+        --prompt_template ./prompt_engineering/prompt_templates/baseline_v1.json \
+        --strategy baseline_standard \
+        --max_samples 100 \
+        --classification_threshold $threshold \
+        --output_dir ./finetuning/outputs/gptoss/threshold_sweep/threshold_${threshold}
+    
+    # Extract F1 score
+    f1=$(awk -F',' 'NR==2 {print $5}' ./finetuning/outputs/gptoss/threshold_sweep/threshold_${threshold}/run_*/performance_metrics_*.csv)
+    echo "Threshold $threshold: F1 = $f1"
+done
+```
+
+#### Success Criteria - Phase 3c
+
+| Metric | Phase 3b Baseline | Target (with threshold tuning) |
+|--------|-------------------|--------------------------------|
+| **F1 Score** | 0.70+ | ≥ 0.71 |
+| **Precision/Recall Ratio** | ~0.75 | **0.85-0.95** (more balanced) |
+| **LGBTQ+ FPR** | ~55% | **≤ 50%** |
+| **Computation Time** | 0 (no retraining) | < 1 hour (just inference) |
+
+---
+
+### Phase 3a: LGBTQ+ Bias Mitigation (DEFERRED)
+- **Purpose**: Reduce LGBTQ+ FPR from 62.07% to < 40%
+- **Config**: default.json with data augmentation and class weights  
+- **Status**: Deferred (requires data collection/augmentation work)
+- **Note**: May revisit after Phase 3b/3c if FPR remains > 50%
+
+### Phase 3d: Data Quality Enhancement (DEFERRED)
+- **Purpose**: Improve training data quality and balance
+- **Config**: default.json with enhanced dataset
+- **Status**: Deferred (research phase, requires data analysis)
+
+---
+
+## Notes
+
+- All experiments use the same training/validation split (2,686 train / 55 val samples)
+- Base model: `openai/gpt-oss-20b` (pre-quantized Mxfp4, dequantized to bf16)
+- Hardware: 4× A100 80GB GPUs with DDP training
+- Early stopping enabled: patience=2 epochs, threshold=1% improvement
+- TensorBoard logs available in respective `{output_dir}/runs/` directories
+- Validation performed on 100-sample test set (canned_100_size_varied)
+
+**Last Updated**: October 26, 2025

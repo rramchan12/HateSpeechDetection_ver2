@@ -28,6 +28,7 @@ scipy
 peft>=0.7.0                # Parameter-Efficient Fine-Tuning (LoRA)
 bitsandbytes>=0.41.0       # Quantization for memory efficiency
 accelerate>=0.25.0         # Distributed training support
+tensorboard>=2.11.0        # Training visualization and logging
 
 # ============================================================
 # PROMPT ENGINEERING & AZURE AI

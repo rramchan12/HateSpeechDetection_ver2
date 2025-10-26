@@ -151,6 +151,8 @@ For **detailed theoretical justification** of each parameter value, see:
 | `lora_target_modules` | q_proj, v_proj | [Query & Value projections](../baseline/templates/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
 | `load_in_4bit` | true | [Memory efficiency (QLoRA)](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
 | `bnb_4bit_quant_type` | nf4 | [NormalFloat4 optimal for LLMs](../baseline/templates/lora_ft_approach.md#14-quantization-4-bit-nf4) |
+| `early_stopping_patience` | 2 | Stop training if no improvement for N epochs |
+| `early_stopping_threshold` | 0.01 | Minimum improvement required (1%) |
 
 ### Creating Custom Configurations
 
@@ -169,12 +171,20 @@ accelerate launch --num_processes 4 \
 ```
 
 **Example configurations**:
-- `default.json` - Standard training (r=32, 3 epochs, lr=2e-4)
+- `default.json` - Standard training (r=32, 3 epochs, lr=2e-4, early stopping enabled)
 - `high_capacity.json` - Higher rank (r=64) for complex tasks
 - `memory_efficient.json` - Smaller batch size (bs=2) for limited VRAM
-- `quick_test.json` - Single epoch for testing (1 epoch, r=16)
+- `quick_test.json` - Single epoch for testing (1 epoch, r=16, early stopping disabled)
 
 ## Monitoring Training
+
+### Early Stopping
+
+Training will automatically stop if the model converges early, saving computation time. The default configuration uses:
+- **Patience**: 2 epochs (stops if no improvement for 2 consecutive epochs)
+- **Threshold**: 0.01 (requires at least 1% improvement in validation loss)
+
+To disable early stopping, set `early_stopping_patience` to 0 in your config or add `--early_stopping_patience 0` to the command line.
 
 ### Log Files
 

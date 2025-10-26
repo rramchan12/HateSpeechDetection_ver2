@@ -192,6 +192,8 @@ For **theoretical justification** of each parameter value, see [`lora_ft_approac
 | `--lora_dropout` | float | 0.05 | LoRA dropout (0.0-0.1) | [Link](../baseline/templates/lora_ft_approach.md#11-lora-dropout-005) |
 | `--lora_target_modules` | str | q_proj,v_proj | Target modules (comma-separated) | [Link](../baseline/templates/lora_ft_approach.md#12-target-modules-q_proj-v_proj) |
 | `--lora_bias` | str | none | Bias strategy (none/all/lora_only) | [Link](../baseline/templates/lora_ft_approach.md#13-lora-bias-none) |
+| `--early_stopping_patience` | int | 2 | Stop if no improvement for N epochs (0=disabled) | - |
+| `--early_stopping_threshold` | float | 0.01 | Minimum improvement required (e.g., 0.01 = 1%) | - |
 
 #### Training Hyperparameters
 
@@ -225,6 +227,9 @@ For **theoretical justification** of each parameter value, see [`lora_ft_approac
 | `--eval_strategy` | str | epoch | When to evaluate (epoch/steps/no) |
 | `--save_strategy` | str | epoch | When to save checkpoints (epoch/steps/no) |
 | `--save_total_limit` | int | 3 | Max checkpoints to keep |
+| `--load_best_model_at_end` | bool | true | Load best checkpoint at end of training |
+| `--metric_for_best_model` | str | eval_loss | Metric to determine best model |
+| `--greater_is_better` | bool | false | Whether higher metric is better |
 | `--report_to` | str | tensorboard | Logging integration (tensorboard/none) |
 
 #### Data Loading Configuration
@@ -333,7 +338,17 @@ accelerate launch --num_processes 4 \
     --config_file ./finetuning/pipeline/lora/configs/default.json \
     --num_train_epochs 5 \
     --output_dir ./finetuning/models/lora_5epochs
+
+# Or disable early stopping to force full training
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --config_file ./finetuning/pipeline/lora/configs/default.json \
+    --early_stopping_patience 0 \
+    --num_train_epochs 5 \
+    --output_dir ./finetuning/models/lora_5epochs_no_early_stop
 ```
+
+**Note**: With early stopping enabled (default), training may stop before reaching `num_train_epochs` if the model converges.
 
 ### 7. Post-Training Validation
 
@@ -382,6 +397,40 @@ python -m finetuning.pipeline.baseline.runner \
 ---
 
 ## Monitoring and Debugging
+
+### Early Stopping
+
+The training script supports automatic early stopping to save computation when the model has converged:
+
+```bash
+# Default: Early stopping enabled (patience=2, threshold=0.01)
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --config_file ./finetuning/pipeline/lora/configs/default.json
+
+# Customize early stopping
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --config_file ./finetuning/pipeline/lora/configs/default.json \
+    --early_stopping_patience 3 \
+    --early_stopping_threshold 0.005
+
+# Disable early stopping
+accelerate launch --num_processes 4 \
+    -m finetuning.pipeline.lora.train \
+    --config_file ./finetuning/pipeline/lora/configs/default.json \
+    --early_stopping_patience 0
+```
+
+**Parameters**:
+- `early_stopping_patience`: Number of epochs with no improvement before stopping (default: 2, set to 0 to disable)
+- `early_stopping_threshold`: Minimum improvement in validation loss required (default: 0.01 = 1%)
+
+**Behavior**:
+- Evaluates validation loss after each epoch
+- Stops training if improvement < threshold for `patience` consecutive epochs
+- Automatically loads the best checkpoint at the end
+- Logs early stopping triggers to training.log
 
 ### Real-Time Log Monitoring
 
@@ -579,11 +628,12 @@ accelerate launch --num_processes 4 \
     -m finetuning.pipeline.lora.train \
     --config_file ./finetuning/pipeline/lora/configs/high_capacity.json
 
-# Option 3: Train longer
+# Option 3: Train longer (disable early stopping)
 accelerate launch --num_processes 4 \
     -m finetuning.pipeline.lora.train \
     --config_file ./finetuning/pipeline/lora/configs/default.json \
-    --num_train_epochs 5
+    --num_train_epochs 5 \
+    --early_stopping_patience 0
 ```
 
 ### Data Format Errors

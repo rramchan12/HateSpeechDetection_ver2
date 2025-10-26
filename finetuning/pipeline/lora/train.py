@@ -51,6 +51,7 @@ from transformers import (
     TrainingArguments,
     Trainer,
     DataCollatorForLanguageModeling,
+    EarlyStoppingCallback,
 )
 from accelerate import Accelerator
 
@@ -125,6 +126,14 @@ class LoraArguments:
     lora_bias: str = field(
         default="none",
         metadata={"help": "Bias training strategy: 'none', 'all', or 'lora_only'"}
+    )
+    early_stopping_patience: int = field(
+        default=0,
+        metadata={"help": "Early stopping patience (epochs). Set to 0 to disable. Recommended: 2-3 epochs"}
+    )
+    early_stopping_threshold: float = field(
+        default=0.0,
+        metadata={"help": "Early stopping threshold for improvement. Recommended: 0.01 (1% improvement)"}
     )
 
 
@@ -485,6 +494,22 @@ def main():
     logger.info(f"Warmup steps: {training_args.warmup_steps} ({training_args.warmup_steps/total_steps*100:.1f}%)")
     logger.info("="*70 + "\n")
     
+    # Setup early stopping callback if enabled
+    callbacks = []
+    if lora_args.early_stopping_patience > 0:
+        early_stopping = EarlyStoppingCallback(
+            early_stopping_patience=lora_args.early_stopping_patience,
+            early_stopping_threshold=lora_args.early_stopping_threshold,
+        )
+        callbacks.append(early_stopping)
+        logger.info("="*70)
+        logger.info("EARLY STOPPING ENABLED")
+        logger.info("="*70)
+        logger.info(f"Patience: {lora_args.early_stopping_patience} epochs")
+        logger.info(f"Threshold: {lora_args.early_stopping_threshold} ({lora_args.early_stopping_threshold*100:.1f}% improvement)")
+        logger.info("The training will stop automatically if validation loss doesn't improve")
+        logger.info("="*70 + "\n")
+    
     # Initialize trainer
     trainer = Trainer(
         model=model,
@@ -492,6 +517,7 @@ def main():
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         data_collator=data_collator,
+        callbacks=callbacks,
     )
     
     # Train
