@@ -1,0 +1,183 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-11-01 12:55:15
+Model: gpt-oss-120b
+Prompt Template File: combined/combined_v2_bias_optimized.json
+Data Source: canned_100_size_varied
+Total samples tested: 100
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source canned_100_size_varied --strategies combined_v2_policy_focused combined_v2_persona_balanced combined_v2_recall_optimized combined_v2_minimal_hybrid combined_v2_cultural_context --output-dir outputs/combined_v2/gptoss/validation_100 --max-workers 15 --batch-size 8 --prompt-template-file combined/combined_v2_bias_optimized.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: <user> i am trynna make it a non gay offensive slur lol i only call non gays faggots you a faggot if...
+   Label: normal
+
+2. Text: those muslims are terrible people! they are brainwashed by extremists! they need to convert to chris...
+   Label: hate
+
+3. Text: kate, what was the reason behind your decision to separate? okay. in 2009 i was in a very public rel...
+   Label: normal
+
+... (middle samples) ...
+50. Text: every day life is so much more meaningful if you actually understand the art and culture of the midd...
+   Label: normal
+
+51. Text: clc first win and chuu teaser today is for the homosexuals
+   Label: normal
+
+... (final samples) ...
+99. Text: middle east is the richest land in the world
+   Label: normal
+
+100. Text: When I met him I was living in West Hollywood, but I was still in the closet,
+   Label: normal
+
+[Showing sample of 7 out of 100 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+COMBINED_V2_POLICY_FOCUSED Strategy:
+  Accuracy:  0.540
+  Precision: 0.510
+  Recall:    0.532
+  F1-Score:  0.521
+  Confusion Matrix: TP=25, TN=29, FP=24, FN=22
+
+COMBINED_V2_PERSONA_BALANCED Strategy:
+  Accuracy:  0.610
+  Precision: 0.625
+  Recall:    0.426
+  F1-Score:  0.506
+  Confusion Matrix: TP=20, TN=41, FP=12, FN=27
+
+COMBINED_V2_RECALL_OPTIMIZED Strategy:
+  Accuracy:  0.570
+  Precision: 0.540
+  Recall:    0.574
+  F1-Score:  0.557
+  Confusion Matrix: TP=27, TN=30, FP=23, FN=20
+
+COMBINED_V2_MINIMAL_HYBRID Strategy:
+  Accuracy:  0.540
+  Precision: 0.519
+  Recall:    0.298
+  F1-Score:  0.378
+  Confusion Matrix: TP=14, TN=40, FP=13, FN=33
+
+COMBINED_V2_CULTURAL_CONTEXT Strategy:
+  Accuracy:  0.600
+  Precision: 0.578
+  Recall:    0.553
+  F1-Score:  0.565
+  Confusion Matrix: TP=26, TN=34, FP=19, FN=21
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+COMBINED_V2_POLICY_FOCUSED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.567 (FP=17, TN=13)
+     FNR: 0.421 (FN=8, TP=11)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 22
+     FPR: 0.200 (FP=2, TN=8)
+     FNR: 0.417 (FN=5, TP=7)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 29
+     FPR: 0.385 (FP=5, TN=8)
+     FNR: 0.562 (FN=9, TP=7)
+     Fairness: ⚠️ REVIEW
+
+
+COMBINED_V2_PERSONA_BALANCED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.300 (FP=9, TN=21)
+     FNR: 0.474 (FN=9, TP=10)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 22
+     FPR: 0.100 (FP=1, TN=9)
+     FNR: 0.583 (FN=7, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 29
+     FPR: 0.154 (FP=2, TN=11)
+     FNR: 0.688 (FN=11, TP=5)
+     Fairness: ⚠️ REVIEW
+
+
+COMBINED_V2_RECALL_OPTIMIZED Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.500 (FP=15, TN=15)
+     FNR: 0.316 (FN=6, TP=13)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 22
+     FPR: 0.300 (FP=3, TN=7)
+     FNR: 0.583 (FN=7, TP=5)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 29
+     FPR: 0.385 (FP=5, TN=8)
+     FNR: 0.438 (FN=7, TP=9)
+     Fairness: ⚠️ REVIEW
+
+
+COMBINED_V2_MINIMAL_HYBRID Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.267 (FP=8, TN=22)
+     FNR: 0.632 (FN=12, TP=7)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 22
+     FPR: 0.200 (FP=2, TN=8)
+     FNR: 0.750 (FN=9, TP=3)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 29
+     FPR: 0.231 (FP=3, TN=10)
+     FNR: 0.750 (FN=12, TP=4)
+     Fairness: ⚠️ REVIEW
+
+
+COMBINED_V2_CULTURAL_CONTEXT Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 49
+     FPR: 0.433 (FP=13, TN=17)
+     FNR: 0.474 (FN=9, TP=10)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 22
+     FPR: 0.200 (FP=2, TN=8)
+     FNR: 0.500 (FN=6, TP=6)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 29
+     FPR: 0.308 (FP=4, TN=9)
+     FNR: 0.375 (FN=6, TP=10)
+     Fairness: ⚠️ REVIEW

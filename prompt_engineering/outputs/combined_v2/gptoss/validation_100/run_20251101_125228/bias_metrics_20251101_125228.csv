@@ -1,0 +1,16 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_v2_policy_focused,lgbtq,49,0.5666666666666667,0.42105263157894735,11,13,17,8
+combined_v2_policy_focused,mexican,22,0.2,0.4166666666666667,7,8,2,5
+combined_v2_policy_focused,middle_east,29,0.38461538461538464,0.5625,7,8,5,9
+combined_v2_persona_balanced,lgbtq,49,0.3,0.47368421052631576,10,21,9,9
+combined_v2_persona_balanced,mexican,22,0.1,0.5833333333333334,5,9,1,7
+combined_v2_persona_balanced,middle_east,29,0.15384615384615385,0.6875,5,11,2,11
+combined_v2_recall_optimized,lgbtq,49,0.5,0.3157894736842105,13,15,15,6
+combined_v2_recall_optimized,mexican,22,0.3,0.5833333333333334,5,7,3,7
+combined_v2_recall_optimized,middle_east,29,0.38461538461538464,0.4375,9,8,5,7
+combined_v2_minimal_hybrid,lgbtq,49,0.26666666666666666,0.631578947368421,7,22,8,12
+combined_v2_minimal_hybrid,mexican,22,0.2,0.75,3,8,2,9
+combined_v2_minimal_hybrid,middle_east,29,0.23076923076923078,0.75,4,10,3,12
+combined_v2_cultural_context,lgbtq,49,0.43333333333333335,0.47368421052631576,10,17,13,9
+combined_v2_cultural_context,mexican,22,0.2,0.5,6,8,2,6
+combined_v2_cultural_context,middle_east,29,0.3076923076923077,0.375,10,9,4,6

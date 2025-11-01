@@ -1,0 +1,4 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_conservative,mexican,209,0.046511627906976744,0.6422764227642277,44,82,4,79
+combined_conservative,lgbtq,494,0.24074074074074073,0.6176470588235294,65,246,78,105
+combined_conservative,middle_east,306,0.125,0.6111111111111112,63,126,18,99
