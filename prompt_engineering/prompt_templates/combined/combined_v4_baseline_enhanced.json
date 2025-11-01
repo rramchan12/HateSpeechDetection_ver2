@@ -1,0 +1,74 @@
+{
+  "strategies": {
+    "combined_v4_minimal_examples": {
+      "name": "combined_v4_minimal_examples",
+      "description": "Baseline + minimal examples (1 HATE + 1 NORMAL per group = 6 total). Uses baseline_standard's proven hyperparameters (temp=0.1, 512 tokens). Hypothesis: Examples help pattern recognition, but V1's 15 examples (5 per group) were too many.",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nExamples:\n\nLGBTQ+ Community:\nHATE: \"Those faggots are disgusting\" (out-group slur)\nNORMAL: \"I'm queer and proud\" (in-group reclamation)\n\nMexican/Latino Community:\nHATE: \"Mexicans are all illegals and criminals\" (generalization)\nNORMAL: \"Border policy needs reform\" (policy discussion)\n\nMiddle Eastern Community:\nHATE: \"All Muslims are terrorists\" (generalization)\nNORMAL: \"ISIS commits terrorist acts\" (specific group)\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v4_subtle_emphasis": {
+      "name": "combined_v4_subtle_emphasis",
+      "description": "Baseline + single-sentence subtle hate emphasis (no examples). Uses baseline_standard's proven hyperparameters. Hypothesis: Minimal guidance on coded hate improves recall without verbosity overhead.",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nImportant: Pay special attention to coded and subtle hate speech (dog whistles, generalizations, dehumanization) which are hate even without explicit slurs.\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v4_community_aware": {
+      "name": "combined_v4_community_aware",
+      "description": "Baseline + brief community context (2-3 sentences per group, no examples). Uses baseline_standard's proven hyperparameters. Hypothesis: Minimal cultural awareness improves detection without verbose persona instructions.",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nCommunity Context:\n\nLGBTQ+: Content attacking sexual orientation/gender identity is hate. LGBTQ+ individuals may reclaim terms (\"queer\") as empowerment; outsiders using same terms to attack is hate.\n\nMexican/Latino: Generalizing ALL Mexicans as \"illegal\", \"criminals\", \"invaders\" is hate. Immigration policy critique without ethnic attacks is not hate.\n\nMiddle Eastern: Generalizing ALL Muslims/Arabs as \"terrorists\", \"extremists\", \"violent\" is hate. Discussing specific groups/events (ISIS, conflicts) is not hate.\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v4_balanced_lite": {
+      "name": "combined_v4_balanced_lite",
+      "description": "Baseline + 1 example per group + brief community context. Uses baseline_standard's proven hyperparameters. Hypothesis: Combining minimal examples with minimal context provides optimal guidance without verbosity.",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nBase your decision on general understanding of hateful language and social norms.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nCommunity Context + Examples:\n\nLGBTQ+: LGBTQ+ individuals may reclaim terms as empowerment; outsiders using same terms to attack is hate.\nHATE Example: \"Those faggots are disgusting\"\nNORMAL Example: \"I'm queer and proud\"\n\nMexican/Latino: Generalizing ALL Mexicans as \"illegal/criminals\" is hate. Policy critique is not hate.\nHATE Example: \"Mexicans are all illegals\"\nNORMAL Example: \"Border policy needs reform\"\n\nMiddle Eastern: Generalizing ALL Muslims/Arabs as \"terrorists\" is hate. Discussing specific groups is not hate.\nHATE Example: \"All Muslims are terrorists\"\nNORMAL Example: \"ISIS commits terrorist acts\"\n\nText: \"{text}\"\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v4_policy_lite": {
+      "name": "combined_v4_policy_lite",
+      "description": "Baseline + concise policy guidance (~50 words, not V1's ~200 words) + minimal examples. Tests if MINIMAL policy (middle ground between baseline's 0 words and V1's verbose policy) can beat F1=0.615.",
+      "system_prompt": "You are a content moderation assistant trained to classify social media posts as either 'hate' or 'normal'.\n\nYou MUST respond in strict JSON format:\n{\"classification\": \"hate\", \"rationale\": \"brief explanation\"} or {\"classification\": \"normal\", \"rationale\": \"brief explanation\"}\n\nClassification Rules:\n- Use EXACTLY 'hate' if the text contains hate speech\n- Use EXACTLY 'normal' if the text does not contain hate speech\n- NO other labels are allowed\n- Always provide a brief rationale (1-2 sentences) explaining your decision\n\nPolicy: Content attacking people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion) is hate speech. Criticizing policies/ideologies without attacking people is not hate.\n\nBase your decision on this policy and general understanding of hateful language.",
+      "user_template": "Classify the following text as either 'hate' or 'normal'.\n\nKey Patterns:\n\nLGBTQ+: Out-group slurs/attacks = HATE | In-group reclamation = NORMAL\nExample: \"Those faggots are disgusting\" (HATE) vs \"I'm queer and proud\" (NORMAL)\n\nMexican/Latino: Generalizing ALL as \"illegals/criminals\" = HATE | Policy debate = NORMAL\nExample: \"Mexicans are all illegals\" (HATE) vs \"Border policy needs reform\" (NORMAL)\n\nMiddle Eastern: Generalizing ALL as \"terrorists\" = HATE | Discussing specific groups = NORMAL\nExample: \"All Muslims are terrorists\" (HATE) vs \"ISIS commits terrorist acts\" (NORMAL)\n\nText: \"{text}\"\n\nApply policy: Does it attack PEOPLE based on protected characteristics, or critique policies?\n\nRespond in JSON format: {{\"classification\": \"[hate/normal]\", \"rationale\": \"[brief explanation]\"}}",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    }
+  }
+}
