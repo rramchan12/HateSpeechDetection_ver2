@@ -11,6 +11,7 @@ This document presents 5 empirically-designed strategies to improve upon the **c
 **Base Framework**: combined_gptoss_v1.json (policy-persona hybrid)
 
 **References**:
+
 - `gptoss_ift_summary_README.md` - Baseline optimization results and hyperparameter rationale
 - `combined_gptoss_v1_README.md` - Combined framework design and V1 validation results
 - Production run results analyzed below
@@ -52,6 +53,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Initial validation of policy-persona hybrid with few-shot examples
 
 **Results** (documented in `combined_gptoss_v1_README.md`):
+
 - **F1-Score**: 0.571
 - **Accuracy**: 58%
 - **Mexican/Latino FNR**: 33% (improved from 83%, -50% reduction with few-shot examples)
@@ -113,7 +115,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 |--------|-------|--------------|------------------------|--------|
 | **F1-Score** | **0.473** | **-0.142 (-23%)** | **-0.117 (-20%)** | ❌ CATASTROPHIC |
 | **Recall** | **37.8%** | **-24.2% (-39%)** | **-18.9% (-33%)** | ❌ CATASTROPHIC |
-| Confusion Matrix | TP=172, TN=454, FP=100, FN=283 | — | 283 FN = missing 62% of hate |
+| Confusion Matrix | TP=172, TN=454, FP=100, FN=283 | — | — | 283 FN = missing 62% of hate |
 
 #### Bias Metrics
 
@@ -137,11 +139,13 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 ### From combined_optimised (Primary)
 
 **Keep**:
+
 - ✅ Policy-persona hybrid (LGBTQ+ FPR improvement proves it works)
 - ✅ Hyperparameters: temp=0.1, 512 tokens
 - ✅ Few-shot concept (but refine)
 
 **Fix**:
+
 - ❌ Add aggressive recall: "Err toward flagging", "Subtle hate IS hate"
 - ❌ Strengthen Mexican detection beyond few-shot
 - ❌ Improve Middle Eastern terrorism detection
@@ -150,6 +154,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 ### From combined_conservative (Secondary)
 
 **Never Repeat**:
+
 - ❌ Temperature 0.0 (use 0.1)
 - ❌ 256 tokens (use 512)
 - ❌ Over-reliance on few-shot
@@ -171,6 +176,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 | **combined_v2_cultural_context** | 40% | 60% | **0.585-0.605** | 0 | **0.605-0.620** | Cultural depth |
 
 **Key V2 Improvements**:
+
 - Recall emphasis: ALL strategies include "err toward flagging"
 - Hyperparameters: temp=0.1, 512 tokens (NOT 0.0, NOT 256)
 - Examples: 0-2 (NOT 5/group to avoid overfitting)
@@ -185,12 +191,14 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Policy-dominant strategy emphasizing X Platform Hateful Conduct Policy (80%) with community awareness (20%). Addresses combined_optimised recall deficit while maintaining LGBTQ+ FPR improvements.
 
 **Target Performance**:
+
 - F1-Score: 0.605-0.620 (vs. combined_optimised 0.590, baseline 0.615)
 - Recall: 0.580-0.600 (target: close -8.5% gap to baseline's 0.620)
 - Mexican FNR: ≤45% (vs. combined_optimised 48%)
 - LGBTQ+ FPR: ≤40% (maintain improvement vs. baseline 43%)
 
 **Hyperparameters**:
+
 ```json
 {
   "max_tokens": 512,
@@ -205,7 +213,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 
 - **Policy Foundation (80%)**: X Platform Hateful Conduct Policy as primary framework with explicit "Attacking PEOPLE = HATE, Criticizing POLICIES = NORMAL" distinction. Comprehensive prohibited content categories (slurs, dehumanization, incitement, stereotypes).
 
-- **Recall Optimization**: 
+- **Recall Optimization**:
   - "⚠️ CRITICAL: Subtle and coded hate speech IS STILL HATE"
   - "When uncertain, ERR TOWARD FLAGGING"
   - "Patterns that are ALWAYS hate: Generalizations, Dehumanization, Stereotyping, Slurs"
@@ -229,6 +237,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Balanced policy-persona hybrid (50/50) with aggressive recall emphasis and minimal few-shot examples. Optimizes for both performance and demographic fairness.
 
 **Target Performance**:
+
 - F1-Score: 0.610-0.625 (target: BEAT baseline 0.615)
 - Recall: 0.590-0.610 (target: approach baseline's 0.620)
 - Mexican FNR: ≤40% (vs. combined_optimised 48%, baseline 39.8%)
@@ -269,6 +278,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Aggressive detection strategy maximizing recall over precision. Safety-first approach targeting FNR reduction from 61-64% (combined_conservative) to <45% across all groups.
 
 **Target Performance**:
+
 - F1-Score: 0.600-0.620 (acceptable trade-off for recall gains)
 - Recall: 0.595-0.615 (target: match/exceed baseline's 0.620)
 - FNR: <45% across ALL groups (vs. combined_conservative 61-64%)
@@ -316,6 +326,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Conservative policy-persona hybrid (60% policy, 40% persona) with minimal guidance. Maintains combined framework while avoiding over-engineering.
 
 **Target Performance**:
+
 - F1-Score: 0.600-0.615 (match baseline minimum)
 - Recall: 0.575-0.595 (moderate improvement vs. combined_optimised 0.567)
 - Mexican FNR: ≤45%, LGBTQ+ FPR: ≤42%
@@ -355,6 +366,7 @@ All Combined V2 strategies use **identical hyperparameters** derived from empiri
 **Purpose**: Deep cultural awareness strategy (40% policy, 60% persona) integrating power dynamics, historical context, and community norms. Addresses FNR while maintaining cultural sensitivity.
 
 **Target Performance**:
+
 - F1-Score: 0.605-0.620 (competitive with baseline)
 - Recall: 0.585-0.605 (moderate-high improvement)
 - Bias Fairness: Target best-in-class fairness metrics across groups
@@ -427,17 +439,20 @@ python prompt_runner.py `
 **Success Criteria**:
 
 **Minimum Viable**:
+
 - F1 ≥ 0.600 (vs. combined_optimised 0.590 = +1.7%)
 - Recall ≥ 0.580 (vs. combined_optimised 0.567 = +2.3%)
 - Mexican FNR ≤ 45% (vs. combined_optimised 48%)
 
 **Target**:
+
 - F1 ≥ 0.615 (match baseline_standard)
 - Recall ≥ 0.610 (approach baseline 0.620)
 - Mexican FNR ≤ 40%, Middle Eastern FNR ≤ 36%
 - LGBTQ+ FPR ≤ 40% (beat baseline 43%)
 
 **Stretch**:
+
 - F1 ≥ 0.625 (+1.6% vs. baseline)
 - Recall ≥ 0.630
 - FNR ≤ 35% across ALL groups
@@ -447,18 +462,21 @@ python prompt_runner.py `
 ## Key Takeaways
 
 **✅ From combined_optimised**:
+
 - Policy-persona hybrid viable (0.590 F1 respectable)
 - LGBTQ+ FPR improvement (43% → 39.2%) proves community context works
 - Hyperparameters validated: temp=0.1, 512 tokens
 - Core problem: 8.5% recall gap needs aggressive optimization
 
 **❌ From combined_conservative**:
+
 - NEVER temperature=0.0 (39% recall loss)
 - NEVER 256 tokens (23% F1 loss)
 - Few-shot can create overfitting
 - Conservative catastrophic for safety (62% hate missed)
 
 **🎯 Combined V2 Strategy**:
+
 - Keep policy-persona framework (proven)
 - Keep hyperparameters (temp=0.1, 512 tokens)
 - Add aggressive recall emphasis
@@ -466,6 +484,7 @@ python prompt_runner.py `
 - Target: F1 ≥ 0.615, Recall ≥ 0.610
 
 **🚀 Recommended Path**:
+
 1. Run Phase 1 (100 samples, all 5 strategies)
 2. Identify top 2-3 performers
 3. Run Phase 2 production (1,009 samples)
