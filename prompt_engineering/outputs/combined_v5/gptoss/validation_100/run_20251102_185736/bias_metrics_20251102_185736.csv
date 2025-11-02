@@ -1,0 +1,16 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_v5_compressed_tokens,lgbtq,49,0.5,0.3684210526315789,12,15,15,7
+combined_v5_compressed_tokens,mexican,22,0.3,0.5,6,7,3,6
+combined_v5_compressed_tokens,middle_east,29,0.23076923076923078,0.375,10,10,3,6
+combined_v5_implicit_examples,lgbtq,49,0.5,0.2631578947368421,14,15,15,5
+combined_v5_implicit_examples,mexican,22,0.3,0.4166666666666667,7,7,3,5
+combined_v5_implicit_examples,middle_east,29,0.38461538461538464,0.3125,11,8,5,5
+combined_v5_chain_of_thought,lgbtq,49,0.6,0.21052631578947367,15,12,18,4
+combined_v5_chain_of_thought,mexican,22,0.3,0.25,9,7,3,3
+combined_v5_chain_of_thought,middle_east,29,0.38461538461538464,0.375,10,8,5,6
+combined_v5_minimal_signal,lgbtq,49,0.6666666666666666,0.21052631578947367,15,10,20,4
+combined_v5_minimal_signal,mexican,22,0.3,0.3333333333333333,8,7,3,4
+combined_v5_minimal_signal,middle_east,29,0.38461538461538464,0.375,10,8,5,6
+combined_v5_example_only,lgbtq,49,0.1,0.8421052631578947,3,27,3,16
+combined_v5_example_only,mexican,22,0.0,0.9166666666666666,1,10,0,11
+combined_v5_example_only,middle_east,29,0.07692307692307693,0.875,2,12,1,14

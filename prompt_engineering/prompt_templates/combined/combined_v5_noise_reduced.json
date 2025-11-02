@@ -1,0 +1,74 @@
+{
+  "strategies": {
+    "combined_v5_compressed_tokens": {
+      "name": "combined_v5_compressed_tokens",
+      "description": "Compressed policy+persona using compact token-style markers. Replaces verbose instructions with minimal signals: [Policy: X] [Focus: Y]. Tests if token compression reduces noise while preserving guidance.",
+      "system_prompt": "You are a content moderation assistant. Classify social media posts as 'hate' or 'normal'.\n\n[Policy: Protected characteristics] [Task: Binary classification] [Format: JSON strict]\n\nClassification Rules:\n- 'hate' = attacks on race, ethnicity, national origin, sexual orientation, gender identity, religion\n- 'normal' = policy critique, in-group reclamation, neutral content\n- Output: {\"classification\": \"hate/normal\", \"rationale\": \"brief reason\"}",
+      "user_template": "[Context: LGBTQ+, Mexican/Latino, Middle Eastern]\n[Focus: Coded language, generalizations, dehumanization]\n\nText: \"{text}\"\n\nClassify:",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v5_implicit_examples": {
+      "name": "combined_v5_implicit_examples",
+      "description": "Policy encoded implicitly through 2 examples per group (6 total). No verbose policy text. Tests if examples alone (without explanatory text) encode policy better than baseline.",
+      "system_prompt": "You are a content moderation assistant. Classify as 'hate' or 'normal'.\n\nOutput: {\"classification\": \"hate/normal\", \"rationale\": \"brief reason\"}",
+      "user_template": "Examples:\n\nLGBTQ+:\n\"Those faggots are disgusting\" → hate\n\"I'm queer and proud\" → normal\n\nMexican/Latino:\n\"Mexicans are all illegals\" → hate\n\"Border policy needs reform\" → normal\n\nMiddle Eastern:\n\"All Muslims are terrorists\" → hate\n\"ISIS commits terrorist acts\" → normal\n\nText: \"{text}\"\n\nClassify:",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v5_chain_of_thought": {
+      "name": "combined_v5_chain_of_thought",
+      "description": "Chain-of-thought reasoning before classification. Asks model to identify patterns step-by-step, then output. Tests if explicit reasoning improves detection of nuanced cases.",
+      "system_prompt": "You are a content moderation assistant. Classify as 'hate' or 'normal'.\n\nUse chain-of-thought reasoning:\nStep 1: Identify if text attacks people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion)\nStep 2: Check for coded language, generalizations (ALL/THEY), dehumanization\nStep 3: Distinguish: policy critique vs people attack, in-group reclamation vs out-group attack\nStep 4: Output classification\n\nOutput: {\"classification\": \"hate/normal\", \"rationale\": \"brief reason\"}",
+      "user_template": "Text: \"{text}\"\n\nAnalyze and classify:",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v5_minimal_signal": {
+      "name": "combined_v5_minimal_signal",
+      "description": "Ultra-minimal: baseline + single-line signal. Tests absolute minimum enhancement: one sentence with key patterns (generalizations, attacks, protected groups) without examples or policy.",
+      "system_prompt": "You are a content moderation assistant. Classify as 'hate' or 'normal'.\n\nHate = attacking people based on protected characteristics (race, ethnicity, national origin, sexual orientation, gender identity, religion) including generalizations, coded language, dehumanization.\n\nOutput: {\"classification\": \"hate/normal\", \"rationale\": \"brief reason\"}",
+      "user_template": "Text: \"{text}\"\n\nClassify:",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    },
+    "combined_v5_example_only": {
+      "name": "combined_v5_example_only",
+      "description": "Examples only, zero explanatory text. Pure pattern learning: 1 HATE + 1 NORMAL per group with no policy, no context, no instructions beyond JSON format. Tests if raw examples work better than examples + text.",
+      "system_prompt": "Classify as 'hate' or 'normal'. Output JSON: {\"classification\": \"hate/normal\", \"rationale\": \"brief reason\"}",
+      "user_template": "\"Those faggots are disgusting\" → hate\n\"I'm queer and proud\" → normal\n\"Mexicans are all illegals\" → hate\n\"Border policy needs reform\" → normal\n\"All Muslims are terrorists\" → hate\n\"ISIS commits terrorist acts\" → normal\n\n\"{text}\" →",
+      "parameters": {
+        "max_tokens": 512,
+        "temperature": 0.1,
+        "top_p": 1.0,
+        "frequency_penalty": 0.0,
+        "presence_penalty": 0.0,
+        "response_format": "json_object"
+      }
+    }
+  }
+}

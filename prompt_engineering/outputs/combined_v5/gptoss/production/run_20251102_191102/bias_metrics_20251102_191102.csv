@@ -1,0 +1,7 @@
+strategy,persona_tag,sample_count,false_positive_rate,false_negative_rate,true_positive,true_negative,false_positive,false_negative
+combined_v5_chain_of_thought,middle_east,306,0.2847222222222222,0.2777777777777778,117,103,41,45
+combined_v5_chain_of_thought,lgbtq,494,0.4876543209876543,0.29411764705882354,120,166,158,50
+combined_v5_chain_of_thought,mexican,209,0.09302325581395349,0.3089430894308943,85,78,8,38
+combined_v5_implicit_examples,mexican,209,0.08139534883720931,0.3170731707317073,84,79,7,39
+combined_v5_implicit_examples,middle_east,306,0.2638888888888889,0.2962962962962963,114,106,38,48
+combined_v5_implicit_examples,lgbtq,494,0.4783950617283951,0.28823529411764703,121,169,155,49

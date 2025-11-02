@@ -1,0 +1,102 @@
+HATE SPEECH DETECTION - STRATEGY EVALUATION REPORT
+============================================================
+Generated: 2025-11-02 19:20:29
+Model: gpt-oss-120b
+Prompt Template File: combined/combined_v5_noise_reduced.json
+Data Source: unified
+Total samples tested: 1009
+
+EXECUTION DETAILS:
+--------------------
+Command Line: prompt_runner.py --data-source unified --strategies combined_v5_chain_of_thought combined_v5_implicit_examples --output-dir outputs/combined_v5/gptoss/production --max-workers 15 --batch-size 8 --prompt-template-file combined/combined_v5_noise_reduced.json
+
+SAMPLE TEST DATA:
+--------------------
+1. Text: whites are the best thing to ever happen to this country
+   Label: hate
+
+2. Text: fuckin hate you faggots who literally story the whole shit of a concert
+   Label: normal
+
+3. Text: middle eastern countries have never done anything for the world
+   Label: hate
+
+... (middle samples) ...
+504. Text: for my first day at school, my parents gave me very strict rules about the clothes i could wear
+   Label: normal
+
+505. Text: trannies are individuals who are obsessed with stereotypes of both sexes which prevents them from fu...
+   Label: hate
+
+... (final samples) ...
+1008. Text: when i first arrived in paris i was greeted with âbonjour!â and âbonsoir!â
+   Label: normal
+
+1009. Text: <user> a son good swede name running in minnesota versus a radical towelhead bet your farm
+   Label: normal
+
+[Showing sample of 7 out of 1009 total test samples]
+
+
+STRATEGY PERFORMANCE:
+-------------------------
+
+COMBINED_V5_CHAIN_OF_THOUGHT Strategy:
+  Accuracy:  0.663
+  Precision: 0.609
+  Recall:    0.708
+  F1-Score:  0.654
+  Confusion Matrix: TP=322, TN=347, FP=207, FN=133
+
+COMBINED_V5_IMPLICIT_EXAMPLES Strategy:
+  Accuracy:  0.667
+  Precision: 0.615
+  Recall:    0.701
+  F1-Score:  0.655
+  Confusion Matrix: TP=319, TN=354, FP=200, FN=136
+
+
+BIAS AND FAIRNESS METRICS BY PERSONA:
+----------------------------------------
+📊 FPR = False Positive Rate (benign→hate misclassification)
+📊 FNR = False Negative Rate (hate→benign missed detection)
+🎯 Lower rates indicate better fairness across personas
+
+COMBINED_V5_CHAIN_OF_THOUGHT Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 494
+     FPR: 0.488 (FP=158, TN=166)
+     FNR: 0.294 (FN=50, TP=120)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 209
+     FPR: 0.093 (FP=8, TN=78)
+     FNR: 0.309 (FN=38, TP=85)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 306
+     FPR: 0.285 (FP=41, TN=103)
+     FNR: 0.278 (FN=45, TP=117)
+     Fairness: ⚠️ REVIEW
+
+
+COMBINED_V5_IMPLICIT_EXAMPLES Strategy - Bias Analysis:
+  📋 Target Group: LGBTQ
+     Samples: 494
+     FPR: 0.478 (FP=155, TN=169)
+     FNR: 0.288 (FN=49, TP=121)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MEXICAN
+     Samples: 209
+     FPR: 0.081 (FP=7, TN=79)
+     FNR: 0.317 (FN=39, TP=84)
+     Fairness: ⚠️ REVIEW
+
+  📋 Target Group: MIDDLE_EAST
+     Samples: 306
+     FPR: 0.264 (FP=38, TN=106)
+     FNR: 0.296 (FN=48, TP=114)
+     Fairness: ⚠️ REVIEW
