@@ -1,5 +1,51 @@
 # GPT-OSS Combined Instruction Fine-Tuning: 5-Iteration Summary & Final Recommendations
 
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Version History & Complete Performance Timeline](#version-history--complete-performance-timeline)
+   - [Baseline (Starting Point)](#baseline-starting-point)
+   - [V1: Combined Policy + Persona with Examples (First Iteration)](#v1-combined-policy--persona-with-examples-first-iteration)
+   - [V2: Cultural Context & Example Optimization (Second Iteration)](#v2-cultural-context--example-optimization-second-iteration)
+   - [V3: Restored Examples with Refined Guidance (Third Iteration)](#v3-restored-examples-with-refined-guidance-third-iteration)
+   - [V4: Minimal Baseline Enhancements (Fourth Iteration)](#v4-minimal-baseline-enhancements-fourth-iteration)
+   - [V5: Noise-Reduced Approaches (Fifth Iteration) - BREAKTHROUGH](#v5-noise-reduced-approaches-fifth-iteration---breakthrough)
+3. [Complete Performance Comparison (All Versions)](#complete-performance-comparison-all-versions)
+   - [Full Timeline: V5 Breakthrough After 4 Failures](#full-timeline-v5-breakthrough-after-4-failures)
+   - [Summary Table: All Strategies Ranked](#summary-table-all-strategies-ranked)
+4. [Key Findings Across All Iterations](#key-findings-across-all-iterations)
+   - [Finding 1: Examples Work When Compressed, Fail When Verbose](#finding-1-examples-work-when-compressed-fail-when-verbose-v5-updated)
+   - [Finding 2: Policy Guidance Works When Compressed](#finding-2-policy-guidance-works-when-compressed-hurts-when-verbose-v5-updated)
+   - [Finding 3: Cultural Context Works When Implicit](#finding-3-cultural-context-works-when-implicit-fails-when-explicit-v5-updated)
+   - [Finding 4: Verbosity Catastrophically Degrades, Compression Succeeds](#finding-4-verbosity-catastrophically-degrades-compression-succeeds-v5-validated)
+   - [Finding 5: Combination Strategies Succeed When Compressed](#finding-5-combination-strategies-succeed-when-compressed-v5-updated)
+   - [Finding 6: High Precision Strategies Have Catastrophic Recall](#finding-6-high-precision-strategies-have-catastrophic-recall-still-true)
+   - [Finding 7: Bias Metrics Show Trade-Offs, Not Pure Improvements](#finding-7-bias-metrics-show-trade-offs-not-pure-improvements-v5-updated)
+   - [Finding 8: Positive Generalization Indicates Robust Strategy](#finding-8-positive-generalization-indicates-robust-strategy-v5-new)
+5. [Why Prompt Engineering Failed (V1-V4): The Science](#why-prompt-engineering-failed-v1-v4-the-science)
+   - [Pre-Training Dominance](#1-pre-training-dominance)
+   - [Conflicting Signals Problem](#2-conflicting-signals-problem)
+   - [Anchoring and Bias Introduction](#3-anchoring-and-bias-introduction)
+   - [The Simplicity-Performance Paradox](#4-the-simplicity-performance-paradox)
+6. [Final Recommendation: Deploy V5, Pursue LoRA](#final-recommendation-deploy-v5-pursue-lora-for-further-gains)
+   - [Production Deployment Decision](#production-deployment-decision)
+   - [Success: V5 Noise-Reduction Breakthrough](#-success-v5-noise-reduction-breakthrough)
+   - [Next Steps: LoRA Fine-Tuning](#next-steps-lora-fine-tuning-for-further-gains-beyond-v5)
+7. [Files and Documentation Reference](#files-and-documentation-reference)
+8. [Beyond Prompt Engineering: Why LoRA Remains Valuable](#beyond-prompt-engineering-why-lora-fine-tuning-remains-valuable)
+   - [What V5 Proved About Instruction Tuning](#what-v5-proved-about-instruction-tuning-prompting)
+   - [LoRA: The Next Frontier](#lora-the-next-frontier)
+9. [Final Summary: The 5-Iteration Journey](#-final-summary-the-5-iteration-journey)
+   - [What We Set Out to Do](#what-we-set-out-to-do)
+   - [What Happened Across 5 Iterations](#what-happened-across-5-iterations)
+   - [The Definitive Answer](#the-definitive-answer)
+   - [Production Deployment](#production-deployment)
+   - [Key Learnings](#key-learnings)
+   - [What's Next](#whats-next)
+10. [References](#references)
+
+---
+
 ## Executive Summary
 
 **Objective**: Beat baseline_standard's F1=0.615 through combined policy + persona prompt engineering approaches.
