@@ -65,6 +65,17 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **Training Runtime** | 825.39 seconds (~13.8 minutes) |
 | **Samples/Second** | 9.763 |
 
+### Training Curves
+
+**Training Loss**:
+![Phase 1 Training Loss](../../../models/lora_default/tensorboard/train_loss.svg)
+
+**Validation Loss**:
+![Phase 1 Eval Loss](../../../models/lora_default/tensorboard/eval_loss.svg)
+
+**Learning Rate Schedule**:
+![Phase 1 Learning Rate](../../../models/lora_default/tensorboard/train_learning_rate.svg)
+
 ### Training Progression
 
 | Checkpoint | Epoch | Step | Eval Loss | Improvement from Previous |
@@ -149,6 +160,17 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **Final Train Loss** | 0.9915 |
 | **Training Runtime** | 1,388.71 seconds (~23.1 minutes) |
 | **Samples/Second** | 9.671 |
+
+### Training Curves
+
+**Training Loss**:
+![Phase 2 Training Loss](../../../models/high_capacity/tensorboard/train_loss.svg)
+
+**Validation Loss**:
+![Phase 2 Eval Loss](../../../models/high_capacity/tensorboard/eval_loss.svg)
+
+**Learning Rate Schedule**:
+![Phase 2 Learning Rate](../../../models/high_capacity/tensorboard/train_learning_rate.svg)
 
 ### Training Progression
 
@@ -243,6 +265,17 @@ Adding the key projection (k_proj) to target modules with full capacity (r=64) s
 | **Final Train Loss** | 1.0768 |
 | **Training Runtime** | 1,101.20 seconds (~18.4 minutes) |
 | **Samples/Second** | 9.757 |
+
+### Training Curves
+
+**Training Loss**:
+![Phase 3 Training Loss](../../../models/k_proj_full_capacity/tensorboard/train_loss.svg)
+
+**Validation Loss**:
+![Phase 3 Eval Loss](../../../models/k_proj_full_capacity/tensorboard/eval_loss.svg)
+
+**Learning Rate Schedule**:
+![Phase 3 Learning Rate](../../../models/k_proj_full_capacity/tensorboard/train_learning_rate.svg)
 
 ### Training Progression
 
@@ -345,6 +378,33 @@ The experiment demonstrates that **more parameters ≠ better performance**. Pha
 4. **Target Achievement**:
    - **F1 ≥ 0.615 target**: ACHIEVED in Phase 2 (0.6852 = +11.4% above target)
    - **F1 ≥ 0.70 target**: NOT ACHIEVED (Phase 2: 0.6852, Phase 3: 0.6491)
+
+### Visual Training Comparison
+
+**Training Loss Convergence** (All Phases):
+
+| Phase 1 (r=32, 3 epochs) | Phase 2 (r=64, 5 epochs) | Phase 3 (r=64+k_proj, 4 epochs) |
+|:------------------------:|:------------------------:|:--------------------------------:|
+| ![P1 Loss](../../../models/lora_default/tensorboard/train_loss.svg) | ![P2 Loss](../../../models/high_capacity/tensorboard/train_loss.svg) | ![P3 Loss](../../../models/k_proj_full_capacity/tensorboard/train_loss.svg) |
+
+**Validation Loss Comparison**:
+
+| Phase 1 (r=32, 3 epochs) | Phase 2 (r=64, 5 epochs) | Phase 3 (r=64+k_proj, 4 epochs) |
+|:------------------------:|:------------------------:|:--------------------------------:|
+| ![P1 Eval](../../../models/lora_default/tensorboard/eval_loss.svg) | ![P2 Eval](../../../models/high_capacity/tensorboard/eval_loss.svg) | ![P3 Eval](../../../models/k_proj_full_capacity/tensorboard/eval_loss.svg) |
+
+**Learning Rate Schedules**:
+
+| Phase 1 (r=32, 3 epochs) | Phase 2 (r=64, 5 epochs) | Phase 3 (r=64+k_proj, 4 epochs) |
+|:------------------------:|:------------------------:|:--------------------------------:|
+| ![P1 LR](../../../models/lora_default/tensorboard/train_learning_rate.svg) | ![P2 LR](../../../models/high_capacity/tensorboard/train_learning_rate.svg) | ![P3 LR](../../../models/k_proj_full_capacity/tensorboard/train_learning_rate.svg) |
+
+**Key Observations from Training Curves**:
+- **Phase 2** shows the smoothest convergence with lowest final validation loss (0.5088)
+- **Phase 1** stopped at 3 epochs but was still improving - could have benefited from more training
+- **Phase 3** converged quickly but plateaued early despite having most parameters (23.9M)
+- All phases show healthy learning rate warmup and cosine decay without training instability
+
 
 ---
 
