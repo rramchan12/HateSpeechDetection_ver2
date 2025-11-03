@@ -67,14 +67,14 @@ This document tracks the results of different LoRA fine-tuning configurations an
 
 ### Training Curves
 
-**Training Loss**:
-![Phase 1 Training Loss](../../../models/lora_default/tensorboard/train_loss.svg)
+**Training Loss**:  
+<img src="../../../models/lora_default/tensorboard/train_loss.svg" width="600" alt="Phase 1 Training Loss">
 
-**Validation Loss**:
-![Phase 1 Eval Loss](../../../models/lora_default/tensorboard/eval_loss.svg)
+**Validation Loss**:  
+<img src="../../../models/lora_default/tensorboard/eval_loss.svg" width="600" alt="Phase 1 Eval Loss">
 
-**Learning Rate Schedule**:
-![Phase 1 Learning Rate](../../../models/lora_default/tensorboard/train_learning_rate.svg)
+**Learning Rate Schedule**:  
+<img src="../../../models/lora_default/tensorboard/train_learning_rate.svg" width="600" alt="Phase 1 Learning Rate">
 
 ### Training Progression
 
@@ -163,14 +163,14 @@ This document tracks the results of different LoRA fine-tuning configurations an
 
 ### Training Curves
 
-**Training Loss**:
-![Phase 2 Training Loss](../../../models/high_capacity/tensorboard/train_loss.svg)
+**Training Loss**:  
+<img src="../../../models/high_capacity/tensorboard/train_loss.svg" width="600" alt="Phase 2 Training Loss">
 
-**Validation Loss**:
-![Phase 2 Eval Loss](../../../models/high_capacity/tensorboard/eval_loss.svg)
+**Validation Loss**:  
+<img src="../../../models/high_capacity/tensorboard/eval_loss.svg" width="600" alt="Phase 2 Eval Loss">
 
-**Learning Rate Schedule**:
-![Phase 2 Learning Rate](../../../models/high_capacity/tensorboard/train_learning_rate.svg)
+**Learning Rate Schedule**:  
+<img src="../../../models/high_capacity/tensorboard/train_learning_rate.svg" width="600" alt="Phase 2 Learning Rate">
 
 ### Training Progression
 
@@ -268,14 +268,14 @@ Adding the key projection (k_proj) to target modules with full capacity (r=64) s
 
 ### Training Curves
 
-**Training Loss**:
-![Phase 3 Training Loss](../../../models/k_proj_full_capacity/tensorboard/train_loss.svg)
+**Training Loss**:  
+<img src="../../../models/k_proj_full_capacity/tensorboard/train_loss.svg" width="600" alt="Phase 3 Training Loss">
 
-**Validation Loss**:
-![Phase 3 Eval Loss](../../../models/k_proj_full_capacity/tensorboard/eval_loss.svg)
+**Validation Loss**:  
+<img src="../../../models/k_proj_full_capacity/tensorboard/eval_loss.svg" width="600" alt="Phase 3 Eval Loss">
 
-**Learning Rate Schedule**:
-![Phase 3 Learning Rate](../../../models/k_proj_full_capacity/tensorboard/train_learning_rate.svg)
+**Learning Rate Schedule**:  
+<img src="../../../models/k_proj_full_capacity/tensorboard/train_learning_rate.svg" width="600" alt="Phase 3 Learning Rate">
 
 ### Training Progression
 
