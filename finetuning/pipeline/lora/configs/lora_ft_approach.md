@@ -28,54 +28,109 @@
 
 ### 1.1 Prompt Engineering Strategy
 
-The prompt template used for instruction fine-tuning follows a structured format designed to align the model with hate speech detection objectives through clear instruction, context, and expected output formatting.
+The prompt template used for instruction fine-tuning follows a chat-based conversational format designed to align the model with hate speech detection objectives through explicit role definition, contextual framing, and structured output formatting.
 
 #### Prompt Template Structure
 
 ```json
 {
-  "instruction": "Classify the following text as 'hate' or 'normal'.",
-  "input": "{text}",
-  "output_format": "Classification: {label}"
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."
+    },
+    {
+      "role": "user", 
+      "content": "Analyze this text for hate speech:\n\nPersona: {target_group}\nText: \"{text}\""
+    },
+    {
+      "role": "assistant",
+      "content": "{\"classification\": \"{hate_speech|not_hate}\", \"confidence\": \"{high|medium|low}\", \"reasoning\": \"{explanation}\", \"protected_group\": \"{MEXICAN|LGBTQ+|MIDDLE_EAST}\"}"
+    }
+  ]
 }
 ```
 
 **Design Rationale**:
-- **Simplicity**: Direct classification task without complex reasoning chains
-- **Clarity**: Explicit binary choice reduces ambiguity in model responses
-- **Consistency**: Standardized format across all training samples
-- **Parsability**: Structured output enables reliable extraction of predictions
+- **System Role**: Establishes expert persona and defines protected demographic groups explicitly
+- **User Role**: Provides demographic context (persona) alongside text for bias-aware classification
+- **Assistant Role**: Structured JSON output with classification (`hate_speech` or `not_hate`), confidence level, reasoning, and protected group (for hate speech cases)
+- **Clarity**: Three-turn conversation format mimics natural instruction-following pattern
+- **Parsability**: JSON response enables reliable extraction of predictions and confidence scores
+- **Bias Awareness**: Persona labels in user message and protected_group in assistant response enable demographic-stratified evaluation
 
 ### 1.2 Baseline Prompt Template
 
-The baseline prompt template (`baseline_v1.json`) was selected based on pre-fine-tuning validation experiments:
+The chat-based prompt template was designed to provide comprehensive context for hate speech detection with explicit protected group awareness:
 
 **Template Characteristics**:
-- Zero-shot instruction format
-- No persona-based context or policy guidelines
-- Direct text-to-label mapping
-- Minimal token overhead (~20-30 tokens per sample)
+- **Multi-turn conversation format**: System → User → Assistant pattern
+- **Expert persona definition**: System message establishes role as hate speech detection expert
+- **Protected group context**: Explicitly mentions LGBTQ+, Mexican, and Middle Eastern communities
+- **Demographic labeling**: Each sample includes persona annotation (HISPANIC, MIDDLE_EAST, LGBTQ+) in user message
+- **Structured JSON output**: 
+  - All samples: `classification`, `confidence`, `reasoning`
+  - Hate speech samples additionally include: `protected_group` field
+- **Token overhead**: ~150-200 tokens per sample (system message + persona context + text)
+- **Data quirk**: Some samples contain double curly braces `{{...}}` in assistant content (escaping artifact)
 
 **Validation Context**:
-The baseline template was validated against sophisticated multi-strategy prompts (policy-based, persona-based, combined) in pre-fine-tuning experiments. Post-fine-tuning validation showed the model successfully internalized task requirements, achieving F1=0.6692 on production data (1,009 samples) with simple prompts, comparable to pre-fine-tuning F1=0.615 achieved with complex prompt engineering.
+The chat-based template with explicit protected group context was designed to improve the model's awareness of bias-sensitive demographics during training. The structured output format distinguishes between hate speech (with `protected_group` field identifying the target) and non-hate speech samples. Post-fine-tuning validation showed the model successfully internalized task requirements, achieving F1=0.6692 on production data (1,009 samples). The `protected_group` field in hate speech responses enables precise demographic-stratified bias analysis.
 
 ### 1.3 Prompt Format for Training Data
 
-Training samples follow the instruction-tuning format compatible with conversational models:
+Training samples follow the chat-based conversational format with system, user, and assistant roles:
 
+**For hate speech samples**:
 ```jsonl
 {
-  "instruction": "Classify the following text as 'hate' or 'normal'.",
-  "input": "Example text here...",
-  "output": "Classification: hate"
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."
+    },
+    {
+      "role": "user",
+      "content": "Analyze this text for hate speech:\n\nPersona: HISPANIC\nText: \"so thats where beaners come from\""
+    },
+    {
+      "role": "assistant",
+      "content": "{\"classification\": \"hate_speech\", \"confidence\": \"high\", \"reasoning\": \"beaners\", \"protected_group\": \"MEXICAN\"}"
+    }
+  ]
+}
+```
+
+**For non-hate speech samples**:
+```jsonl
+{
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."
+    },
+    {
+      "role": "user",
+      "content": "Analyze this text for hate speech:\n\nPersona: MIDDLE_EAST\nText: \"we must learn to live with others even if we do not like them\""
+    },
+    {
+      "role": "assistant",
+      "content": "{\"classification\": \"not_hate\", \"confidence\": \"high\", \"reasoning\": \"This text does not contain hate speech.\"}"
+    }
+  ]
 }
 ```
 
 **Key Properties**:
-- **Instruction Field**: Consistent task description across all samples
-- **Input Field**: Raw text to classify (variable length, max 512 tokens)
-- **Output Field**: Expected classification with standard prefix
-- **Format**: JSONL (one sample per line) for efficient streaming
+- **System Message**: Defines the model's role as a hate speech detection expert with context about protected groups
+- **User Message**: Contains the text to analyze along with demographic persona annotation (HISPANIC, MIDDLE_EAST, LGBTQ+)
+- **Assistant Message**: Structured JSON response with:
+  - `classification`: Either `"hate_speech"` or `"not_hate"`
+  - `confidence`: Confidence level (typically `"high"`)
+  - `reasoning`: Explanation or key offensive terms identified
+  - `protected_group`: Target demographic (only for hate_speech samples) - values: `"MEXICAN"`, `"LGBTQ+"`, `"MIDDLE_EAST"`
+- **Format**: JSONL (one sample per line) with chat-based messages array for instruction fine-tuning
+- **Note**: Some samples have double curly braces `{{...}}` which are escaped during processing
 
 ---
 
@@ -113,11 +168,29 @@ The dataset includes target group annotations for bias analysis:
 **Training File**: `finetuning/data/ft_prompts/train.jsonl`  
 **Validation File**: `finetuning/data/ft_prompts/validation.jsonl`
 
-**Sample Structure**:
+**Sample Structure** (Chat-based format):
+
+*Example 1 - Hate Speech:*
 ```jsonl
-{"instruction": "Classify the following text as 'hate' or 'normal'.", "input": "text sample", "output": "Classification: hate"}
-{"instruction": "Classify the following text as 'hate' or 'normal'.", "input": "text sample", "output": "Classification: normal"}
+{"messages": [{"role": "system", "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."}, {"role": "user", "content": "Analyze this text for hate speech:\n\nPersona: HISPANIC\nText: \"so thats where beaners come from\""}, {"role": "assistant", "content": "{\"classification\": \"hate_speech\", \"confidence\": \"high\", \"reasoning\": \"beaners\", \"protected_group\": \"MEXICAN\"}"}]}
 ```
+
+*Example 2 - Non-Hate Speech:*
+```jsonl
+{"messages": [{"role": "system", "content": "You are an expert hate speech detection system. Analyze the given text and determine if it contains hate speech targeting protected groups (LGBTQ+, Mexican, Middle Eastern communities)."}, {"role": "user", "content": "Analyze this text for hate speech:\n\nPersona: MIDDLE_EAST\nText: \"we must learn to live with others even if we do not like them\""}, {"role": "assistant", "content": "{\"classification\": \"not_hate\", \"confidence\": \"high\", \"reasoning\": \"This text does not contain hate speech.\"}"}]}
+```
+
+**Format Details**:
+- **Messages Array**: Each sample contains a conversation with system, user, and assistant turns
+- **System Role**: Establishes context and task definition (hate speech detection with protected group focus)
+- **User Role**: Presents text with demographic persona label (HISPANIC, MIDDLE_EAST, LGBTQ+) for bias-aware evaluation
+- **Assistant Role**: Returns structured JSON with:
+  - `classification`: `"hate_speech"` or `"not_hate"`
+  - `confidence`: Confidence level (typically `"high"`)
+  - `reasoning`: Explanation text or identified offensive terms
+  - `protected_group`: Target demographic - only present in hate_speech samples (values: `"MEXICAN"`, `"LGBTQ+"`, `"MIDDLE_EAST"`)
+- **Token Limit**: Maximum 512 tokens per conversation (tokenized using model's chat template)
+- **Data Note**: Approximately 55% of samples have double curly braces `{{...}}` in assistant content (escaping artifact from data preparation)
 
 ### 2.4 Data Augmentation
 
