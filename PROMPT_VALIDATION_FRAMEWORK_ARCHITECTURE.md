@@ -93,298 +93,169 @@ This framework serves as the experimental infrastructure for prompt engineering 
 ## Deep Dive: Template Loader Architecture
 
 ### Overview
-The Template Loader subsystem (`loaders/strategy_templates_loader.py`) implements a declarative JSON-based approach to prompt strategy management, enabling researchers to define, modify, and evaluate different prompting strategies across multiple AI models without code modification. This design philosophy supports comparative model evaluation (GPT-5 vs. GPT-OSS) while maintaining experimental rigor through version-controlled configurations.
+The Template Loader subsystem (`loaders/strategy_templates_loader.py`) implements a declarative JSON-based approach to prompt strategy management. Researchers can define and modify prompting strategies through JSON configuration files without code modification, supporting comparative evaluation across multiple AI models (GPT-5 vs. GPT-OSS) while maintaining experimental reproducibility through version control.
 
 ### Template Loader Component Architecture
 
 ```text
-┌──────────────────────────────────────────────────────────────────────────────┐
-│                     TEMPLATE LOADER SUBSYSTEM                                │
-│                  (strategy_templates_loader.py)                              │
-└────────────────────────────────┬─────────────────────────────────────────────┘
-                                 │
-                                 ▼
-              ┌──────────────────────────────────────┐
-              │   JSON Configuration Files           │
-              │   (prompt_templates/ directory)      │
-              └──────────┬───────────────────────────┘
-                         │
-         ┌───────────────┼────────────────┐
-         │               │                │
-         ▼               ▼                ▼
-  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
-  │   BASELINE   │ │   COMBINED   │ │ ALL_COMBINED │
-  │  TEMPLATES   │ │  TEMPLATES   │ │   (Master)   │
-  └──────┬───────┘ └──────┬───────┘ └──────┬───────┘
-         │                │                │
-    ┌────┴────┐      ┌────┴────┐      ┌────┴────┐
-    │  GPT-5  │      │  GPT-5  │      │ All     │
-    │baseline_│      │combined_│      │Strategies│
-    │v1_gpt5  │      │gpt5_v1  │      │(5 total)│
-    └─────────┘      └─────────┘      └─────────┘
-    ┌─────────┐      ┌─────────┐
-    │ GPT-OSS │      │ GPT-OSS │
-    │baseline_│      │combined_│
-    │v1       │      │gptoss_v1│
-    └─────────┘      └─────────┘
-
-                         │
-                         ▼
-        ┌────────────────────────────────────────┐
-        │     STRATEGY REGISTRY                  │
-        │  Dict[str, PromptStrategy]             │
-        │                                        │
-        │  Key-Value Store for O(1) Lookup:     │
-        │  ├─ "baseline_conservative" → Strategy│
-        │  ├─ "baseline_standard" → Strategy    │
-        │  ├─ "combined_optimized" → Strategy   │
-        │  ├─ "combined_focused" → Strategy     │
-        │  └─ "combined_conservative" → Strategy│
-        └────────────────┬───────────────────────┘
-                         │
-                         ▼
-        ┌────────────────────────────────────────┐
-        │   RUNTIME INSTANTIATION                │
-        │                                        │
-        │  For each sample:                      │
-        │  1. Retrieve strategy from registry   │
-        │  2. Format template with {text}       │
-        │  3. Substitute {target_group}         │
-        │  4. Return complete prompt + params   │
-        └────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────────────┐
+│              TEMPLATE LOADER SUBSYSTEM                             │
+│           (strategy_templates_loader.py)                           │
+└──────────────────────────┬─────────────────────────────────────────┘
+                           │
+                           ▼
+        ┌──────────────────────────────────────┐
+        │   JSON Configuration Files           │
+        │   (prompt_templates/ directory)      │
+        └──────┬──────────────┬────────────────┘
+               │              │
+         ┌─────┴─────┐   ┌────┴─────┐
+         ▼           ▼   ▼          ▼
+    ┌─────────┐  ┌─────────┐  ┌──────────┐
+    │BASELINE │  │BASELINE │  │ COMBINED │  
+    │ GPT-5   │  │ GPT-OSS │  │GPT-5/OSS │
+    └─────────┘  └─────────┘  └──────────┘
+         │              │            │
+         └──────────────┴────────────┘
+                        │
+                        ▼
+         ┌──────────────────────────────┐
+         │   STRATEGY REGISTRY          │
+         │   Dict[str, PromptStrategy]  │
+         │                              │
+         │   O(1) Lookup:               │
+         │   • baseline_conservative    │
+         │   • baseline_standard        │
+         │   • combined_optimized       │
+         │   • combined_focused         │
+         │   • combined_conservative    │
+         └──────────────┬───────────────┘
+                        │
+                        ▼
+         ┌──────────────────────────────┐
+         │  RUNTIME INSTANTIATION       │
+         │  1. Retrieve strategy        │
+         │  2. Substitute {text}        │
+         │  3. Substitute {target_group}│
+         │  4. Return prompt + params   │
+         └──────────────────────────────┘
 ```
 
 ### Template Structure Specification
 
-Each JSON template file follows a standardized hierarchical structure designed for declarative prompt engineering:
+Each JSON template contains four layers:
 
-```text
-TEMPLATE FILE STRUCTURE
-═══════════════════════════════════════════════════════════════
-
+```json
 {
-  "strategies": {                          ← Top-level container
-    
-    "strategy_name": {                     ← Unique strategy identifier
+  "strategies": {
+    "strategy_name": {
       
-      ┌─────────────────────────────────────────────────────┐
-      │ 1. METADATA LAYER                                   │
-      ├─────────────────────────────────────────────────────┤
-      │ "name": "strategy_name"                             │
-      │ "description": "Strategy purpose and approach..."   │
-      └─────────────────────────────────────────────────────┘
+      // 1. METADATA LAYER
+      "name": "strategy_name",
+      "description": "Strategy purpose and approach",
       
-      ┌─────────────────────────────────────────────────────┐
-      │ 2. SYSTEM PROMPT LAYER                              │
-      │    (Role Definition & Structural Constraints)       │
-      ├─────────────────────────────────────────────────────┤
-      │ "system_prompt": "You are a content moderation...   │
-      │                                                     │
-      │ Components:                                         │
-      │ ├─ Role Definition: Model's identity/capabilities  │
-      │ ├─ Response Format: JSON structure requirements    │
-      │ ├─ Classification Rules: Label constraints         │
-      │ ├─ Reasoning Instructions: Analysis approach       │
-      │ └─ Detection Focus: What to prioritize            │
-      └─────────────────────────────────────────────────────┘
+      // 2. SYSTEM PROMPT LAYER (Role & Constraints)
+      "system_prompt": "You are a content moderation assistant...\n
+                        - Response format: JSON\n
+                        - Classification rules: hate/normal\n
+                        - Detection focus: slurs, stereotypes, attacks",
       
-      ┌─────────────────────────────────────────────────────┐
-      │ 3. USER TEMPLATE LAYER                              │
-      │    (Parameterized Input with Runtime Substitution)  │
-      ├─────────────────────────────────────────────────────┤
-      │ "user_template": "Policy context...                 │
-      │                                                     │
-      │                  Text: \"{text}\"                   │
-      │                                                     │
-      │                  Community focus for {target_group}│
-      │                  ..."                               │
-      │                                                     │
-      │ Placeholders:                                       │
-      │ ├─ {text}: Sample text for classification          │
-      │ └─ {target_group}: Demographic context (optional)  │
-      └─────────────────────────────────────────────────────┘
+      // 3. USER TEMPLATE LAYER (Parameterized Input)
+      "user_template": "Policy context...\n
+                        Text: \"{text}\"\n
+                        Target group: {target_group}\n
+                        Classify as hate or normal.",
       
-      ┌─────────────────────────────────────────────────────┐
-      │ 4. MODEL PARAMETERS LAYER                           │
-      │    (Generation Hyperparameters)                     │
-      ├─────────────────────────────────────────────────────┤
-      │ "parameters": {                                     │
-      │   "max_tokens": 200-1024,        ← Response length │
-      │   "temperature": 0.0-1.0,        ← Randomness      │
-      │   "top_p": 0.8-1.0,              ← Nucleus sampling│
-      │   "frequency_penalty": 0.0-0.2,  ← Repetition ctrl │
-      │   "presence_penalty": 0.0-0.1,   ← Topic diversity │
-      │   "response_format": "json_object" ← Output format │
-      │ }                                                   │
-      └─────────────────────────────────────────────────────┘
+      // 4. PARAMETERS LAYER (Model Hyperparameters)
+      "parameters": {
+        "max_tokens": 200-650,           // Response length
+        "temperature": 0.0-1.0,          // Randomness control
+        "top_p": 0.8-1.0,                // Nucleus sampling
+        "frequency_penalty": 0.0-0.2,    // Repetition control
+        "presence_penalty": 0.0-0.1,     // Topic diversity
+        "response_format": "json_object" // Output format
+      }
     }
   }
 }
-
-INSTANTIATION FLOW (Runtime)
-═══════════════════════════════════════════════════════════════
-
-Template Definition (Static JSON)
-         │
-         ▼
-   "{text}" placeholder
-         │
-         ▼
-   Runtime Substitution
-   str.format(text="actual sample text...")
-         │
-         ▼
-   Complete Prompt
-   "Classify the following text: actual sample text..."
-         │
-         ▼
-   Submitted to Model API
-   (with parameters: temperature=0.1, max_tokens=512, ...)
 ```
 
-### Template Taxonomy: Baseline vs. Combined Strategies
+**Runtime Instantiation Flow**:
+```
+Static JSON Template → Extract {text} placeholder → 
+Substitute with "actual sample text..." → 
+Complete Prompt → Submit to Model API with parameters
+```
 
-The framework organizes prompt templates into two primary categories, each optimized for different AI models:
+### Template Taxonomy
 
-#### **BASELINE Templates** (Minimal Prompting Approach)
+The framework organizes templates into two categories across two model families:
 
-**Purpose**: Establish performance floor using minimal contextual guidance, relying on model's pre-trained knowledge of hate speech patterns without explicit policy frameworks or community perspectives.
+**Template Categories**:
 
-**Characteristics**:
-- Short, direct instructions (~150-200 words)
-- No explicit policy text or community perspectives
-- Relies on general understanding of "hate speech" and "social norms"
-- Minimal token usage (200-350 tokens max)
+1. **BASELINE Templates**: Minimal prompting (~150-200 words)
+   - Purpose: Establish performance floor without explicit guidance
+   - Characteristics: No policy text, no community perspectives, general hate speech understanding
+   - Token allocation: 200-350 tokens
 
-**Model-Specific Variants**:
+2. **COMBINED Templates**: Advanced multi-faceted prompting (~800-1500 words)
+   - Purpose: Maximize accuracy and fairness through policy + community perspectives + few-shot examples
+   - Characteristics: X platform policy, LGBTQ+/Middle Eastern/Mexican Latino perspectives, cultural awareness, coded hate detection
+   - Token allocation: 400-650 tokens
 
-1. **GPT-5 Baseline Templates** (`baseline_v1_gpt5.json`):
-   - Three variants optimized for GPT-5's enhanced reasoning:
-     * `baseline_conservative`: Ultra-low temperature (1.0), 200 tokens, minimal overhead
-     * `baseline_standard`: Balanced parameters (temp=1.0), 300 tokens, reliability focus
-     * `baseline_balanced`: Production-optimized (temp=1.0), 350 tokens, comprehensive rationale
-   - Leverages GPT-5's improved safety alignment and contextual understanding
-   - Designed to test GPT-5's zero-shot hate speech detection without scaffolding
+**Model-Specific Optimization**:
 
-2. **GPT-OSS Baseline Templates** (`baseline_v1.json`):
-   - Single baseline variant optimized for open-source models
-   - Temperature: 0.1 (lower for more deterministic outputs on OSS models)
-   - Max tokens: 512 (standard allocation)
-   - Tests OSS model capabilities without advanced prompting techniques
+- **GPT-5 Templates**: 
+  - Temperature: 1.0 (leveraging improved reasoning stability)
+  - Variants: 3 baseline (conservative/standard/balanced), 3 combined (optimized/focused/conservative)
+  
+- **GPT-OSS Templates**: 
+  - Temperature: 0.0-0.1 (compensating for output variance)
+  - Variants: 1 baseline, 3 combined (optimized/focused/conservative)
 
-**Experimental Value**: Establishes baseline performance metrics against which advanced prompting strategies (Combined) can be compared to quantify prompt engineering impact.
+### Loading Process
 
-#### **COMBINED Templates** (Advanced Multi-Faceted Approach)
+**Initialization → Parsing → Runtime Access**:
 
-**Purpose**: Maximize detection accuracy and demographic fairness by integrating multiple complementary perspectives: (1) X platform's official hateful conduct policy for regulatory compliance, (2) community-informed harm analysis from LGBTQ+, Middle Eastern, and Mexican/Latino perspectives, and (3) few-shot examples demonstrating edge cases.
-
-**Characteristics**:
-- Extended, structured instructions (~800-1500 words)
-- Explicit policy text from X platform's hateful conduct guidelines
-- Community-specific harm assessment frameworks
-- Few-shot examples for Mexican/Latino, LGBTQ+, and Middle Eastern contexts
-- Cultural awareness guidance (in-group reclamation vs. out-group attacks)
-- Coded/subtle hate detection emphasis
-- Higher token allocation (400-650 tokens max)
-
-**Model-Specific Variants**:
-
-1. **GPT-5 Combined Templates** (`combined_gpt5_v1.json`):
-   - Three temperature-optimized variants for GPT-5:
-     * `combined_optimized`: Confidence-aware analysis (temp=1.0, 650 tokens)
-       - Adaptive reasoning: high-confidence cases get direct classification, ambiguous cases get multi-perspective analysis
-       - Explicit confidence scoring: {"classification": "hate", "confidence": "high/medium/low"}
-       - Expanded few-shot examples with Mexican/Latino immigration hate detection focus
-     * `combined_focused`: Cultural context integration (temp=1.0, 500 tokens)
-       - Direct binary classification with cultural awareness framework
-       - Historical context and power dynamics considerations
-       - Balanced few-shot coverage across all three demographic groups
-     * `combined_conservative`: Minimal overhead precision (temp=1.0, 400 tokens)
-       - High-confidence scenario optimization
-       - Condensed examples while maintaining core policy + community perspectives
-   - All GPT-5 variants use temperature=1.0 (leveraging GPT-5's improved reasoning stability)
-
-2. **GPT-OSS Combined Templates** (`combined_gptoss_v1.json`):
-   - Three temperature-tuned variants for open-source models:
-     * `combined_optimized`: Comprehensive approach (temp=0.1, 512 tokens)
-       - Full policy text with few-shot examples
-       - Detailed Mexican/Latino hate vs. policy discussion examples
-       - LGBTQ+ in-group reclamation context
-     * `combined_focused`: Balanced variant (temp=0.05, 256 tokens)
-       - Restored LGBTQ+ cultural context
-       - Focused few-shot examples
-       - Lower temperature for deterministic outputs
-     * `combined_conservative`: High-precision variant (temp=0.0, 256 tokens)
-       - Zero temperature for maximum determinism
-       - Conservative token allocation
-       - Minimal but effective guidance
-   - OSS variants use lower temperatures (0.0-0.1) to compensate for potentially higher output variance
-
-**Experimental Value**: Tests hypothesis that explicit policy + community perspectives + cultural awareness significantly improves hate speech detection accuracy and reduces demographic bias compared to baseline prompting.
-
-### Template Loading Process
-
-**Phase 1: Initialization**
 ```python
+# Phase 1: Initialization
 loader = StrategyTemplatesLoader(templates_file_path)
-├─ Resolve file path (default: prompt_templates/combined/all_combined.json)
-├─ Initialize empty registry: strategies = {}
-└─ Auto-invoke load_strategies()
-```
+# Resolves path, initializes registry, loads strategies
 
-**Phase 2: JSON Parsing & Object Construction**
-```python
+# Phase 2: JSON Parsing
 load_strategies()
-├─ Open JSON file with UTF-8 encoding
-├─ Parse JSON: data = json.load(f)
-├─ Extract strategies dict: data["strategies"]
-└─ For each strategy_name, strategy_config:
-   ├─ Extract system_prompt string
-   ├─ Extract user_template string
-   ├─ Create PromptTemplate(system_prompt, user_template)
-   ├─ Extract parameters dict
-   ├─ Create PromptStrategy(name, description, template, parameters)
-   └─ Register: strategies[strategy_name] = PromptStrategy(...)
-```
+# Reads JSON → Parses {"strategies": {...}} → 
+# Creates PromptTemplate + PromptStrategy objects →
+# Stores in registry: strategies[name] = PromptStrategy(...)
 
-**Phase 3: Runtime Strategy Retrieval & Instantiation**
-```python
-# Orchestration layer requests strategy
+# Phase 3: Runtime Retrieval
 strategy = loader.strategies["combined_optimized"]  # O(1) lookup
-
-# Format prompt with sample data
 formatted_prompt = strategy.format_prompt(
-    text="Sample text to classify...",
+    text="Sample text...", 
     target_group="lgbtq"
 )
-# Returns: Complete prompt with {text} and {target_group} substituted
-
-# Get model parameters
 params = strategy.get_model_parameters()
-# Returns: {"max_tokens": 650, "temperature": 1.0, ...}
 
-# Submit to model API
+# Submit to model
 response = model_connector.complete(
     messages=[SystemMessage(system_prompt), UserMessage(formatted_prompt)],
     **params
 )
 ```
 
-### Design Rationale & Benefits
+### Design Benefits
 
-**Model-Agnostic Infrastructure**: Single loading mechanism supports both GPT-5 and GPT-OSS templates, enabling controlled comparative evaluation where template content is the experimental variable.
+**Declarative Configuration**: JSON-based template definition enables rapid experimental iteration without code changes, reducing development cycle from minutes to seconds.
 
-**Declarative Configuration**: Researchers modify JSON files to test new prompting strategies without touching Python code, reducing iteration time from minutes to seconds and minimizing bugs.
+**Model-Agnostic Architecture**: Single loading mechanism supports both GPT-5 and GPT-OSS templates, isolating prompt design as the experimental variable for controlled comparative evaluation.
 
-**Version Control & Reproducibility**: All templates are Git-versioned, enabling bitwise-identical prompt reconstruction across experimental replications and peer review validation.
+**Reproducibility**: Git-versioned JSON configurations ensure bitwise-identical prompt reconstruction across experimental replications and enable peer review validation.
 
-**Temperature Optimization by Model Family**: GPT-5 templates use higher temperatures (1.0) leveraging improved reasoning stability, while GPT-OSS templates use lower temperatures (0.0-0.1) for deterministic outputs, reflecting model-specific tuning.
+**Stratified Complexity Testing**: Baseline templates (~200 words) establish performance floor, Combined templates (~800-1500 words) test performance ceiling, quantifying prompt engineering impact through controlled comparison.
 
-**Stratified Complexity**: Baseline templates establish performance floor (~200 words), Combined templates test ceiling (~800-1500 words), enabling quantification of prompt engineering impact through controlled comparison.
+**Parameter Optimization**: Model-specific temperature tuning (GPT-5: 1.0, GPT-OSS: 0.0-0.1) and token allocation (baseline: 200-350, combined: 400-650) optimized per model family characteristics.
 
-**Few-Shot Learning Integration**: Combined templates include targeted examples addressing known failure modes (Mexican/Latino immigration hate, LGBTQ+ in-group reclamation context), informed by error analysis from baseline validation runs.
-
-This template loader architecture serves as the foundation for systematic prompt engineering experimentation, enabling rigorous evaluation of how prompt design choices (baseline vs. combined), cultural context integration, and model selection (GPT-5 vs. GPT-OSS) impact hate speech detection performance and demographic fairness.
+This architecture provides the foundation for systematic evaluation of prompt design choices (baseline vs. combined), cultural context integration, and model selection (GPT-5 vs. GPT-OSS) on hate speech detection performance and demographic fairness. Subsequent sections detail individual template strategies and their empirical performance.
 
 ---
 
