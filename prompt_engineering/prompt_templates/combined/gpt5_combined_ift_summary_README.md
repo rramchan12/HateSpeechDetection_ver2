@@ -129,7 +129,7 @@ This template implements three distinct architectural patterns optimized for GPT
 
 ### 1. combined_optimized - Hybrid Architecture with Adaptive Reasoning
 
-**Architecture**: Multi-stage confidence-based analysis combining GPT-5's proven hybrid_fast_accurate framework (F1=0.598 baseline) with few-shot learning from GPT-OSS success (Mexican FPR: 83%→7%).
+**Architecture**: Multi-stage confidence-based analysis combining GPT-5's proven hybrid_fast_accurate framework (F1=0.598 baseline) with few-shot learning from GPT-OSS V5 breakthrough (implicit_examples: F1=0.655, +6.5% over baseline through noise reduction).
 
 **System Prompt Design**:
 - **Confidence Assessment**: High/medium/low classification for adaptive analysis depth
@@ -162,7 +162,7 @@ This template implements three distinct architectural patterns optimized for GPT
 - **Confidence-Based Recall**: Balances detection sensitivity (MEDIUM→err toward flagging) with precision (LOW→normal unless clear)
 - **PRECISION GUARD**: Explicit "do not flag factual discussions" prevents Middle Eastern FPR
 - **Priority Ordering**: Mexican examples FIRST leverages recency bias for immigration-based hate detection
-- **Hybrid Architecture**: Proven GPT-5 baseline (F1=0.598) + few-shot learning (GPT-OSS FPR reduction 83%→7%)
+- **Hybrid Architecture**: Proven GPT-5 baseline (F1=0.598) + few-shot learning (GPT-OSS V5 implicit_examples F1=0.655 through compressed signal encoding)
 
 **Expected Performance**:
 - **F1-Score**: 0.58-0.62 (target baseline hybrid_fast_accurate F1=0.598)
@@ -361,83 +361,84 @@ This template implements three distinct architectural patterns optimized for GPT
 
 ## Key Findings from GPT-5 Combined Policy-Persona with Architectural Optimization
 
-### 1. Architectural Optimization Achieves Scale Robustness Under Temperature Constraint
+### 1. Architectural Optimization Enables Competitive Performance Despite Temperature Constraint
 
-**Evidence**: Production validation (1,009 samples) showed F1 improvement +2.0% (0.587→0.607) vs. typical degradation patterns. GPT-5 combined achieved accuracy improvement +4.8% (62.0%→66.8%) and precision improvement +6.5% (58.7%→65.2%) at scale.
+**Evidence**: Production validation (1,009 samples) showed F1 improvement +2.0% (0.587→0.607) with accuracy +4.8% (62.0%→66.8%) and precision +6.5% (58.7%→65.2%) at scale. However, GPT-OSS V5 achieved F1=0.655 (+4.8% over GPT-5) through noise-reduction with implicit examples.
 
-**Implication**: Hybrid adaptive reasoning architecture with few-shot examples demonstrates superior generalization at scale under fixed temperature=1.0 constraint. Unlike baseline approaches showing performance degradation with dataset scaling, architectural sophistication (650 tokens, confidence-based reasoning, 9 few-shot examples) enables performance improvement. This validates prompt engineering as viable optimization strategy when hyperparameter tuning unavailable.
+**Implication**: Hybrid adaptive reasoning architecture with few-shot examples demonstrates viable optimization under fixed temperature=1.0 constraint, achieving F1=0.607. However, GPT-OSS V5's breakthrough (F1=0.655 with compressed 60-word signals) proves that signal compression outperforms architectural complexity. V5's ruthless noise reduction (6 implicit examples without policy text) achieves +7.9% better F1 than GPT-5's sophisticated 650-token adaptive reasoning, validating that demonstration beats explanation regardless of architectural sophistication or token budget. GPT-5's approach represents best achievable performance through architectural engineering alone, while V5 demonstrates compression superiority.
 
-### 2. Few-Shot Learning Achieves Exceptional Precision for Immigration-Based Hate Detection
+### 2. Few-Shot Learning Achieves Exceptional Precision but Recall Lags Compressed Approaches
 
-**Evidence**: Production validation showed Mexican FPR=5.8% (only 5 false positives out of 86 normal samples), representing -24.2% improvement from 100-sample testing (30.0%→5.8%). Middle Eastern FPR similarly improved -22.4% (38.5%→16.1%).
+**Evidence**: Production validation showed Mexican FPR=5.8% (only 5 false positives out of 86 normal samples) but FNR=48.8%. GPT-OSS V5 achieved Mexican FPR=8.1%, FNR=31.7%—trading 2.3% precision for 17.1% recall improvement.
 
-**Implication**: Explicit few-shot examples demonstrating hate vs. policy distinction (e.g., "These Mexicans are all illegals" vs. "Border policy needs reform") provide stable pattern grounding that generalizes effectively to diverse content at scale. Mexican FPR=5.8% approaches GPT-OSS's production performance (7.0% with adjustable temperature), validating few-shot learning as effective mitigation for temperature=1.0 constraint. Priority ordering (Mexican examples FIRST) maintains pattern salience despite sampling variability.
+**Implication**: GPT-5's nine explicit few-shot examples with verbose explanations (e.g., "These Mexicans are all illegals" with annotations) achieve best-in-class precision (5.8% FPR) but sacrifice recall (48.8% FNR missing nearly half of hate speech). V5's compressed approach (6 implicit examples, ~60 words, no explanations) demonstrates superior recall-precision balance. This validates V5's core finding: verbose examples with explanatory text introduce noise reducing sensitivity, while compressed examples maintain precision while dramatically improving recall. Priority ordering (Mexican FIRST) works under both approaches, but compression effectiveness depends on signal density not explanation verbosity.
 
-### 3. Token Budget Critically Determines Recall Under Fixed Temperature
+### 3. Token Budget Matters Less Than Signal Compression for Recall Performance
 
-**Evidence**: 650 tokens (optimized) achieved recall=56.8% production with FNR 40.8-48.8% across groups. 500 tokens (focused) achieved recall=48.9% with FNR 43.8-57.9%. 400 tokens (conservative) achieved recall=42.6% with FNR 52.6-62.5%.
+**Evidence**: GPT-5 650 tokens (optimized) achieved recall=56.8%, FNR 40.8-48.8%. GPT-OSS V5 512 tokens achieved recall=70.1%, FNR 28.8-31.7%—superior recall with 21% fewer tokens.
 
-**Implication**: With temperature fixed at 1.0, token capacity becomes primary determinant of detection sensitivity. Each 150-token reduction correlates with ~10% recall decrease. Production deployment requires minimum 600 tokens for balanced detection (FNR <50% across groups). Token-recall dependency demonstrates that architectural complexity compensates for temperature variability—insufficient reasoning space amplifies sampling variance impact.
+**Implication**: V5's breakthrough invalidates token budget determinism under fixed temperature. GPT-5's finding that "each 150-token reduction correlates with ~10% recall decrease" holds only within verbose architectural approaches. V5 demonstrates that compressed signals (implicit examples without policy text) achieve +23% better recall (70.1% vs 56.8%) with fewer tokens (512 vs 650). This proves signal compression efficiency: high-density pattern encoding in minimal token space outperforms verbose multi-stage reasoning. Under temperature=1.0, architectural complexity without compression amplifies noise; compression reduces noise enabling better recall despite sampling variability.
 
-### 4. LGBTQ+ In-Group Reclamation Framework Achieves Architectural Fairness
+### 4. LGBTQ+ Framework Achieves Precision-Focused Fairness with Recall Trade-off
 
-**Evidence**: Production validation showed LGBTQ+ FPR=34.1%, FNR=40.8% (6.7% difference), maintaining symmetric error distribution from 100-sample testing (36.7% vs. 36.8%, 0.1% difference). Both scales show balanced TP/TN/FP/FN distributions.
+**Evidence**: Production validation showed LGBTQ+ FPR=34.1%, FNR=40.8% (6.7% difference), maintaining symmetric distribution. GPT-OSS V5 achieved FPR=47.8%, FNR=28.8%—opposite tradeoff favoring recall.
 
-**Implication**: In-group reclamation framework with harm vs. affirmation indicators (distinguishing "I'm queer and proud" from "Queers are disgusting") achieves architectural fairness—neither systematically over-flagging benign content nor missing hate speech. Temperature=1.0 variability affects both error types equally across scales, indicating robust balanced detection mechanism. While both error rates exceed fairness threshold (30%), symmetric distribution at both scales demonstrates unbiased processing resilient to dataset diversity.
+**Implication**: GPT-5's in-group reclamation framework with verbose harm vs. affirmation indicators achieves better precision (34.1% vs 47.8% FPR) but worse recall (40.8% vs 28.8% FNR) compared to V5's compressed approach. Different optimization priorities: GPT-5 prioritizes avoiding overcriminalization of LGBTQ+ self-expression (lower FPR), V5 prioritizes detecting hate (lower FNR). For safety-critical applications, V5's approach (detecting 71.2% of hate vs GPT-5's 59.2%) may be preferable despite higher false positive rate. Both exceed fairness threshold (30%), but V5's recall advantage better protects vulnerable communities.
 
-### 5. Precision-Recall Balance Through Adaptive Confidence Architecture
+### 5. Adaptive Confidence Architecture Achieves Balance Within Precision-Focused Design
 
-**Evidence**: 100-sample testing achieved perfect precision-recall balance (both 0.587) with FN/FP ratio 1.00:1 (19 FN, 19 FP). Production showed FN/FP ratio 1.42:1 (196 FN, 138 FP), indicating minor shift toward under-detection at scale.
+**Evidence**: 100-sample testing achieved perfect precision-recall balance (both 0.587) with FN/FP ratio 1.00:1. Production showed FN/FP ratio 1.42:1 (196 FN, 138 FP). GPT-OSS V5 achieved superior recall (70.1% vs 56.8%) indicating different FN/FP balance.
 
-**Implication**: Confidence-based adaptive reasoning (high confidence → direct classification; low confidence → multi-perspective analysis) successfully balances hate detection sensitivity with overcriminalization prevention under temperature=1.0 variability. Perfect balance at 100 samples validates architectural design; minor shift at production scale (1.42:1) reflects acceptable precision-recall tradeoff. Contrast with fixed-depth strategies showing 1.71-1.80:1 ratios demonstrates adaptive architecture advantage.
+**Implication**: Confidence-based adaptive reasoning successfully balances within its design constraints, achieving 1.42:1 FN/FP ratio under temperature=1.0. However, V5's compressed approach achieves fundamentally different balance: lower FNR (better hate detection) despite temperature disadvantage. GPT-5's perfect 1.00:1 balance at 100 samples demonstrates architectural design validity, but production shift to 1.42:1 (more false negatives) reveals precision prioritization. This validates V5's finding that verbose approaches become conservative at scale, while compressed signals maintain sensitivity. Adaptive architecture provides best balance within verbose framework, but cannot overcome inherent compression advantage.
 
-### 6. Cross-Group FPR Improvement at Scale Validates Few-Shot Generalization
+### 6. Cross-Group FPR Improvement Validates Few-Shot Generalization with Precision Focus
 
-**Evidence**: Production scale showed universal FPR reduction: LGBTQ+ -2.6% (36.7%→34.1%), Mexican -24.2% (30.0%→5.8%), Middle Eastern -22.4% (38.5%→16.1%).
+**Evidence**: Production scale showed universal FPR reduction: LGBTQ+ -2.6% (36.7%→34.1%), Mexican -24.2% (30.0%→5.8%), Middle Eastern -22.4% (38.5%→16.1%). All improvements maintain or slightly increase FNR.
 
-**Implication**: Few-shot examples improve specificity at scale as model encounters diverse normal content expressions. Dataset diversity (1,009 samples vs. 100 samples) exposes model to broader range of benign policy discussions and factual content, improving distinction from hate speech. Mexican and Middle Eastern groups show dramatic FPR improvements, suggesting few-shot examples for these groups generalize particularly well. Minor FNR increases (3-4%) represent acceptable tradeoff for major FPR gains.
+**Implication**: Few-shot examples improve specificity at scale across both GPT-5 and V5 approaches, confirming generalization validity. However, GPT-5's dramatic FPR reductions (5.8-34.1% range) come with recall sacrifice (40.8-48.8% FNR range), while V5 achieves competitive FPR (8.1-47.8%) with superior FNR (28.8-31.7%). This demonstrates precision-recall optimization philosophy difference: GPT-5's verbose examples with architectural complexity optimize for specificity (avoiding false accusations), V5's compressed examples optimize for balanced performance. Dataset diversity benefits both, but compression enables maintaining recall gains while verbose approaches trade recall for precision at scale.
 
 ---
 
-## Comparison: GPT-5 vs. GPT-OSS Combined Approaches
+## Comparison: GPT-5 vs. GPT-OSS V5 Combined Approaches
 
 ### Performance Comparison (100-Sample Testing)
 
-| Metric | GPT-5 Optimized | GPT-OSS Optimized | Difference | Analysis |
-|--------|-----------------|-------------------|------------|----------|
-| **F1-Score** | 0.587 | 0.614 | -2.7% | Temperature constraint impact |
-| **Accuracy** | 62% | 61% | +1% | GPT-5 precision improvement |
-| **Precision** | 0.587 | 0.574 | +1.3% | Balanced architecture benefit |
-| **Recall** | 0.587 | 0.660 | -7.3% | Temperature variability reduces sensitivity |
-| **FN/FP Ratio** | 1.00:1 | 1.29:1 | Perfect balance | Adaptive confidence advantage |
+| Metric | GPT-5 Optimized | GPT-OSS V5 implicit_examples | Difference | Analysis |
+|--------|-----------------|------------------------------|------------|----------|
+| **F1-Score** | 0.587 | **0.627** | **-4.0%** | V5 noise reduction advantage |
+| **Accuracy** | 62% | 62% | 0% | Comparable overall performance |
+| **Precision** | 0.587 | 0.582 | +0.5% | GPT-5 slight precision edge |
+| **Recall** | 0.587 | **0.681** | **-9.4%** | V5 compressed signals boost sensitivity |
+| **FN/FP Ratio** | 1.00:1 | N/A | Perfect balance | Adaptive confidence advantage |
 
 ### Performance Comparison (Production Scale)
 
-| Metric | GPT-5 Production (1,009) | GPT-OSS Production (1,009) | Difference | Analysis |
-|--------|--------------------------|----------------------------|------------|----------|
-| **F1-Score** | **0.607** | 0.590 | **+1.7%** | ✅ GPT-5 advantage at scale |
-| **Accuracy** | **66.8%** | 64.5% | +2.3% | ✅ GPT-5 better overall |
-| **Precision** | **65.2%** | 61.6% | +3.6% | ✅ GPT-5 reduces false positives |
-| **Recall** | 56.8% | **56.7%** | +0.1% | Comparable sensitivity |
-| **FN/FP Ratio** | 1.42:1 | 1.22:1 | GPT-5 more conservative | Minor precision-recall tradeoff |
+| Metric | GPT-5 Production (1,009) | GPT-OSS V5 Production (1,009) | Difference | Analysis |
+|--------|--------------------------|-------------------------------|------------|----------|
+| **F1-Score** | 0.607 | **0.655** | **-4.8%** | ✅ V5 breakthrough validates noise reduction |
+| **Accuracy** | 66.8% | **66.7%** | +0.1% | Virtually identical |
+| **Precision** | 65.2% | 61.5% | +3.7% | ✅ GPT-5 better precision |
+| **Recall** | 56.8% | **70.1%** | **-13.3%** | ✅ V5 compressed examples dramatically improve sensitivity |
+| **FN/FP Ratio** | 1.42:1 | N/A | GPT-5 more conservative | Minor precision-recall tradeoff |
 
 ### Bias Fairness Comparison (Production Scale)
 
-| Group | Metric | GPT-5 Production | GPT-OSS Production | Difference | Analysis |
-|-------|--------|------------------|---------------------|------------|----------|
-| **Mexican** | FPR | **5.8%** | 7.0% | **-1.2%** | ✅ GPT-5 exceptional precision |
-| **Mexican** | FNR | 48.8% | 48.0% | +0.8% | Comparable recall |
-| **LGBTQ+** | FPR | **34.1%** | 39.2% | **-5.1%** | ✅ GPT-5 better precision |
-| **LGBTQ+** | FNR | 40.8% | **41.2%** | -0.4% | Comparable recall |
-| **Middle East** | FPR | **16.1%** | 19.4% | **-3.3%** | ✅ GPT-5 better precision |
-| **Middle East** | FNR | 41.4% | **42.0%** | -0.6% | Comparable recall |
+| Group | Metric | GPT-5 Production | GPT-OSS V5 Production | Difference | Analysis |
+|-------|--------|------------------|------------------------|------------|----------|
+| **Mexican** | FPR | **5.8%** | 8.1% | **-2.3%** | ✅ GPT-5 exceptional precision |
+| **Mexican** | FNR | 48.8% | **31.7%** | **+17.1%** | ✅ V5 compressed signals dramatically improve recall |
+| **LGBTQ+** | FPR | **34.1%** | 47.8% | **-13.7%** | ✅ GPT-5 better precision |
+| **LGBTQ+** | FNR | 40.8% | **28.8%** | **+12.0%** | ✅ V5 better recall |
+| **Middle East** | FPR | **16.1%** | 26.4% | **-10.3%** | ✅ GPT-5 better precision |
+| **Middle East** | FNR | 41.4% | **29.6%** | **+11.8%** | ✅ V5 better recall |
 
 **Critical Production Comparison Findings**:
 
-1. **Scale Performance Reversal**: GPT-5 outperforms GPT-OSS at production scale (F1: 0.607 vs. 0.590, +1.7%) despite temperature constraint, validating architectural optimization superiority for large-scale deployment
-2. **Universal FPR Advantage**: GPT-5 achieves better precision across all protected groups (Mexican -1.2%, LGBTQ+ -5.1%, Middle East -3.3%), indicating adaptive confidence architecture reduces overcriminalization
-3. **Comparable Recall Maintenance**: Both models show similar FNR (40-49% range), suggesting temperature=1.0 does not significantly impair sensitivity vs. temperature=0.1 at production scale
-4. **Mexican Detection Excellence**: GPT-5 achieves 5.8% FPR (best across both models), surpassing GPT-OSS's 7.0% despite temperature disadvantage—validating few-shot priority ordering effectiveness
+1. **V5 Noise-Reduction Breakthrough**: GPT-OSS V5 achieves F1=0.655 (+4.8% over GPT-5) through compressed signal encoding (implicit examples without policy text), validating that demonstration beats explanation even under temperature constraints
+2. **Precision-Recall Tradeoff**: GPT-5 achieves superior precision across all groups (5.8-34.1% FPR vs. 8.1-47.8%), while V5 achieves superior recall (28.8-31.7% FNR vs. 40.8-48.8%)—different optimization priorities
+3. **GPT-OSS V5 Evolution**: Five iterative cycles (V1-V4 failed with 4-28% degradation from verbose approaches; V5 succeeded through ruthless compression to 60-90 words) demonstrate that effective prompting requires high-density pattern encoding
+4. **Mexican Detection Trade-off**: GPT-5 achieves lowest FPR (5.8%) but moderate FNR (48.8%), while V5 balances with FPR=8.1% and superior FNR=31.7%—V5's compressed examples improve recall without catastrophic precision loss
+5. **Architectural vs. Compression Optimization**: GPT-5's adaptive confidence architecture compensates for fixed temperature through complexity, while V5 demonstrates compression superiority—implicit examples (6 total, ~60 words) outperform verbose guidance regardless of architectural sophistication
 
 ---
 
@@ -490,7 +491,8 @@ This template implements three distinct architectural patterns optimized for GPT
 
 ### Comparative Analysis
 
-- **GPT-OSS Combined**: `gpt_oss_combined_ift_summary_README.md`
+- **GPT-OSS Combined V5**: `gpt_oss_combined_ift_5iter_summary.md` (latest 5-iteration evolution, V5 noise-reduction breakthrough)
+- **GPT-OSS Combined V1** (deprecated): `gpt_oss_combined_ift_summary_README.md` (early few-shot approach, superseded by V5)
 - **Baseline Architectures**: `baseline_v1_README.md`
 - **Dataset Unification**: `data_preparation/UNIFICATION_APPROACH.md`
 

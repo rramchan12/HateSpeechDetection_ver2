@@ -143,14 +143,24 @@ Set these environment variables or update the YAML file directly:
 
 ## Features
 
-### **Four Prompt Strategies (JSON-Configurable)**
+### **Multiple Prompt Strategies (JSON-Configurable)**
 
-All strategies are loaded from `prompt_templates/all_combined.json` for easy customization and enforce structured JSON response format with rationale:
+All strategies are loaded from `prompt_templates/all_combined.json` or `prompt_templates/combined/combined_v5.json` for easy customization and enforce structured JSON response format with rationale.
 
+**Available Strategies**:
 1. **Baseline**: Simple classification without additional context
 2. **Policy**: Platform guidelines-based content moderation  
 3. **Persona**: Multi-perspective evaluation with role-based analysis
 4. **Combined**: Policy + persona approach with comprehensive bias detection
+5. **Enhanced Combined**: Advanced fusion with enhanced reasoning
+6. **V5 Noise-Reduced Strategies** (5 variants): Compressed prompts (60-90 words) with pattern demonstration
+   - `combined_v5_implicit_examples`: Contrasting examples without explanations
+   - `combined_v5_chain_of_thought`: 4-step structured reasoning
+   - `combined_v5_compressed_tokens`: Token-efficient policy
+   - `combined_v5_minimal_signal`: Ultra-minimal approach
+   - `combined_v5_example_only`: Pure examples without framing
+
+**For Performance Results**: See `prompt_templates/combined/gpt_oss_combined_ift_5iter_summary.md` for comprehensive 5-iteration analysis and performance metrics.
 
 ### **JSON Response Format with Rationale**
 
@@ -442,12 +452,32 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 
 ### Strategy Options
 
+**Available Strategies**:
 - `baseline`: Direct hate speech classification
 - `policy`: Platform guidelines-based moderation
 - `persona`: Multi-perspective evaluation with bias awareness
 - `combined`: Policy + persona fusion approach
 - `enhanced_combined`: Advanced fusion with enhanced reasoning
-- `all`: Execute all five strategies
+- `combined_v5_implicit_examples`: V5 pattern demonstration (contrasting examples)
+- `combined_v5_chain_of_thought`: V5 4-step structured reasoning
+- `combined_v5_compressed_tokens`: V5 token-efficient policy
+- `combined_v5_minimal_signal`: V5 ultra-minimal approach
+- `combined_v5_example_only`: V5 pure examples (no framing)
+- `all`: Execute all available strategies
+
+**Usage Examples**:
+```bash
+# Test specific strategy
+python prompt_runner.py --data-source canned_50_quick --strategies baseline
+
+# Test multiple strategies
+python prompt_runner.py --data-source unified --sample-size 50 --strategies baseline policy combined_v5_implicit_examples
+
+# Test all strategies
+python prompt_runner.py --data-source unified --sample-size 100 --strategies all
+```
+
+**For Performance Comparison**: See `prompt_templates/combined/gpt_oss_combined_ift_5iter_summary.md` for detailed strategy performance analysis.
 
 ### Data Source Options
 
@@ -485,6 +515,27 @@ python prompt_runner.py --metrics-only --run-id run_20250920_015821
 2. **Loaders Package**: Extend data sources or template formats in `loaders/`
 3. **Metrics Package**: Add new evaluation metrics or output formats in `metrics/`
 4. Each package has its own `__init__.py` with proper exports for clean imports
+
+## Results Documentation
+
+For comprehensive performance analysis and iteration history:
+
+- **5-Iteration Summary**: `prompt_templates/combined/gpt_oss_combined_ift_5iter_summary.md`
+  - Complete performance timeline across all iterations
+  - All strategies tested and ranked with metrics
+  - Key findings and production recommendations
+  
+- **Policy-Persona Analysis**: `prompt_templates/combined/gpt_oss_iter5_policy_persona_coverage.md`
+  - Detailed analysis of V5 noise-reduction approach
+  - Explicit vs implicit encoding comparison
+  - Information density and signal-to-noise analysis
+
+- **V5 Templates**: `prompt_templates/combined/combined_v5.json`
+  - Production-ready configurations for noise-reduced strategies
+
+- **Results Data**: `outputs/combined_v5/gptoss/production/run_20251102_191102/`
+  - Complete validation and production run results
+  - Confusion matrices, bias analysis, and detailed metrics
 
 ## Troubleshooting
 

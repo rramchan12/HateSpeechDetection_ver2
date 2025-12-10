@@ -259,6 +259,196 @@ This architecture provides the foundation for systematic evaluation of prompt de
 
 ---
 
+## GPT-OSS Baseline Prompting Strategies: A Parameter-Driven Exploration
+
+### Overview
+
+The GPT-OSS baseline framework implements systematic hyperparameter exploration to establish performance boundaries for open-source language models in hate speech detection. Maintaining identical prompt content across all variants, the framework investigates five distinct parameterization strategies that probe trade-offs between determinism and diversity, conciseness and comprehensiveness, and precision and recall. This controlled design isolates hyperparameter optimization as the independent variable, enabling rigorous assessment of how generation settings influence classification accuracy and demographic bias patterns.
+
+### Architectural Framework
+
+```text
+┌──────────────────────────────────────────────────────────────┐
+│         GPT-OSS BASELINE STRATEGY ARCHITECTURE               │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+                         ▼
+      ┌──────────────────────────────────────┐
+      │   SHARED PROMPT FOUNDATION           │
+      │   • Binary classification (hate/normal)
+      │   • JSON format requirement          │
+      │   • 1-2 sentence rationale          │
+      └──────────────┬───────────────────────┘
+                     │
+         ┌───────────┼──────────┬──────────┬──────────┐
+         ▼           ▼          ▼          ▼          ▼
+   ┌─────────┐ ┌─────────┐ ┌────────┐ ┌────────┐ ┌──────────┐
+   │CONSERV- │ │STANDARD │ │CREATIVE│ │FOCUSED │ │EXPLORAT- │
+   │ ATIVE   │ │         │ │        │ │        │ │ ORY      │
+   └────┬────┘ └────┬────┘ └───┬────┘ └───┬────┘ └────┬─────┘
+        │           │          │          │           │
+   temp=0.0    temp=0.1   temp=0.3   temp=0.05   temp=0.5
+   tok=256     tok=512    tok=768    tok=200     tok=1024
+   top_p=0.9   top_p=1.0  top_p=0.95 top_p=0.8   top_p=0.85
+   freq=0.0    freq=0.0   freq=0.1   freq=0.2    freq=0.3
+   pres=0.0    pres=0.0   pres=0.1   pres=0.0    pres=0.2
+```
+
+### Parameterization Strategies
+
+The Conservative strategy implements maximum determinism through zero-temperature sampling (0.0), eliminating stochastic variation in model outputs. With top-p at 0.9 and token allocation of 256, the strategy enforces greedy decoding that consistently selects highest-probability tokens, targeting production scenarios requiring reproducible classifications and minimal computational overhead. Both frequency and presence penalties remain at zero, prioritizing natural language patterns over diversity enforcement.
+
+The Standard strategy establishes a balanced baseline through moderate temperature (0.1) that introduces minimal stochasticity while maintaining high determinism. Token allocation doubles to 512, accommodating comprehensive rationale generation. Maximum top-p (1.0) allows full probability distribution consideration while temperature constrains selection to high-probability regions. This configuration serves as the experimental control, representing conventional best practices for classification tasks.
+
+The Creative strategy introduces controlled stochasticity (temperature 0.3) to probe nuanced reasoning in ambiguous cases. Token allocation expands to 768, hypothesizing that higher-temperature generation benefits from extended rationale space. Nucleus sampling at 0.95 truncates low-probability tokens while preserving diversity. Introduction of frequency penalty (0.1) and presence penalty (0.1) discourages repetitive phrasing, targeting scenarios where cultural context or coded language requires interpretive flexibility.
+
+The Focused strategy optimizes for high-confidence classifications through aggressive constraints on diversity and output length. Temperature reduction to 0.05 approaches deterministic behavior with minimal stochastic variation. Token allocation constrains to 200, enforcing extreme conciseness under the hypothesis that clear cases require minimal justification. Top-p tightens to 0.8, and frequency penalty elevates to 0.2, maximizing information density for real-time moderation scenarios prioritizing latency minimization.
+
+The Exploratory strategy maximizes generation diversity to discover novel hate speech patterns. Temperature elevation to 0.5 enables substantial stochastic variation, with maximum token allocation (1024) providing extensive reasoning space. Top-p at 0.85 balances diversity with quality. Combined frequency penalty (0.3) and presence penalty (0.2) represent aggressive diversity enforcement, actively discouraging repetition. This parameterization serves as a discovery mechanism, potentially revealing failure modes and bias patterns masked by conservative configurations.
+
+### Experimental Rationale
+
+This five-strategy framework operationalizes theoretical insights from large language model optimization research. The temperature dimension tests the determinism-diversity trade-off, where lower temperatures yield consistent but potentially brittle classifications, while higher temperatures enable nuanced reasoning at the cost of reproducibility. Token allocation investigates whether hate speech detection benefits from extensive rationale generation or if constrained outputs suffice. Frequency and presence penalties probe linguistic diversity's role in classification quality, testing whether diverse phrasing correlates with robust reasoning. Performance evaluation across demographic subgroups (LGBTQ+, Middle Eastern, Mexican/Latino) quantifies whether parameter choices introduce or mitigate bias patterns, addressing fairness concerns in automated content moderation.
+
+---
+
+## GPT-5 Baseline Prompting Strategies: Leveraging Enhanced Model Capabilities
+
+### Overview
+
+The GPT-5 baseline framework explores minimal prompting approaches optimized for next-generation language models with enhanced reasoning stability. Unlike GPT-OSS strategies requiring extensive hyperparameter tuning, GPT-5 investigates three parameterization strategies leveraging architectural improvements to achieve robust hate speech detection with simplified configuration. This controlled exploration maintains identical prompt content while testing whether GPT-5's enhanced capabilities enable effective classification through uniform temperature (1.0) and varied token allocation.
+
+### Architectural Framework
+
+```text
+GPT-5 BASELINE STRATEGIES
+         │
+    ┌────┴────┐
+    │ SHARED  │  Role: Content moderation
+    │ PROMPT  │  Task: Binary classification
+    └────┬────┘  Format: JSON + rationale
+         │
+    ┌────┼────┐
+    ▼    ▼    ▼
+  CONS  STD  BAL
+  t=1.0 t=1.0 t=1.0    Unified temp=1.0
+  200   300   350      Token variation
+```
+
+### Parameterization Strategies
+
+The Conservative strategy establishes minimal viable configuration, employing temperature 1.0 with constrained token allocation of 200. This tests whether GPT-5's enhanced reasoning enables accurate classification with concise rationale generation, eliminating ultra-low temperatures required by earlier models. The strategy targets high-throughput production scenarios where computational efficiency is prioritized, leveraging GPT-5's deterministic tendencies at temperature 1.0 to maintain consistency without explicit temperature suppression.
+
+The Standard strategy represents balanced experimental control, maintaining temperature 1.0 while expanding token allocation to 300. This serves as primary benchmark for assessing GPT-5's zero-shot detection capabilities, providing sufficient rationale space without verbose explanations. The moderate token budget accommodates GPT-5's tendency toward comprehensive yet concise outputs, reflecting optimization for clarity. This configuration tests conventional best practices adapted for next-generation models, where architectural improvements eliminate aggressive temperature constraints observed in GPT-OSS configurations.
+
+The Balanced strategy optimizes production deployment through token allocation at 350 while maintaining unified temperature 1.0. This reflects empirical insights suggesting GPT-5's enhanced contextual understanding benefits from extended rationale space for nuanced reasoning in ambiguous cases, particularly coded language and implicit hate speech. The marginal token increase (17% over Standard) provides additional reasoning capacity without excessive computational overhead, isolating token allocation as the primary experimental variable.
+
+### Experimental Rationale
+
+The three-strategy framework fundamentally differs from GPT-OSS's five-strategy approach by leveraging architectural improvements that eliminate extensive hyperparameter exploration. The unified temperature 1.0 configuration reflects that GPT-5's enhanced reasoning stability produces consistent outputs at default sampling parameters, obviating determinism-diversity trade-offs central to GPT-OSS optimization. This enables focused investigation of token allocation's impact, testing whether hate speech detection benefits from minimal (200), moderate (300), or optimal (350) rationale lengths. The absence of frequency and presence penalty tuning reflects GPT-5's improved generation capabilities, where pre-training on diverse data reduces repetition without explicit penalty enforcement. Performance evaluation focuses on whether GPT-5's enhancements translate into superior accuracy and reduced demographic bias (LGBTQ+, Middle Eastern, Mexican/Latino) compared to GPT-OSS baselines, addressing critical fairness concerns in automated content moderation.
+
+---
+
+## Combined GPT-OSS Prompting Strategies: Iterative Noise-Reduction Discovery
+
+### Overview
+
+The Combined GPT-OSS framework investigates whether advanced prompt engineering can improve upon baseline performance through five iterative experimental cycles. After four failed iterations (V1-V4) where verbose additions degraded performance 4-28%, the fifth iteration achieved breakthrough through noise reduction. The framework systematically tests policy guidance, example-based learning, cultural context, and reasoning frameworks across escalating complexity levels to identify optimal signal compression strategies.
+
+### Architectural Framework
+
+```text
+COMBINED GPT-OSS: 5-ITERATION EVOLUTION
+         
+V1: Policy + Examples (Verbose)           V2: Cultural Context           V3: Refined Examples
+├─ combined_optimized                     ├─ cultural_context           ├─ recall_focused
+├─ combined_focused                       ├─ recall_optimized           ├─ cultural_aware
+├─ combined_conservative                  ├─ policy_focused             ├─ optimized
+                                          ├─ persona_balanced
+                                          ├─ minimal_hybrid
+
+V4: Minimal Enhancements                  V5: NOISE-REDUCED (Breakthrough)
+├─ minimal_examples                       ├─ implicit_examples ★ 
+├─ balanced_lite                          ├─ chain_of_thought ★
+├─ community_aware                        ├─ minimal_signal
+├─ policy_lite                            ├─ compressed_tokens
+├─ subtle_emphasis                        ├─ example_only
+
+All configurations: temp=0.1, tokens=512, top_p=1.0
+```
+
+### Strategy Taxonomy
+
+**V1 (Combined Policy + Persona with Examples)**: Fifteen examples across three demographic groups (five hate, five normal per LGBTQ+, Mexican/Latino, Middle Eastern) combined with 200-word X Platform Hateful Conduct Policy and structured evaluation framework. Tests whether comprehensive policy guidance plus extensive examples improves classification through explicit instruction.
+
+**V2 (Cultural Context & Example Optimization)**: Five strategies testing zero to two examples with cultural awareness frameworks. Explores whether deep demographic context (cultural_context), recall optimization (recall_optimized), policy-heavy approaches (policy_focused), hybrid two-example configurations (persona_balanced), or minimal guidance (minimal_hybrid) outperform V1's verbose fifteen-example approach.
+
+**V3 (Restored Examples with Refined Guidance)**: Returns to five examples per group after V2's zero-to-two approach failed. Tests whether V2's refined cultural guidance combined with V1's five-example structure improves performance through recall emphasis (recall_focused), cultural depth (cultural_aware), or balanced policy-persona frameworks (optimized).
+
+**V4 (Minimal Baseline Enhancements)**: Explores the "goldilocks zone" between baseline simplicity and V1-V3 verbosity through six-example configurations (minimal_examples, balanced_lite), brief context additions (community_aware), compressed fifty-word policy (policy_lite), and single-sentence emphasis (subtle_emphasis). Tests whether minimal additions avoid V1-V3's degradation.
+
+**V5 (Noise-Reduced Approaches)**: Five compression strategies testing demonstration over explanation. Implicit_examples presents six contrasting example pairs without policy text. Chain_of_thought implements four-step reasoning framework (identify attacks, check coded language, distinguish critique from hate, classify). Minimal_signal adds single-sentence policy definition. Compressed_tokens uses token-style markers [Policy: X]. Example_only presents raw examples without instructional framing.
+
+### Experimental Rationale
+
+The Combined framework systematically explores the complexity-performance relationship across five iterations. V1 tests conventional prompt engineering wisdom that comprehensive guidance improves performance through extensive examples and policy definitions. V2 investigates whether example reduction (zero to two) with deep cultural context avoids V1's potential information overload. V3 validates whether V1's five-example approach combined with V2's refined guidance achieves optimal balance. V4 explores minimal enhancements hypothesis that small additions to baseline avoid degradation while providing benefits. V5 tests noise-reduction through signal compression, replacing verbose explanations with implicit examples or structured reasoning frameworks.
+
+The framework evolution reveals that verbosity consistently degrades performance regardless of implementation approach (policy guidance, examples, cultural context, persona instructions). Success emerges only when signals are compressed to 60-90 words through demonstration (implicit examples) or structured logic (chain-of-thought), eliminating explanatory text that conflicts with model pre-training or introduces ambiguous decision boundaries. This validates that effective instruction fine-tuning requires ruthless compression prioritizing high-density pattern encoding over comprehensive explanations.
+
+---
+
+## Combined GPT-5 Prompting Strategies: Architectural Optimization Under API Constraints
+
+### Overview
+
+The Combined GPT-5 framework addresses GPT-5's fixed temperature constraint (1.0) through architectural prompt engineering rather than hyperparameter tuning. Synthesizing GPT-5's hybrid adaptive reasoning with few-shot learning strategies proven effective in GPT-OSS combined approaches, the framework explores three architectural variants optimized for next-generation model capabilities. Unlike GPT-OSS combined strategies that leverage temperature manipulation, GPT-5 combined strategies optimize through reasoning structure (adaptive multi-stage vs. direct binary), cultural context integration depth, and strategic few-shot example allocation.
+
+### Architectural Framework
+
+```text
+COMBINED GPT-5: ARCHITECTURAL OPTIMIZATION
+         
+         GPT-5 API Constraint: temp=1.0 (fixed)
+         Optimization via: Architecture + Examples + Token Allocation
+         
+├─ combined_optimized
+│  Architecture: Hybrid Adaptive Reasoning
+│  Examples: 9 total (3 per group: Mexican, LGBTQ+, Middle Eastern)
+│  Tokens: 650
+│  Reasoning: Confidence-based (high→direct, low→multi-perspective)
+│  
+├─ combined_focused  
+│  Architecture: Direct Binary + Cultural Context
+│  Examples: 9 total (3 per group, priority-ordered)
+│  Tokens: 500
+│  Reasoning: Cultural awareness framework (4 dimensions)
+│
+├─ combined_conservative
+│  Architecture: Minimal Overhead
+│  Examples: 6 total (2 per group, priority-ordered)
+│  Tokens: 400
+│  Reasoning: Streamlined classification
+
+All configurations: temp=1.0 (fixed), response_format=json_object
+Priority Ordering: Mexican/Latino FIRST (immigration-based hate detection)
+```
+
+### Strategy Taxonomy
+
+**Combined Optimized (Hybrid Adaptive Reasoning)**: Implements confidence-based multi-stage analysis combining adaptive complexity with nine few-shot examples (three per demographic group). High-confidence cases trigger direct classification for efficiency, while ambiguous cases invoke multi-perspective analysis across policy violation, community impact, cultural context, and language patterns. The 650-token allocation accommodates confidence assessment and extended reasoning chains. Explicit LGBTQ+ in-group reclamation guidance distinguishes community self-identification from out-group attacks. Mexican/Latino examples prioritize immigration-based hate detection (generalizations, dehumanization, coded language) versus policy discussion. Outputs include classification, confidence level (high/medium/low), and rationale.
+
+**Combined Focused (Direct Binary + Cultural Context)**: Streamlines classification through cultural awareness framework integrating four analytical dimensions: historical discrimination patterns, power dynamics, community norms, and intent versus impact assessment. Nine priority-ordered examples (Mexican/Latino first) provide compact pattern encoding without verbose explanations. The 500-token budget balances cultural context depth with computational efficiency. Explicit recall priority guidance addresses subtle and coded hate detection, with precision guards preventing over-flagging of factual Middle Eastern content. LGBTQ+ harm-versus-affirmation framing distinguishes out-group attacks from in-group reclamation.
+
+**Combined Conservative (Minimal Overhead)**: Prioritizes efficiency through six essential examples (two per group) with streamlined three-question evaluation framework. The 400-token constraint enforces concise reasoning suitable for high-throughput scenarios. Priority ordering maintains Mexican/Latino examples first despite reduced example count. Precision guards prevent Middle Eastern factual content over-flagging. Detection emphasis explicitly clarifies that subtle or coded hate constitutes hate speech without requiring explicit slurs, addressing under-detection risks in efficiency-focused configurations.
+
+### Experimental Rationale
+
+The Combined GPT-5 framework operationalizes architectural optimization as the primary performance lever when hyperparameter tuning is constrained. The hybrid adaptive reasoning architecture (combined_optimized) tests whether confidence-based complexity adjustment improves accuracy by allocating reasoning resources proportional to case difficulty. The direct binary plus cultural context architecture (combined_focused) validates whether integrated fairness frameworks improve demographic bias metrics without multi-stage reasoning overhead. The minimal overhead architecture (combined_conservative) establishes efficiency boundaries, quantifying performance-speed trade-offs.
+
+Few-shot example integration addresses documented bias patterns: Mexican/Latino immigration-based hate under-detection, LGBTQ+ in-group reclamation over-flagging, and Middle Eastern terrorism generalization failures. Priority ordering (Mexican examples first) leverages recency bias in context windows to mitigate the most severe fairness issues. Token allocation strategy reflects empirical findings that GPT-5 performance plateaus beyond 600 tokens, with combined_optimized's 650-token budget targeting optimal balance while combined_conservative's 400-token constraint tests minimum viable configuration. The framework validates whether architectural prompt engineering achieves performance gains comparable to GPT-OSS combined's hyperparameter-driven optimization despite API constraints.
+
+---
+
 ## Deep Dive: Data Management Architecture
 
 ### Overview

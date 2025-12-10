@@ -32,7 +32,7 @@
     "- **Multiclass Labels**: Balanced representation across all categories\n",
     "- **Rationale Coverage**: 36.9% (vs original 3.2% - 11.5x improvement!)\n",
     "\n",
-    "### ? **Split Distribution**\n",
+    "### \udcc8 **Split Distribution**\n",
     "- **Training Set**: 3,628 samples (70.4%)\n",
     "- **Validation Set**: 514 samples (10.0%)\n",
     "- **Test Set**: 1,009 samples (19.6%)\n",
