@@ -90,6 +90,144 @@ This framework serves as the experimental infrastructure for prompt engineering 
 
 ---
 
+## Execution Workflow Diagram
+
+The prompt validation framework implements a five-stage execution pipeline orchestrated through `prompt_runner.py`, coordinating validation operations from configuration loading through metrics reporting with modular error handling and incremental result persistence.
+
+```text
+EXECUTION WORKFLOW: Five-Stage Pipeline
+═══════════════════════════════════════════════════════════════
+
+STAGE 1: Configuration & Initialization
+┌─────────────────────────────────────────────────────────────┐
+│  prompt_runner.py (CLI Entry Point)                         |
+│ • argparse: --model, --strategy, --data-file, --max-samples |
+└─────────┬──────────────────────────────────┬────────────────┘
+          │                                  │
+          ▼                                  ▼
+┌──────────────────────┐          ┌────────────────────────┐
+│ ModelConfigLoader    │          │ StrategyTemplatesLoader│
+│ (YAML Parsing)       │          │ (JSON Parsing)         │
+│ • model_connection   │          │ • prompt_templates/    │
+│   .yaml              │          │ • PromptStrategy →     │
+│ • ${ENV_VAR} subst.  │          │   PromptTemplate       │
+│ • Endpoint + API key │          │ • In-memory registry   │
+└─────────┬────────────┘          └────────┬───────────────┘
+          │                                │
+          └────────────┬───────────────────┘
+                       ▼
+            ┌────────────────────┐
+            │ AzureAIConnector   │
+            │ • HTTP connection  │
+            │ • Auth validation  │
+            └──────────┬─────────┘
+                       │
+═══════════════════════╪═══════════════════════════════════════
+STAGE 2: Dataset Preparation                │
+═══════════════════════╪═══════════════════════════════════════
+                       ▼
+            ┌────────────────────────────────┐
+            │ UnifiedDatasetLoader           │
+            │ • unified_test.json (1,009)    │
+            │ • canned_50/100 subsets        │
+            │ • Stratified sampling (seed=42)│
+            │ • Schema validation            │
+            └──────────┬─────────────────────┘
+                       │
+═══════════════════════╪═══════════════════════════════════════
+STAGE 3: Concurrent Execution               │
+═══════════════════════╪═══════════════════════════════════════
+                       ▼
+            ┌─────────────────────────────────────────┐
+            │ ThreadPoolExecutor (5 workers)          │
+            │ Batch Processing (10 samples/batch)     │
+            └──────────┬──────────────────────────────┘
+                       │
+                       ▼
+    ┌──────────────────────────────────────────────────────┐
+    │ Per-Sample Pipeline (6 operations):                  │
+    │ 1. Template instantiation ({text}, {target_group})   │
+    │ 2. Message construction (System + User)              │
+    │ 3. API request (AzureAIConnector.complete())         │
+    │ 4. Retry logic (exponential backoff, max 3)          │
+    │ 5. JSON parsing (fallback: text extraction)          │
+    │ 6. Label standardization (hate/normal)               │
+    └──────────┬───────────────────────────────────────────┘
+               │
+               ▼
+    ┌────────────────────────────┐
+    │ PersistenceHelper          │
+    │ • Incremental CSV write    │
+    │ • Immediate disk flush     │
+    │ • validation_results.csv   │
+    └──────────┬─────────────────┘
+               │
+═══════════════╪═══════════════════════════════════════════════
+STAGE 4: Metrics Computation                │
+═══════════════╪═══════════════════════════════════════════════
+               ▼
+    ┌────────────────────────────────────────┐
+    │ EvaluationMetrics (sklearn)            │
+    │ • Load validation_results.csv          │
+    │ • Filter invalid predictions           │
+    │ • Accuracy, Precision, Recall, F1      │
+    │ • Confusion matrix (TP/TN/FP/FN)       │
+    │ • Bias metrics by group (FPR/FNR)      │
+    └──────────┬─────────────────────────────┘
+               │
+               ▼
+    ┌─────────────────────────────────┐
+    │ Output CSV Files:               │
+    │ • performance_metrics.csv       │
+    │ • bias_metrics.csv              │
+    └──────────┬────────────────────┘
+               │
+═══════════════╪═══════════════════════════════════════════════
+STAGE 5: Report Generation              │
+═══════════════╪═══════════════════════════════════════════════
+               ▼
+    ┌──────────────────────────────────────────┐
+    │ PersistenceHelper.generate_report()      │
+    │ • Metadata synthesis                     │
+    │ • Tabular formatting                     │
+    │ • evaluation_report.txt                  │
+    └──────────┬───────────────────────────────┘
+               │
+               ▼
+    ┌──────────────────────────────────────────┐
+    │ Run Directory: outputs/run_YYYYMMDD_HHMMSS│
+    │ • validation_results_*.csv               │
+    │ • performance_metrics_*.csv              │
+    │ • bias_metrics_*.csv                     │
+    │ • evaluation_report_*.txt                │
+    │ • Execution metadata + config checksums  │
+    └──────────────────────────────────────────┘
+```
+
+### Stage 1: Configuration and Initialization
+
+The initialization stage loads model configuration from `connector/model_connection.yaml` through the `ModelConfigLoader` class, implementing YAML deserialization with environment variable substitution (`${AZURE_AI_ENDPOINT}`, `${AZURE_AI_KEY}`) for secure credential management. The orchestrator loads prompt strategy templates from `prompt_engineering/prompt_templates/` through `StrategyTemplatesLoader`, parsing JSON structures into `PromptStrategy` objects containing `PromptTemplate` components (system_prompt, user_template) and generation parameters. The initialization concludes with `AzureAIConnector` instantiation, establishing persistent HTTP connections and validating authentication through preliminary connectivity testing.
+
+### Stage 2: Dataset Preparation and Sampling
+
+The `UnifiedDatasetLoader` class implements flexible data source selection supporting unified test dataset loading (`data/processed/unified/unified_test.json`, 1,009 samples), canned subsets (`canned_50_quick`, `canned_100_stratified`), or custom JSONL files. Stratified sampling with deterministic seeding (seed=42) ensures reproducible selection maintaining proportional representation across target groups (LGBTQ+ 48.8%, Middle Eastern 28.5%, Mexican/Latino 22.6%) and binary labels (hate 47%, normal 53%). Schema validation ensures required fields (`text`, `label_binary`, `target_group_norm`) before execution.
+
+### Stage 3: Concurrent Validation Execution
+
+The execution stage implements thread-pool processing via `ThreadPoolExecutor` (5 workers, 10-sample batches), distributing inference requests across parallel workers. Each sample undergoes six operations: template instantiation via variable substitution, message construction assembling `SystemMessage`/`UserMessage` objects, API submission through `AzureAIConnector.complete()`, retry logic with exponential backoff (delay = min(30, 2^attempt + random(0,1))), JSON parsing with text extraction fallback, and label standardization mapping variants (hate/hateful/hate_speech → hate; normal/benign/not_hate → normal). The orchestrator implements rate limiting through HTTP header monitoring (`x-ratelimit-remaining-requests/tokens`), inserting adaptive delays to prevent HTTP 429 errors. The `PersistenceHelper` class performs incremental CSV persistence with immediate disk flush, preventing memory accumulation and ensuring partial result preservation during execution interruptions.
+
+### Stage 4: Metrics Computation and Analysis
+
+The `EvaluationMetrics` class loads persisted results from `validation_results.csv`, filtering invalid predictions to compute classification metrics via scikit-learn: accuracy ((TP+TN)/(TP+TN+FP+FN)), precision (TP/(TP+FP)), recall (TP/(TP+FN)), and F1-score (harmonic mean). Confusion matrices stratify true positives, true negatives, false positives, and false negatives by demographic group, enabling bias analysis through false positive rate (FPR = FP/(FP+TN)) and false negative rate (FNR = FN/(FN+TP)) computation. Metrics serialize to `performance_metrics.csv` and `bias_metrics.csv` within run-specific directories.
+
+### Stage 5: Report Generation and Result Archival
+
+The `PersistenceHelper.generate_evaluation_report()` method synthesizes validation metadata (strategy name, model configuration, dataset source, sample count), classification metrics (accuracy, precision, recall, F1-score), confusion statistics, and demographic bias analysis into `evaluation_report.txt` with tabular formatting. The framework preserves execution context through metadata serialization including command-line arguments, template checksums, model parameters, and dataset provenance. Four primary artifacts populate each run directory (`outputs/run_YYYYMMDD_HHMMSS/`): per-sample predictions with rationales, aggregated performance metrics, demographic fairness analysis, and human-readable evaluation synthesis. The `--metrics-only` flag enables post-hoc recalculation from stored results without redundant inference execution.
+
+This five-stage architecture implements separation of concerns across configuration, data preparation, concurrent execution, metrics analysis, and result reporting. The modular design enables independent component testing while maintaining end-to-end integration through well-defined interfaces. Incremental persistence, comprehensive logging, and metadata preservation ensure experimental reproducibility and facilitate peer review validation for systematic prompt engineering research.
+
+---
+
 ## Deep Dive: Template Loader Architecture
 
 ### Overview

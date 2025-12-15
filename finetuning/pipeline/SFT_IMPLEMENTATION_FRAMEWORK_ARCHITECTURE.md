@@ -14,7 +14,7 @@ The Supervised Fine-Tuning (SFT) Framework implements a dual-pipeline architectu
             ┌───────────────┴───────────────┐
             │                               │
        PHASE 1                         PHASE 2
-┌──────────────────┐  safetensors  ┌─────────────────┐
+┌──────────────────┐  safetensors   ┌─────────────────┐
 │ LoRA Training    │───────────────>│ Evaluation      │
 │ (train.py)       │  adapter_config│ (runner.py)     │
 │ • 4-bit QLoRA    │                │ • Load adapters │
