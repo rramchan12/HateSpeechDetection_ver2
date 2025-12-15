@@ -1,249 +1,214 @@
-# Hate Speech Detection Framework
+# Hate Speech Detection Research Framework
 
-A hate speech detection project that unifies HateXplain and ToxiGen datasets into a consistent schema. The project includes data processing pipelines and a prompt validation framework for testing hate speech detection strategies with Azure AI models.
+A comprehensive hate speech detection framework integrating dataset unification, prompt engineering validation, and LoRA-based fine-tuning. The project unifies HateXplain (real social media) and ToxiGen (synthetic) datasets with stratified balancing, achieving 47/53 class balance across 5,151 high-quality entries with 36.9% rationale coverage.
 
-## Project Overview
+## Project Architecture
 
-- **Dataset Unification**: Combines HateXplain and ToxiGen datasets into unified schema
-- **Target Groups**: Focuses on LGBTQ, Mexican, and Middle East demographics
-- **Data Processing Pipeline**: End-to-end data collection, processing, and unification
-- **Prompt Engineering Framework**: Multi-model validation system with modular architecture
-- **Test Coverage**: Unit tests for core unification logic
+### `data_collection/`
+**Automated dataset acquisition infrastructure for HateXplain and ToxiGen sources.**
 
-## Prompt Engineering Framework
+Downloads HateXplain from GitHub (4 core files) and ToxiGen from HuggingFace Hub (3 splits). Includes integrity validators for format verification and presence checking.
 
-Located in `prompt_engineering/` - a modular framework for validating hate speech detection strategies:
+**Documentation**: [`data_collection/data_collection_README.md`](data_collection/data_collection_README.md)
 
-- **Package Architecture**: Organized into `connector`, `loaders`, and `metrics` packages
-- **Multi-Model Support**: YAML configuration for different Azure AI models
-- **Strategy Testing**: Five prompt strategies (Baseline, Policy, Persona, Combined, Enhanced Combined)
-- **Data Sources**: Unified dataset sampling and canned test datasets
-- **Output Organization**: Timestamped runId folders with comprehensive results
+### `data_preparation/`
+**3-stage preprocessing and unification pipeline producing balanced, unified dataset.**
 
-See [`prompt_engineering/README.md`](prompt_engineering/README.md) for detailed framework documentation.
+- **Stage 1**: Source-specific preprocessing (HateXplain/ToxiGen normalization)
+- **Stage 2**: Schema unification with Approach 3 stratified balancing (47/53 source balance, 36.9% rationale coverage)
+- **Stage 3**: Export and validation (5,151 entries, 92% size reduction with quality improvement)
+
+**Documentation**: [`data_preparation/data_preparation_README.md`](data_preparation/data_preparation_README.md)  
+**Methodology**: [`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md)
+
+### `finetuning/pipeline/`
+**LoRA training and evaluation infrastructure with QLoRA 4-bit quantization.**
+
+- **Phase 1**: LoRA Training (train.py with HuggingFace Accelerate, produces safetensors)
+- **Phase 2**: Baseline Evaluation (runner.py loads safetensors, computes metrics)
+
+Supports multi-GPU training (4x A100 80GB), parameter-efficient fine-tuning (r=32, α=32), and comprehensive evaluation metrics (accuracy, precision, recall, F1).
+
+**Documentation**: [`finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md`](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)
+
+### `prompt_engineering/`
+**Validation framework for testing prompt strategies with Azure AI models.**
+
+Multi-threaded execution framework (5 workers, batch size 10) with 5 prompt strategies (Baseline, Policy, Persona, Combined, Enhanced Combined). Features intelligent rate limiting, exponential backoff retry logic, and runID-based incremental storage.
+
+**Documentation**: [`prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)  
+**User Guide**: [`prompt_engineering/README.md`](prompt_engineering/README.md)  
+**Debugging**: [`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)
+
+### `data/`
+**Raw and processed datasets with unified schema output.**
+
+- `hatexplain/` - Real social media posts (2,427 samples, 100% rationale coverage)
+- `toxigen/` - Synthetic generated text (2,724 samples)
+- `processed/unified/` - Balanced unified dataset (5,151 entries, 12-field schema)
+
+### `eda/`
+**Exploratory data analysis notebooks and visualization outputs.**
+
+Jupyter notebooks for HateXplain, ToxiGen, and unified dataset analysis. Includes distribution analysis, quality metrics, and balance verification.
+
+### `tests/`
+**Unit and integration tests with 63% coverage of core unification logic.**
+
+36 tests covering target group normalization, persona tag extraction, label mapping, fine-tuning embeddings, and dataset loading. Run with `python run_tests.py all`.
 
 ## Project Structure
 
 ```
 HateSpeechDetection_ver2/
 ├── data/
-│   ├── hatexplain/           # HateXplain raw dataset
-│   ├── toxigen/              # ToxiGen raw dataset  
-│   └── processed/            # Processed & unified data
-│       └── unified/          # Final unified dataset
-├── data_collection/          # Dataset downloaders and validators
-├── data_preparation/         # Data processing pipeline
-├── tests/                    # Unit test suite
-├── eda/                      # Exploratory Data Analysis
-│   └── unified_dataset_eda.ipynb    # EDA notebook
-├── prompt_engineering/       # Prompt Validation Framework
-│   ├── prompt_runner.py              # Main CLI entry point
-│   ├── dataset_sampler.py            # Dataset sampling utilities
-│   ├── connector/                    # Azure AI connection package
-│   │   ├── azureai_connector.py      # Model connection management
-│   │   └── model_connection.yaml     # YAML model configuration
-│   ├── loaders/                      # Data and template loading utilities
-│   │   ├── strategy_templates_loader.py  # Strategy template management
-│   │   └── unified_dataset_loader.py     # Dataset loading with sampling  
-│   ├── metrics/                      # Evaluation and persistence utilities
-│   │   ├── evaluation_metrics_calc.py    # Metrics calculation
-│   │   └── persistence_helper.py         # Output file management
-│   ├── prompt_templates/             # Strategy configuration files
-│   │   └── all_combined.json         # Main strategy definitions
-│   ├── data_samples/                 # Test datasets
-│   │   ├── canned_50_quick.json      # Quick test samples (50)
-│   │   ├── canned_100_size_varied.json   # Size-varied samples (100)
-│   │   └── canned_100_stratified.json    # Stratified samples (100)
-│   ├── outputs/                      # Generated results (runId organized)
-│   ├── README.md                     # Framework documentation
-│   └── DEBUG.md                      # Debugging guide
-├── requirements.txt          # Project dependencies
-├── pyproject.toml           # Project configuration
-├── run_tests.py             # Test runner
-└── README.md                # This file
+│   ├── hatexplain/              # Raw HateXplain dataset
+│   ├── toxigen/                 # Raw ToxiGen dataset
+│   └── processed/
+│       └── unified/             # Unified balanced dataset
+├── data_collection/             # Dataset downloaders and validators
+│   ├── hatexplain_downloader.py
+│   ├── toxigen_downloader.py
+│   ├── hatexplain_data_presence_validator.py
+│   └── toxigen_data_presence_validator.py
+├── data_preparation/            # Preprocessing and unification
+│   ├── data_preparation_hatexplain.py
+│   ├── data_preparation_toxigen.py
+│   └── data_unification.py
+├── eda/                         # Exploratory data analysis
+│   ├── hatexplain_eda.ipynb
+│   ├── toxigen_eda.ipynb
+│   ├── unified_dataset_eda.ipynb
+│   └── outputs/
+├── finetuning/
+│   └── pipeline/                # LoRA training and evaluation
+│       ├── lora/                # Training infrastructure
+│       │   ├── train.py
+│       │   └── configs/
+│       ├── baseline/            # Evaluation runner
+│       │   ├── runner.py
+│       │   ├── connector/
+│       │   └── metrics/
+│       └── outputs/
+├── prompt_engineering/          # Prompt validation framework
+│   ├── prompt_runner.py         # Main CLI entry point
+│   ├── dataset_sampler.py
+│   ├── connector/               # Azure AI integration
+│   │   ├── azureai_connector.py
+│   │   └── model_connection.yaml
+│   ├── loaders/                 # Data and template loaders
+│   │   ├── strategy_templates_loader.py
+│   │   ├── unified_dataset_loader.py
+│   │   └── model_config_loader.py
+│   ├── metrics/                 # Evaluation and persistence
+│   │   ├── evaluation_metrics_calc.py
+│   │   └── persistence_helper.py
+│   ├── prompt_templates/        # Strategy configurations
+│   ├── data_samples/            # Canned test datasets
+│   └── outputs/                 # Results (runID organized)
+├── tests/                       # Unit and integration tests
+│   ├── test_data_unification.py
+│   ├── test_hatexplain_downloader.py
+│   ├── test_toxigen_data_preparation.py
+│   └── ...
+├── htmlcov/                     # Test coverage reports
+├── requirements.txt             # Project dependencies
+├── pyproject.toml              # Project configuration
+├── run_tests.py                # Test runner script
+└── README.md                   # This file
 ```
 
 ## Quick Start
 
-### 1. Setup Environment
-
+### 1. Environment Setup
 ```bash
 pip install -r requirements.txt
+cp .env.example .env  # Configure Azure AI credentials
 ```
 
-### 2. Download Datasets
-
+### 2. Data Pipeline
 ```bash
-# Download HateXplain dataset
-python -m data_collection.hatexplain_downloader
+# Download datasets
+python data_collection/hatexplain_downloader.py
+python data_collection/toxigen_downloader.py
 
-# Download ToxiGen dataset  
-python -m data_collection.toxigen_downloader
+# Unify datasets
+python data_preparation/data_unification.py
 ```
 
-### 3. Process Datasets
-
+### 3. Prompt Engineering Validation
 ```bash
-# Process HateXplain data
-python -m data_preparation.data_preparation_hatexplain
-
-# Process ToxiGen data
-python -m data_preparation.data_preparation_toxigen
-```
-
-### 4. Create Unified Dataset
-
-```bash
-# Unify both datasets (filtered to LGBTQ, Mexican, Middle East)
-python -m data_preparation.data_unification
-```
-
-### 5. Prompt Engineering Framework
-
-```bash
-# Navigate to prompt engineering directory
 cd prompt_engineering
-
-# Test connection to Azure AI models
 python prompt_runner.py --test-connection
-
-# Quick validation with canned samples
-python prompt_runner.py --data-source canned_50_quick --strategies baseline
-
-# Run all strategies with stratified samples
-python prompt_runner.py --data-source canned_100_stratified --strategies all --sample-size 10
-python prompt_runner.py --prompt-template-file experimental.json --data-source canned_100_all --strategies policy persona
-
-# Recalculate metrics from previous run
-python prompt_runner.py --metrics-only --run-id run_20250920_015821
-
-# Use unified dataset for comprehensive evaluation
-python prompt_runner.py --data-source unified --sample-size 100 --strategies all
+python prompt_runner.py --data-source unified --sample-size 50 --strategies all
 ```
 
-For detailed framework documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md).
+### 4. LoRA Fine-Tuning
+```bash
+cd finetuning/pipeline/lora
+accelerate launch train.py --config configs/training_config.yaml
 
-The unified dataset contains **5,151 entries** using a **stratified balancing approach** across 3 target groups (reduced from original 64,321 for improved quality and balance):
+cd ../baseline
+python runner.py --model-path ../lora/outputs/checkpoint-final
+```
 
-- **LGBTQ**: 2,515 entries (48.8%)
-- **Middle East**: 1,471 entries (28.5%)  
-- **Mexican**: 1,165 entries (22.6%)
+## Documentation Index
 
-Dataset characteristics:
+### Core Framework Documentation
+- **[`data_collection/data_collection_README.md`](data_collection/data_collection_README.md)** - Dataset acquisition and validation
+- **[`data_preparation/data_preparation_README.md`](data_preparation/data_preparation_README.md)** - Preprocessing and unification pipeline
+- **[`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md)** - Comprehensive unification methodology analysis
+- **[`finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md`](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)** - LoRA training and evaluation framework
+- **[`prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)** - Prompt validation framework architecture
+- **[`prompt_engineering/README.md`](prompt_engineering/README.md)** - Prompt engineering user guide
+- **[`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)** - Debugging and troubleshooting guide
 
-- **Quality over Quantity**: 92% size reduction with 11.5x improvement in rationale coverage
-- **Perfect Source Balance**: 47.1% HateXplain vs 52.9% ToxiGen (vs original 4.2%/95.8%)
-- Original target group identities preserved (e.g., "Arab" → `target_group_norm: "middle_east"`, `persona_tag: "arab"`)
-- Standardized binary and multiclass labels
-- Combined real and synthetic data sources
+### Implementation Guides
+- **[`IFT_APPROACH_IMPLEMENTATION.md`](IFT_APPROACH_IMPLEMENTATION.md)** - In-context fine-tuning implementation
+- **[`TRAINING_EVALUATION_DATASET_NOTE.md`](TRAINING_EVALUATION_DATASET_NOTE.md)** - Dataset usage guidelines
+- **[`finetuning/A100_SSH_TRAINING_GUIDE.md`](finetuning/A100_SSH_TRAINING_GUIDE.md)** - Remote A100 training setup
+- **[`finetuning/VALIDATION_GUIDE.md`](finetuning/VALIDATION_GUIDE.md)** - Model validation procedures
 
-For detailed methodology, see [`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md).
+## Unified Dataset Features
 
-## 📊 Unified Dataset Features
+### Target Groups & Distribution
+| **Group** | **Count** | **Percentage** | **Persona Tags** |
+|-----------|-----------|----------------|------------------|
+| **LGBTQ** | 2,515 | 48.8% | homosexual, gay, lgbtq |
+| **Middle East** | 1,471 | 28.5% | arab, middle_east |
+| **Mexican** | 1,165 | 22.6% | hispanic, latino, mexican |
 
-### Target Groups & Mapping
-
-| **Group** | **HateXplain Source** | **ToxiGen Source** | **Persona Tags** | **Final Count** | **Percentage** |
-|-----------|----------------------|-------------------|-----------------|-----------------|----------------|
-| **LGBTQ** | Homosexual, Gay | lgbtq | homosexual, gay, lgbtq | 2,515 | 48.8% |
-| **Mexican** | Hispanic, Latino | mexican | hispanic, latino, mexican | 1,165 | 22.6% |
-| **Middle East** | Arab | middle_east | arab, middle_east | 1,471 | 28.5% |
-
-**Persona Tag Preservation**: Original target group identities are preserved in `persona_tag` field while `target_group_norm` provides normalized grouping for consistent analysis.
-
-### Label Distribution
-
-- **Binary Labels**: 47.1% hate, 52.9% normal (near-perfect balance for training)
-- **Multiclass Labels**: hate, offensive, normal, toxic_implicit, benign_implicit
-- **Sources**: 52.9% ToxiGen (synthetic), 47.1% HateXplain (real social media) - **Perfect Balance Achieved**
-- **Rationale Coverage**: 36.9% of entries include human explanations (11.5x improvement from original 3.2%)
+### Quality Metrics
+- **Total Entries**: 5,151 (stratified balanced from 64,321 - 92% reduction for quality)
+- **Label Balance**: 47.1% hate, 52.9% normal (near-perfect class balance)
+- **Source Balance**: 47.1% HateXplain, 52.9% ToxiGen (perfect source balance)
+- **Rationale Coverage**: 36.9% (11.5x improvement from original 3.2%)
+- **Data Split**: 70.4% train, 10.0% val, 19.6% test
 
 ### Unified Schema (12 Fields)
-
-| **Field** | **Purpose** | **Example Values** |
-|-----------|-------------|-------------------|
-| `text` | Input text | "This is offensive content..." |
-| `label_binary` | Binary classification | "hate", "normal" |
-| `label_multiclass` | Multi-class labels | "hatespeech", "toxic_implicit", "benign_implicit" |
-| `target_group_norm` | Normalized group | "lgbtq", "mexican", "middle_east" |
-| `persona_tag` | Original identity preserved | "homosexual", "arab", "hispanic" |
-| `source_dataset` | Data provenance | "hatexplain", "toxigen" |
-| `rationale_text` | Label explanation | Human rationale (HateXplain only) |
-| `is_synthetic` | Generated flag | true (ToxiGen), false (HateXplain) |
-| `fine_tuning_embedding` | Model features | "[PERSONA:ARAB] text [POLICY:HATE_SPEECH_DETECTION]" |
-| `original_id` | Source identifier | Original dataset ID |
-| `split` | Data split | "train", "val", "test" |
-
-## Prompt Engineering & Validation
-
-The project includes a prompt validation system for testing hate speech detection strategies with Azure AI models:
-
-### Available Strategies
-
-- **Baseline**: Direct text classification
-- **Policy**: Classification with hate speech policy guidelines
-- **Persona**: Classification using persona tags (Arab, LGBTQ, etc.)
-- **Combined**: Policy + Persona integration
-- **Enhanced Combined**: Advanced fusion approach
-
-### Framework Components
-
-- Multi-threaded execution with configurable settings
-- YAML-based model configuration
-- Multiple data sources (unified dataset and canned samples)
-- runId-based output organization
-- Incremental result storage
-- Connection testing and error handling
-
-### Usage Examples
-
-```bash
-cd prompt_engineering
-
-# Test Azure AI connection
-python prompt_runner.py --test-connection
-
-# Quick validation with canned samples
-python prompt_runner.py --data-source canned_50_quick --strategies baseline
-
-# Run all strategies with stratified samples
-python prompt_runner.py --data-source canned_100_stratified --strategies all --sample-size 10
-
-# Use unified dataset
-python prompt_runner.py --data-source unified --sample-size 50 --strategies policy persona
-
-# Recalculate metrics from previous run
-python prompt_runner.py --metrics-only --run-id run_20250920_015821
-```
-
-For detailed documentation, see [`prompt_engineering/README.md`](prompt_engineering/README.md).
+| **Field** | **Description** |
+|-----------|----------------|
+| `text` | Input text content |
+| `label_binary` | Binary classification (hate/normal) |
+| `label_multiclass` | Multi-class labels (hatespeech/toxic_implicit/benign_implicit) |
+| `target_group_norm` | Normalized group (lgbtq/mexican/middle_east) |
+| `persona_tag` | Original identity preserved (homosexual/arab/hispanic) |
+| `source_dataset` | Data provenance (hatexplain/toxigen) |
+| `rationale_text` | Human explanation (HateXplain only) |
+| `is_synthetic` | Generated flag (true for ToxiGen) |
+| `fine_tuning_embedding` | Formatted training input |
+| `original_id` | Source dataset identifier |
+| `split` | Data split (train/val/test) |
+| `fine_tuning_label` | Formatted training target |
 
 ## Testing & Validation
 
-The project includes unit tests for data unification components.
-
-### Unit Test Coverage
-
-Data Unification Tests (36 tests):
-
-- Class Initialization (3 tests)
-- Target Group Normalization (8 tests)
-- Persona Tag Extraction (7 tests)
-- Label Mapping (2 tests)
-- Fine-Tuning Embeddings (5 tests)
-- Entry Unification (9 tests)
-- Dataset Loading (3 tests)
-- Dataset Analysis (3 tests)
-
-Coverage: 63% of core unification logic (273 lines tested)
-
-### Quick Test Commands
-
+### Run Tests
 ```bash
 # Run all tests with coverage
 python run_tests.py all
 
-# Run only fast unit tests  
+# Run only unit tests
 python run_tests.py unit
 
 # Run data validation tests
@@ -251,220 +216,57 @@ python run_tests.py data
 
 # Run without coverage (fastest)
 python run_tests.py fast
-```
 
-### Test Categories
-
-**Data Collection Tests:**
-
-- HateXplain downloader validation
-- ToxiGen downloader validation  
-- Data presence verification
-- File integrity checks
-
-**Data Preparation Tests:**
-
-- HateXplain processing pipeline
-- ToxiGen processing pipeline
-- Label mapping validation
-- Feature extraction verification
-
-**Unification Tests:**
-
-- ✅ **Schema Consistency**: 12-field unified schema validation
-- ✅ **Target Group Filtering**: Only LGBTQ, Mexican, Middle East included
-- ✅ **Persona Tag Preservation**: Original identities maintained (e.g., "Arab" → "arab")
-- ✅ **Label Distribution**: Binary/multiclass mapping verification
-- ✅ **Synthetic Flag Handling**: Proper is_synthetic field management
-- ✅ **Fine-Tuning Embeddings**: Persona placeholder generation
-- ✅ **Split Ratio Validation**: Train/val/test distribution checks
-
-### Coverage Reports
-
-```bash
-# Generate and view coverage report
+# View coverage report
 python run_tests.py coverage
 # Open htmlcov/index.html in browser
 ```
 
-### Manual pytest Usage
+### Test Categories
+- **Data Collection Tests**: HateXplain/ToxiGen downloader validation, integrity checks
+- **Data Preparation Tests**: Processing pipeline, label mapping, feature extraction
+- **Unification Tests**: Schema consistency, target group filtering, persona tag preservation, label distribution, fine-tuning embeddings
 
-```bash
-# All tests with detailed output
-pytest tests/ -v
-
-# Run specific test categories
-pytest tests/ -v -m "unit"           # Unit tests only
-pytest tests/ -v -m "data"           # Data validation tests  
-pytest tests/ -v -m "integration"    # Integration tests
-
-# Run specific test files
-pytest tests/test_data_unification.py -v      # 36 unification unit tests
-pytest tests/test_hatexplain_downloader.py -v
-pytest tests/test_toxigen_data_preparation.py -v
-```
-
-## 📈 Dataset Information
-
-### HateXplain Dataset
-
-**Source**: Real social media posts from Twitter and Gab  
-**Size**: ~20K posts with human annotations  
-**Splits**: train/val/test (80/10/10)  
-**Labels**: hate, offensive, normal  
-**Target Groups**: 13+ demographic groups (filtered to 3 for this project)
-
-**Key Fields:**
-
-- `post_text` - Original social media text
-- `majority_label` - Human-annotated labels  
-- `target` - Target demographic groups
-- `rationale_text` - Human explanations for labels
-
-### ToxiGen Dataset  
-
-**Source**: Machine-generated synthetic text  
-**Size**: ~250K generated examples  
-**Splits**: train/val/test (70/10/20)  
-**Labels**: toxic/benign based on prompts  
-**Target Groups**: 13 minority demographic groups
-
-**Key Fields:**
-
-- `generation` - Machine-generated text
-- `prompt_label` - Binary toxicity label (1=toxic, 0=benign)
-- `group` - Target demographic group  
-- `roberta_prediction` - RoBERTa toxicity score
-
-### Unified Dataset Output
-
-After processing and stratified balancing:
-
-- **Total Entries**: 5,151 (balanced from original 64,321 using stratified approach - 92% reduction for quality)
-- **Target Groups**: 3 (LGBTQ 48.8%, Middle East 28.5%, Mexican 22.6%)  
-- **Label Balance**: 47.1% hate, 52.9% normal (near-perfect balance)
-- **Source Balance**: 47.1% HateXplain, 52.9% ToxiGen (perfect balance achieved)
-- **Rationale Coverage**: 36.9% (11.5x improvement from original 3.2%)
-- **Data Split**: 70.4% train, 10.0% val, 19.6% test
-- **File Format**: JSON with unified 12-field schema
-
-**Methodology**: See [`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md) for detailed stratified balancing approach.
-
-## 🔧 Development & Extension
-
-### Recent Framework Improvements (September 2025)
-
-**🚀 Performance & Concurrency:**
-- Multi-threaded processing with configurable worker pools (default: 5 workers)
-- Intelligent batching for optimal throughput (default: 10 samples per batch)
-- Real-time progress monitoring and performance metrics
-- Adaptive rate limiting with exponential backoff and intelligent retry logic
-
-**📁 File Logging & Audit Trail:**
-- Complete execution logs written to runID folders
-- Azure AI request/response monitoring with rate limit headers
-- Detailed error handling and retry logic status
-- Clean console output with only runID for CI/CD integration
-
-**🎨 Enhanced User Experience:**
-- Custom prompt template file selection via CLI (`--prompt-template-file`)
-- Rich evaluation reports with model metadata, command line, and execution context
-- Sample size control for all data sources (unified and canned datasets)
-- Comprehensive debug logging with file output
-
-### Adding New Target Groups
-
-1. Update `VALID_TARGET_GROUPS` in `data_unification.py`
-2. Add mapping rules in `TARGET_GROUP_NORMALIZATION`  
-3. Update persona tags in `TOP_PERSONA_TAGS`
-4. Re-run unification pipeline
-
-### Modifying Label Mapping
-
-**HateXplain**: Edit `map_hatexplain_labels()` in `data_unification.py`  
-**ToxiGen**: Edit `map_toxigen_labels()` in `data_unification.py`
-
-### Custom Processing
-
-Extend the data processors:
-
-- `data_preparation_hatexplain.py` - HateXplain-specific processing
-- `data_preparation_toxigen.py` - ToxiGen-specific processing  
-- `data_unification.py` - Cross-dataset unification logic
-
-## 📋 Dependencies
+## Dependencies
 
 **Core Libraries:**
-
-- `datasets` - Hugging Face datasets for loading
+- `datasets` - HuggingFace datasets for loading
 - `pandas` - Data manipulation and analysis
 - `pyarrow` - Efficient Parquet file processing
 - `numpy` - Numerical computing support
 
-**Testing Libraries:**
-
-- `pytest` - Test framework with fixtures
-- `pytest-cov` - Coverage reporting and analysis  
-- `pytest-mock` - Mocking utilities for isolation
-
-**Prompt Engineering Libraries:**
-
-- `azure-ai-inference` - Azure AI model integration with rate limiting support
+**Prompt Engineering:**
+- `azure-ai-inference` - Azure AI model integration with rate limiting
 - `python-dotenv` - Environment variable management
-- `PyYAML` - YAML configuration file parsing for multi-model setup
-- `scikit-learn` - Machine learning metrics and evaluation
-- `concurrent.futures` - Multi-threaded concurrent processing support
+- `PyYAML` - YAML configuration file parsing
+- `scikit-learn` - Machine learning metrics
+
+**Fine-Tuning:**
+- `transformers` - HuggingFace model library
+- `peft` - Parameter-efficient fine-tuning (LoRA/QLoRA)
+- `accelerate` - Multi-GPU training support
+- `bitsandbytes` - 4-bit quantization
+
+**Testing:**
+- `pytest` - Test framework
+- `pytest-cov` - Coverage reporting
 
 **See `requirements.txt` for complete dependency list with versions.**
 
-## 📚 Additional Documentation
-
-**📖 Prompt Engineering Framework Documentation:**
-
-- **[`prompt_engineering/README.md`](prompt_engineering/README.md)** - **Production prompt validation framework documentation**
-  - Multi-model Azure AI configuration and usage with YAML support
-  - Concurrent processing with configurable worker pools and batch sizes
-  - Rate limiting intelligence with exponential backoff and retry logic
-  - File logging with complete audit trails in runID folders
-  - Comprehensive CLI reference and examples with performance tuning
-  - Incremental storage and runId organization for memory efficiency
-  - Strategy configuration (Policy, Persona, Combined, Baseline) with custom template support
-  - Rich evaluation reports with metadata integration
-
-- **[`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)** - **Debugging guide for prompt validation framework**
-  - VS Code debugging setup and workflow
-  - Component-specific troubleshooting guidance
-  - Common error patterns and solutions
-  - Performance monitoring and rate limiting diagnostics
-
-- **[`prompt_engineering/STRATEGY_TEST_RESULTS.md`](prompt_engineering/STRATEGY_TEST_RESULTS.md)** - **Test results and analysis framework**
-  - Strategy performance evaluation templates with concurrent processing results
-  - Metrics analysis and comparison guidelines
-  - Usage patterns and best practices for production deployments
-  - Performance benchmarking and optimization recommendations
-
-**📊 Dataset & Project Documentation:**
-
-- **`UNIFICATION_GUIDE.md`** - Detailed unification process and schema documentation
-- **`eda/unified_dataset_eda.ipynb`** - Exploratory data analysis notebook
-- **`htmlcov/index.html`** - Test coverage reports (generated after running tests)
-- **`data/processed/unified/unified_dataset_stats.json`** - Dataset statistics and distributions
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Add tests for new functionality  
-4. Ensure test coverage remains above 70%
+3. Add tests for new functionality
+4. Ensure test coverage remains above 60%
 5. Commit changes (`git commit -m 'Add amazing feature'`)
 6. Push to branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
-## 📄 License
+## License
 
 This project processes publicly available datasets:
-
-- **HateXplain**: MIT License  
+- **HateXplain**: MIT License
 - **ToxiGen**: Apache License 2.0
 
 Please cite the original papers when using this unified dataset.
