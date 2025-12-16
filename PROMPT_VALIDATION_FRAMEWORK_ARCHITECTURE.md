@@ -10,8 +10,8 @@ The Hate Speech Prompt Validation Framework implements a modular architecture fo
 ┌─────────────────────────────────────────────────────────────────────┐
 │                    ORCHESTRATION LAYER (prompt_runner.py)           │
 │  CLI Interface • Workflow Coordination • Concurrent Execution       │
-│  Retry Logic • Rate Limit Handling • Result Aggregation            │
-└────────┬─────────────┬─────────────┬─────────────┬─────────────────┘
+│  Retry Logic • Rate Limit Handling • Result Aggregation             │
+└────────┬─────────────┬─────────────┬─────────────┬──────────────────┘
          │             │             │             │
          ▼             ▼             ▼             ▼
     ┌────────┐   ┌──────────┐  ┌──────────┐  ┌───────────────┐
