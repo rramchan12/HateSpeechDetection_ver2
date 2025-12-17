@@ -107,7 +107,7 @@ This document tracks the results of different LoRA fine-tuning configurations an
 **Bias Metrics** (same 100-sample canned dataset):
 
 | Target Group | FPR | FNR | Samples |
-|--------------|-----|--------|---------||
+|--------------|-----|--------|---------|
 | **LGBTQ+** | 93.33% | 15.79% | 49 |
 | **Mexican** | 50.0% | 9.09% | 22 |
 | **Middle East** | 76.92% | 6.25% | 29 |
