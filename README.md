@@ -61,56 +61,13 @@ Jupyter notebooks for HateXplain, ToxiGen, and unified dataset analysis. Include
 
 ```
 HateSpeechDetection_ver2/
-├── data/
-│   ├── hatexplain/              # Raw HateXplain dataset
-│   ├── toxigen/                 # Raw ToxiGen dataset
-│   └── processed/
-│       └── unified/             # Unified balanced dataset
+├── data/                        # Raw and processed datasets
 ├── data_collection/             # Dataset downloaders and validators
-│   ├── hatexplain_downloader.py
-│   ├── toxigen_downloader.py
-│   ├── hatexplain_data_presence_validator.py
-│   └── toxigen_data_presence_validator.py
-├── data_preparation/            # Preprocessing and unification
-│   ├── data_preparation_hatexplain.py
-│   ├── data_preparation_toxigen.py
-│   └── data_unification.py
-├── eda/                         # Exploratory data analysis
-│   ├── hatexplain_eda.ipynb
-│   ├── toxigen_eda.ipynb
-│   ├── unified_dataset_eda.ipynb
-│   └── outputs/
-├── finetuning/
-│   └── pipeline/                # LoRA training and evaluation
-│       ├── lora/                # Training infrastructure
-│       │   ├── train.py
-│       │   └── configs/
-│       ├── baseline/            # Evaluation runner
-│       │   ├── runner.py
-│       │   ├── connector/
-│       │   └── metrics/
-│       └── outputs/
+├── data_preparation/            # Preprocessing and unification pipeline
+├── eda/                         # Exploratory data analysis notebooks
+├── finetuning/                  # LoRA training and evaluation infrastructure
 ├── prompt_engineering/          # Prompt validation framework
-│   ├── prompt_runner.py         # Main CLI entry point
-│   ├── dataset_sampler.py
-│   ├── connector/               # Azure AI integration
-│   │   ├── azureai_connector.py
-│   │   └── model_connection.yaml
-│   ├── loaders/                 # Data and template loaders
-│   │   ├── strategy_templates_loader.py
-│   │   ├── unified_dataset_loader.py
-│   │   └── model_config_loader.py
-│   ├── metrics/                 # Evaluation and persistence
-│   │   ├── evaluation_metrics_calc.py
-│   │   └── persistence_helper.py
-│   ├── prompt_templates/        # Strategy configurations
-│   ├── data_samples/            # Canned test datasets
-│   └── outputs/                 # Results (runID organized)
 ├── tests/                       # Unit and integration tests
-│   ├── test_data_unification.py
-│   ├── test_hatexplain_downloader.py
-│   ├── test_toxigen_data_preparation.py
-│   └── ...
 ├── htmlcov/                     # Test coverage reports
 ├── requirements.txt             # Project dependencies
 ├── pyproject.toml              # Project configuration
