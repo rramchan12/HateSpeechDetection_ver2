@@ -49,11 +49,14 @@ This document tracks the results of different LoRA fine-tuning configurations an
 ### Training Statistics
 
 - **Training samples**: 2,686
-- **Validation samples**: 55
+- **Validation samples (during training)**: 55 (from `validation.jsonl`)
+- **Validation samples (post-training eval)**: 100 (from `canned_100_size_varied`, 99 valid predictions)
 - **Effective batch size**: 64 (4 per device × 4 GPUs × 4 grad accumulation)
 - **Steps per epoch**: 42
 - **Total training steps**: 126 (3 epochs)
 - **Trainable parameters**: 7,962,624 (0.038% of 20.9B total)
+
+**Note**: Training uses a small 55-sample validation set for quick evaluation during training. Post-training comprehensive validation uses a larger 100-sample canned dataset for more robust performance assessment.
 
 ### Training Results
 
@@ -101,15 +104,13 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **False Positive** | 43 |
 | **False Negative** | 5 |
 
-**Bias Metrics** (computed on test set: 1,009 samples):
+**Bias Metrics** (same 100-sample canned dataset):
 
 | Target Group | FPR | FNR | Samples |
-|--------------|-----|-----|---------|
-| **LGBTQ+** | 93.33% | 15.79% | 494 |
-| **Mexican** | 50.0% | 9.09% | 209 |
-| **Middle East** | 76.92% | 6.25% | 306 |
-
-**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples). This provides comprehensive fairness assessment across all target groups.
+|--------------|-----|--------|---------||
+| **LGBTQ+** | 93.33% | 15.79% | 49 |
+| **Mexican** | 50.0% | 9.09% | 22 |
+| **Middle East** | 76.92% | 6.25% | 29 |
 
 **Analysis**: High false positive rates across all groups, especially LGBTQ+ (93.33%), indicating the model is over-predicting hate speech for these target groups.
 
@@ -147,11 +148,14 @@ This document tracks the results of different LoRA fine-tuning configurations an
 ### Training Statistics
 
 - **Training samples**: 2,686
-- **Validation samples**: 55
+- **Validation samples (during training)**: 55 (from `validation.jsonl`)
+- **Validation samples (post-training eval)**: 100 (from `canned_100_size_varied`, 98 valid predictions)
 - **Effective batch size**: 64 (4 per device × 4 GPUs × 4 grad accumulation)
 - **Steps per epoch**: 42
 - **Total training steps**: 210 (5 epochs)
 - **Trainable parameters**: 15,925,248 (0.076% of 20.9B total)
+
+**Note**: Training uses a small 55-sample validation set for quick evaluation. Post-training uses a 100-sample canned dataset for comprehensive validation (2 samples had invalid predictions).
 
 ### Training Results
 
@@ -201,15 +205,13 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **False Positive** | 25 | -18 |
 | **False Negative** | 9 | +4 |
 
-**Bias Metrics** (computed on test set: 1,009 samples):
+**Bias Metrics** (same 100-sample canned dataset, 98 valid predictions):
 
 | Target Group | FPR | FNR | Samples | Change from Phase 1 (FPR) |
-|--------------|-----|-----|---------|---------------------------|
-| **LGBTQ+** | 62.07% | 21.05% | 494 | -33.5% (Major improvement) |
-| **Mexican** | 30.0% | 25.0% | 209 | -40.0% (Major improvement) |
-| **Middle East** | 30.77% | 13.33% | 306 | -60.0% (Major improvement) |
-
-**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples). This provides comprehensive fairness assessment across all target groups.
+|--------------|-----|--------|---------|---------------------------|
+| **LGBTQ+** | 62.07% | 21.05% | 49 | -33.5% (Major improvement) |
+| **Mexican** | 30.0% | 25.0% | 22 | -40.0% (Major improvement) |
+| **Middle East** | 30.77% | 13.33% | 29 | -60.0% (Major improvement) |
 
 **Analysis**: 
 - Dramatic FPR improvements across all target groups
@@ -254,11 +256,14 @@ Adding the key projection (k_proj) to target modules with full capacity (r=64) s
 ### Training Statistics
 
 - **Training samples**: 2,686
-- **Validation samples**: 55
+- **Validation samples (during training)**: 55 (from `validation.jsonl`)
+- **Validation samples (post-training eval)**: 100 (from `canned_100_size_varied`, 98 valid predictions)
 - **Effective batch size**: 64 (4 per device × 4 GPUs × 4 grad accumulation)
 - **Steps per epoch**: 42
 - **Total training steps**: 168 (4 epochs)
 - **Trainable parameters**: ~23,887,872 (0.114% of 20.9B total)
+
+**Note**: Training uses a small 55-sample validation set for quick evaluation. Post-training uses a 100-sample canned dataset for comprehensive validation (2 samples had invalid predictions).
 
 ### Training Results
 
@@ -307,15 +312,13 @@ Adding the key projection (k_proj) to target modules with full capacity (r=64) s
 | **False Positive** | 30 | +5 |
 | **False Negative** | 10 | +1 |
 
-**Bias Metrics** (computed on test set: 1,009 samples):
+**Bias Metrics** (same 100-sample canned dataset, 98 valid predictions):
 
 | Target Group | FPR | FNR | Samples | Change from Phase 2 (FPR) |
-|--------------|-----|-----|---------|---------------------------|
-| **LGBTQ+** | 70.0% | 21.05% | 494 | +12.8% (Worse) |
-| **Mexican** | 22.22% | 25.0% | 209 | -25.9% (Better) |
-| **Middle East** | 58.33% | 18.75% | 306 | +89.6% (Worse) |
-
-**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples).
+|--------------|-----|--------|---------|---------------------------|
+| **LGBTQ+** | 70.0% | 21.05% | 49 | +12.8% (Worse) |
+| **Mexican** | 22.22% | 25.0% | 22 | -25.9% (Better) |
+| **Middle East** | 58.33% | 18.75% | 29 | +89.6% (Worse) |
 
 ### Phase 3 Analysis
 
