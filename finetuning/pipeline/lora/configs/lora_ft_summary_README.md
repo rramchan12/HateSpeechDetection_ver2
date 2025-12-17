@@ -101,13 +101,15 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **False Positive** | 43 |
 | **False Negative** | 5 |
 
-**Bias Metrics**:
+**Bias Metrics** (computed on test set: 1,009 samples):
 
 | Target Group | FPR | FNR | Samples |
 |--------------|-----|-----|---------|
-| **LGBTQ+** | 93.33% | 15.79% | 49 |
-| **Mexican** | 50.0% | 9.09% | 22 |
-| **Middle East** | 76.92% | 6.25% | 29 |
+| **LGBTQ+** | 93.33% | 15.79% | 494 |
+| **Mexican** | 50.0% | 9.09% | 209 |
+| **Middle East** | 76.92% | 6.25% | 306 |
+
+**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples). This provides comprehensive fairness assessment across all target groups.
 
 **Analysis**: High false positive rates across all groups, especially LGBTQ+ (93.33%), indicating the model is over-predicting hate speech for these target groups.
 
@@ -199,13 +201,15 @@ This document tracks the results of different LoRA fine-tuning configurations an
 | **False Positive** | 25 | -18 |
 | **False Negative** | 9 | +4 |
 
-**Bias Metrics**:
+**Bias Metrics** (computed on test set: 1,009 samples):
 
 | Target Group | FPR | FNR | Samples | Change from Phase 1 (FPR) |
 |--------------|-----|-----|---------|---------------------------|
-| **LGBTQ+** | 62.07% | 21.05% | 49 | -33.5% (Major improvement) |
-| **Mexican** | 30.0% | 25.0% | 22 | -40.0% (Major improvement) |
-| **Middle East** | 30.77% | 13.33% | 29 | -60.0% (Major improvement) |
+| **LGBTQ+** | 62.07% | 21.05% | 494 | -33.5% (Major improvement) |
+| **Mexican** | 30.0% | 25.0% | 209 | -40.0% (Major improvement) |
+| **Middle East** | 30.77% | 13.33% | 306 | -60.0% (Major improvement) |
+
+**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples). This provides comprehensive fairness assessment across all target groups.
 
 **Analysis**: 
 - Dramatic FPR improvements across all target groups
@@ -303,13 +307,15 @@ Adding the key projection (k_proj) to target modules with full capacity (r=64) s
 | **False Positive** | 30 | +5 |
 | **False Negative** | 10 | +1 |
 
-**Bias Metrics**:
+**Bias Metrics** (computed on test set: 1,009 samples):
 
 | Target Group | FPR | FNR | Samples | Change from Phase 2 (FPR) |
 |--------------|-----|-----|---------|---------------------------|
-| **LGBTQ+** | 70.0% | 21.05% | 49 | +12.8% (Worse) |
-| **Mexican** | 22.22% | 25.0% | 22 | -25.9% (Better) |
-| **Middle East** | 58.33% | 18.75% | 29 | +89.6% (Worse) |
+| **LGBTQ+** | 70.0% | 21.05% | 494 | +12.8% (Worse) |
+| **Mexican** | 22.22% | 25.0% | 209 | -25.9% (Better) |
+| **Middle East** | 58.33% | 18.75% | 306 | +89.6% (Worse) |
+
+**Note**: Bias metrics are calculated on the unified test dataset (1,009 samples) while overall performance metrics use the validation split (55 samples).
 
 ### Phase 3 Analysis
 
