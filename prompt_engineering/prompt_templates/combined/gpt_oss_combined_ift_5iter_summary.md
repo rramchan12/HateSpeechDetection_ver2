@@ -431,35 +431,68 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 ### Summary Table: All Strategies Ranked
 
-| Rank | Version | Strategy | F1 Score | vs Baseline | Examples | Policy | Context | Result |
-|------|---------|----------|----------|-------------|----------|--------|---------|--------|
-| **1** | **V5** | **implicit_examples (PROD)** | **0.655** | **+6.5%** | 6 | 0 words | Implicit | ✅ **WINNER** |
-| **2** | **V5** | **chain_of_thought (PROD)** | **0.654** | **+6.3%** | 0 | Compressed | Structured | ✅ **SUCCESS** |
-| 3 | V5 | chain_of_thought (100) | 0.636 | +1.6% | 0 | Compressed | Structured | ✅ |
-| 4 | V5 | implicit_examples (100) | 0.627 | +0.2% | 6 | 0 words | Implicit | ✅ |
-| 5 | Baseline | standard (100) | 0.626 | -- | 0 | 0 words | None | Reference |
-| 6 | Baseline | standard (PROD) | 0.615 | -- | 0 | 0 words | None | Old target |
-| 7 | V1 | combined_optimized (100) | 0.614 | -0.2% | 15 | ~200 words | Verbose | ❌ |
-| 8 | V5 | minimal_signal | 0.611 | -2.3% | 0 | 1 sentence | Minimal | ❌ |
-| 9 | V1 | combined_optimized (PROD) | 0.590 | -4.1% | 15 | ~200 words | Verbose | ❌ |
-| 10 | V4 | minimal_examples | 0.589 | -4.2% | 6 | 0 words | None | ❌ |
-| 11 | V5 | compressed_tokens | 0.583 | -5.2% | 0 | Tokens | Compressed | ❌ |
-| 12 | V4 | balanced_lite | 0.571 | -7.1% | 6 | 0 words | Brief | ❌ |
-| 13 | V2 | cultural_context | 0.565 | -8.1% | 0 | 0 words | Deep | ❌ |
-| 14 | V3 | recall_focused | 0.559 | -9.1% | 5 | ~100 words | Moderate | ❌ |
-| 15 | V2 | recall_optimized | 0.557 | -9.4% | 0 | 0 words | None | ❌ |
-| 16 | V4 | community_aware | 0.539 | -12.4% | 0 | 0 words | Brief | ❌ |
-| 17 | V4 | policy_lite | 0.524 | -14.8% | 6 | ~50 words | None | ❌ |
-| 18 | V2 | policy_focused | 0.521 | -15.3% | 0 | ~150 words | None | ❌ |
-| 19 | V4 | subtle_emphasis | 0.516 | -16.1% | 0 | 0 words | 1 sentence | ❌ |
-| 20 | V2 | persona_balanced | 0.506 | -17.7% | 2 | ~100 words | Moderate | ❌ |
-| 21 | V1 | combined_conservative | 0.500 | -18.7% | 15 | ~200 words | Verbose | ❌ |
-| 22 | V3 | cultural_aware | 0.442 | -28.1% | 5 | ~100 words | Deep | ❌ |
-| 23 | V3 | optimized | 0.438 | -28.8% | 5 | ~150 words | Verbose | ❌ |
-| 24 | V2 | minimal_hybrid | 0.378 | -38.5% | 0 | ~50 words | Minimal | ❌ |
-| 25 | V5 | example_only | 0.211 | -66.3% | 6 | 0 words | None | ❌ **WORST** |
+| Rank | Version | Strategy | Accuracy | Precision | Recall | F1 Score | vs Baseline | Result |
+|------|---------|----------|----------|-----------|--------|----------|-------------|--------|
+| **1** | **V5** | **chain_of_thought** | **0.610** | **0.567** | **0.723** | **0.636** | **+1.6%** | ✅ **WINNER** |
+| **2** | **V5** | **implicit_examples** | **0.620** | **0.582** | **0.681** | **0.627** | **+0.2%** | ✅ **SUCCESS** |
+| 3 | Baseline | standard (100) | 0.650 | 0.615 | 0.340 | 0.626 | -- | Reference |
+| 4 | Baseline | standard (PROD) | 0.650 | 0.610 | 0.620 | 0.615 | -- | Target |
+| 5 | V1 | combined_optimized | 0.610 | 0.574 | 0.660 | 0.614 | -1.9% | ❌ |
+| 6 | V5 | minimal_signal | 0.580 | 0.541 | 0.702 | 0.611 | -2.4% | ❌ |
+| 7 | V4 | minimal_examples | 0.610 | 0.583 | 0.596 | 0.589 | -5.9% | ❌ |
+| 8 | V5 | compressed_tokens | 0.600 | 0.571 | 0.596 | 0.583 | -6.9% | ❌ |
+| 9 | V4 | balanced_lite | 0.670 | 0.733 | 0.468 | 0.571 | -8.8% | ❌ |
+| 10 | V2 | cultural_context | 0.660 | 0.625 | 0.617 | 0.565 | -9.7% | ❌ |
+| 11 | V3 | recall_focused | 0.590 | 0.565 | 0.553 | 0.559 | -10.7% | ❌ |
+| 12 | V2 | recall_optimized | 0.640 | 0.622 | 0.553 | 0.557 | -11.0% | ❌ |
+| 13 | V1 | combined_focused | 0.610 | 0.605 | 0.489 | 0.541 | -13.6% | ❌ |
+| 14 | V4 | community_aware | 0.590 | 0.571 | 0.511 | 0.539 | -13.9% | ❌ |
+| 15 | V4 | policy_lite | 0.600 | 0.595 | 0.468 | 0.524 | -16.3% | ❌ |
+| 16 | V2 | policy_focused | 0.620 | 0.615 | 0.489 | 0.521 | -16.8% | ❌ |
+| 17 | V4 | subtle_emphasis | 0.550 | 0.522 | 0.511 | 0.516 | -17.6% | ❌ |
+| 18 | V2 | persona_balanced | 0.610 | 0.625 | 0.426 | 0.506 | -19.2% | ❌ |
+| 19 | V1 | combined_conservative | 0.560 | 0.537 | 0.468 | 0.500 | -20.1% | ❌ |
+| 20 | V3 | cultural_aware | 0.570 | 0.567 | 0.362 | 0.442 | -29.4% | ❌ |
+| 21 | V3 | optimized | 0.590 | 0.615 | 0.340 | 0.438 | -30.0% | ❌ |
+| 22 | V2 | minimal_hybrid | 0.530 | 0.625 | 0.255 | 0.378 | -39.6% | ❌ |
+| 23 | V5 | example_only | 0.550 | 0.600 | 0.128 | 0.211 | -66.3% | ❌ **WORST** |
 
-**Key Insight**: V5's noise-reduced approaches (implicit_examples, chain_of_thought) are the ONLY strategies to beat baseline across 5 iterations and 25+ strategies tested.
+**Key Insight**: V5's noise-reduced approaches (chain_of_thought, implicit_examples) are the ONLY strategies to beat baseline across 5 iterations and 23 total strategies tested (21 iteration strategies on 100-sample validation + 2 baseline references).
+
+---
+
+### Strategy Mapping: Technical Names to Conceptual Framework
+
+| Iteration | Goal | Technical Strategy Name | Conceptual Framework Name | F1 Score | Result |
+|-----------|------|------------------------|---------------------------|----------|--------|
+| **Iteration 1** | **Establish baseline with pattern-based rules** | | | | |
+| | | combined_optimized | Persona Framing | 0.614 | ❌ |
+| | | combined_focused | Role-Explicit System Prompt | 0.541 | ❌ |
+| | | combined_conservative | Strict Output Format | 0.500 | ❌ |
+| **Iteration 2** | **Introduce few-shot examples for clarification** | | | | |
+| | | combined_v2_cultural_context | Example Diversity | 0.565 | ❌ |
+| | | combined_v2_recall_optimized | Contrastive Example Selection | 0.557 | ❌ |
+| | | combined_v2_policy_focused | Direct Policy Statement | 0.521 | ❌ |
+| | | combined_v2_persona_balanced | Multiple Example Prepending | 0.506 | ❌ |
+| | | combined_v2_minimal_hybrid | Minimal Context | 0.378 | ❌ |
+| **Iteration 3** | **Restore persona context (in-group/out-group)** | | | | |
+| | | combined_v3_recall_focused | Persona-Conditioned Examples | 0.559 | ❌ |
+| | | combined_v3_cultural_aware | In-Group Persona Framing | 0.442 | ❌ |
+| | | combined_v3_optimized | Persona-Driven Rationale | 0.438 | ❌ |
+| **Iteration 4** | **Apply conservative decoding and structure** | | | | |
+| | | combined_v4_minimal_examples | Essential Example Selection | 0.589 | ❌ |
+| | | combined_v4_balanced_lite | Concise Rationales | 0.571 | ❌ |
+| | | combined_v4_community_aware | Deterministic Sampling | 0.539 | ❌ |
+| | | combined_v4_policy_lite | Minimal Prompt Overhead | 0.524 | ❌ |
+| | | combined_v4_subtle_emphasis | Strict Output Enforcement | 0.516 | ❌ |
+| **Iteration 5** | **Compare example-only vs. hybrid pattern** | | | | |
+| | | combined_v5_chain_of_thought | Balanced Example Distribution | 0.636 | ✅ |
+| | | combined_v5_implicit_examples | Hybrid Prompt | 0.627 | ✅ |
+| | | combined_v5_minimal_signal | Minimal vs. Maximal Context | 0.611 | ❌ |
+| | | combined_v5_compressed_tokens | Direct Comparison Protocol | 0.583 | ❌ |
+| | | combined_v5_example_only | Example-Only Prompt | 0.211 | ❌ |
+
+**Key Insight**: V5's noise-reduced approaches (chain_of_thought, implicit_examples) are the ONLY strategies to beat baseline across 5 iterations and 23 total strategies tested (21 iteration strategies on 100-sample validation + 2 baseline references).
 
 ---
 
