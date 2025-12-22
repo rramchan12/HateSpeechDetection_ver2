@@ -138,13 +138,21 @@ Training samples follow the chat-based conversational format with system, user, 
 
 ### 2.1 Dataset Composition
 
-**Source**: Unified dataset combining HateXplain and ToxiGen corpora  
-**Total Samples**: 13,048  
-**Training Split**: 2,686 samples (~20.6%)  
-**Validation Split**: 55 samples  
-**Test Split**: 10,307 samples (production validation)
+**Source**: Unified dataset combining HateXplain and ToxiGen corpora (filtered for LoRA training)  
+**Total LoRA Training Samples**: 2,686 (filtered from unified training set)  
+**LoRA Validation Split**: 55 samples (filtered from unified validation set)  
+**Test/Production Validation**: 1,009 samples (unified test set, used for post-training evaluation)
 
-**Class Distribution**:
+**Unified Dataset Context**:
+- Original unified corpus: 5,151 total samples
+- Unified training set: 3,628 samples (70.4%)
+- Unified validation set: 514 samples (10.0%)
+- Unified test set: 1,009 samples (19.6%)
+
+**LoRA Training Data Selection**:
+The LoRA training files (`train.jsonl` with 2,686 samples and `validation.jsonl` with 55 samples) represent a filtered subset of the unified dataset. The filtering is performed by the `ft_prompt_generator` module, which selects samples based on split field values from the unified dataset. The test set (1,009 samples) is used exclusively for post-training production validation and is never seen during training.
+
+**Class Distribution** (LoRA training data):
 - Hate speech samples: ~45%
 - Normal (non-hate) samples: ~55%
 - Balanced representation maintained across splits
