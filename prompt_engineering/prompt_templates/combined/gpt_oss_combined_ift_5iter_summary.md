@@ -75,7 +75,7 @@
 - **1,009 samples (production)**: F1=0.615, Precision=0.610, Recall=0.620
 - **Configuration**: temp=0.1, 512 tokens, top_p=1.0 (empirically optimized)
 - **Approach**: Generic "hateful language and social norms" guidance, no examples, no policy
-- **Status**: ✅ **PRODUCTION BASELINE (TARGET TO BEAT)**
+- **Status**:  **PRODUCTION BASELINE (TARGET TO BEAT)**
 
 **Bias Metrics (Production, 1,009 samples)**:
 - LGBTQ+ (494 samples): FPR=43.0%, FNR=39.4%
@@ -109,7 +109,7 @@
 **Performance (1,009 samples production)**:
 - F1=0.590, Precision=0.574, Recall=0.609
 - **Degradation**: -4.0% from 100 samples, -4.1% vs baseline production (0.615)
-- **Status**: ❌ FAILED TO BEAT BASELINE
+- **Status**:  FAILED TO BEAT BASELINE
 
 **Bias Metrics (Production)**:
 - LGBTQ+ FPR: 56.7%, FNR: 21.1% (FPR worse than baseline 43%)
@@ -123,7 +123,7 @@
 
 **Performance (100 samples)**:
 - F1=0.500, Precision=0.457, Recall=0.468
-- **Status**: ❌ Significantly worse than baseline
+- **Status**:  Significantly worse than baseline
 
 **Key V1 Findings**:
 1. 15 examples + verbose policy underperformed baseline
@@ -145,11 +145,11 @@
 
 | Strategy | Examples | Approach | F1 Score | vs Baseline | Status |
 |----------|----------|----------|----------|-------------|--------|
-| **cultural_context** | 0 | Deep cultural framework | **0.565** | -8.1% | ❌ Best V2, below baseline |
-| recall_optimized | 0 | Recall emphasis | 0.557 | -9.4% | ❌ |
-| policy_focused | 0 | Policy-heavy | 0.521 | -15.3% | ❌ |
-| persona_balanced | 2 | Policy-persona 40/60 | 0.506 | -17.7% | ❌ WORST |
-| minimal_hybrid | 0 | Minimal guidance | 0.378 | -38.5% | ❌ CATASTROPHIC |
+| **cultural_context** | 0 | Deep cultural framework | **0.565** | -8.1% |  Best V2, below baseline |
+| recall_optimized | 0 | Recall emphasis | 0.557 | -9.4% |  |
+| policy_focused | 0 | Policy-heavy | 0.521 | -15.3% |  |
+| persona_balanced | 2 | Policy-persona 40/60 | 0.506 | -17.7% |  WORST |
+| minimal_hybrid | 0 | Minimal guidance | 0.378 | -38.5% |  CATASTROPHIC |
 
 **Key V2 Findings**:
 1. **0 examples better than 2 examples** (cultural_context F1=0.565 vs persona_balanced F1=0.506)
@@ -177,9 +177,9 @@
 
 | Strategy | Examples | Approach | F1 Score | Precision | Recall | vs Baseline | Status |
 |----------|----------|----------|----------|-----------|--------|-------------|--------|
-| **recall_focused** | 5 | Recall emphasis | **0.559** | 0.565 | 0.553 | -9.1% | ❌ Best V3 |
-| cultural_aware | 5 | Cultural depth | 0.442 | 0.567 | 0.362 | -28.1% | ❌ |
-| optimized | 5 | Balanced 50/50 | 0.438 | 0.615 | 0.340 | -28.8% | ❌ **CATASTROPHIC** |
+| **recall_focused** | 5 | Recall emphasis | **0.559** | 0.565 | 0.553 | -9.1% |  Best V3 |
+| cultural_aware | 5 | Cultural depth | 0.442 | 0.567 | 0.362 | -28.1% |  |
+| optimized | 5 | Balanced 50/50 | 0.438 | 0.615 | 0.340 | -28.8% |  **CATASTROPHIC** |
 
 **CATASTROPHIC V3 Findings**:
 1. **Recall collapsed** in optimized/cultural_aware (0.340-0.362 vs V1's 0.660)
@@ -211,11 +211,11 @@
 
 | Rank | Strategy | Additions | F1 Score | Precision | Recall | vs Baseline | Status |
 |------|----------|-----------|----------|-----------|--------|-------------|--------|
-| 1 | **minimal_examples** | 6 examples only | **0.589** | 0.583 | 0.596 | -4.2% | ❌ Best V4 |
-| 2 | balanced_lite | 6 examples + brief context | 0.571 | 0.733 | 0.468 | -7.1% | ❌ |
-| 3 | community_aware | Brief context only | 0.539 | 0.571 | 0.511 | -12.4% | ❌ |
-| 4 | policy_lite | ~50 words policy + examples | 0.524 | 0.595 | 0.468 | -14.8% | ❌ |
-| 5 | subtle_emphasis | Single sentence emphasis | 0.516 | 0.522 | 0.511 | -16.1% | ❌ WORST |
+| 1 | **minimal_examples** | 6 examples only | **0.589** | 0.583 | 0.596 | -4.2% |  Best V4 |
+| 2 | balanced_lite | 6 examples + brief context | 0.571 | 0.733 | 0.468 | -7.1% |  |
+| 3 | community_aware | Brief context only | 0.539 | 0.571 | 0.511 | -12.4% |  |
+| 4 | policy_lite | ~50 words policy + examples | 0.524 | 0.595 | 0.468 | -14.8% |  |
+| 5 | subtle_emphasis | Single sentence emphasis | 0.516 | 0.522 | 0.511 | -16.1% |  WORST |
 
 **V4 COMPLETE FAILURE**:
 1. **ALL 5 strategies underperformed baseline** by 4-16%
@@ -258,11 +258,11 @@
 
 | Rank | Strategy | Approach | 100-Sample F1 | Production F1 | vs Baseline | Status |
 |------|----------|----------|---------------|---------------|-------------|--------|
-| **1** | **implicit_examples** | 6 examples, NO explanations | 0.627 | **0.655** | **+6.5%** | ✅ **WINNER** |
-| **2** | **chain_of_thought** | Structured reasoning steps | 0.636 | **0.654** | **+6.3%** | ✅ **SUCCESS** |
-| 3 | compressed_tokens | [Policy: X] compact markers | 0.583 | — | -5.2% | ❌ |
-| 4 | minimal_signal | Single sentence policy | 0.611 | — | -2.3% | ❌ |
-| 5 | example_only | Pure examples, no framing | 0.211 | — | -66.3% | ❌ Catastrophic |
+| **1** | **implicit_examples** | 6 examples, NO explanations | 0.627 | **0.655** | **+6.5%** |  **WINNER** |
+| **2** | **chain_of_thought** | Structured reasoning steps | 0.636 | **0.654** | **+6.3%** |  **SUCCESS** |
+| 3 | compressed_tokens | [Policy: X] compact markers | 0.583 | — | -5.2% |  |
+| 4 | minimal_signal | Single sentence policy | 0.611 | — | -2.3% |  |
+| 5 | example_only | Pure examples, no framing | 0.211 | — | -66.3% |  Catastrophic |
 
 ---
 
@@ -285,7 +285,7 @@
 **Performance (1,009 samples production)**:
 - F1=0.655, Precision=0.615, Recall=0.701
 - Accuracy: 66.7%
-- **+6.5% vs baseline production (0.615)** ✅
+- **+6.5% vs baseline production (0.615)** 
 - **Positive generalization**: +2.8% improvement from small to large sample
 
 **Bias Metrics (Production)**:
@@ -317,7 +317,7 @@
 **Performance (1,009 samples production)**:
 - F1=0.654, Precision=0.609, Recall=0.708
 - Accuracy: 66.3%
-- **+6.3% vs baseline production (0.615)** ✅
+- **+6.3% vs baseline production (0.615)** 
 - **Positive generalization**: +1.8% improvement from small to large sample
 
 **Bias Metrics (Production)**:
@@ -388,8 +388,8 @@
 ```
 F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
-0.66 │                                              ★ V5 implicit_examples (prod): 0.655 ✅
-     │                                              ★ V5 chain_of_thought (prod): 0.654 ✅
+0.66 │                                               V5 implicit_examples (prod): 0.655 
+     │                                               V5 chain_of_thought (prod): 0.654 
      │                                              ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 0.64 │                            ● V5 CoT (100): 0.636
      │
@@ -401,29 +401,29 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
      │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 0.61 │  ● V1 combined_optimized (100): 0.614
      │
-0.59 │  ● V1 combined_optimized (prod): 0.590 ❌
-     │  ● V4 minimal_examples: 0.589 ❌
-     │  ● V5 compressed_tokens: 0.583 ❌
+0.59 │  ● V1 combined_optimized (prod): 0.590 
+     │  ● V4 minimal_examples: 0.589 
+     │  ● V5 compressed_tokens: 0.583 
      │
-0.57 │  ● V4 balanced_lite: 0.571 ❌
+0.57 │  ● V4 balanced_lite: 0.571 
      │
-0.56 │  ● V2 cultural_context: 0.565 ❌
-     │  ● V3 recall_focused: 0.559 ❌
+0.56 │  ● V2 cultural_context: 0.565 
+     │  ● V3 recall_focused: 0.559 
      │
-0.54 │  ● V4 community_aware: 0.539 ❌
-     │  ● V4 policy_lite: 0.524 ❌
+0.54 │  ● V4 community_aware: 0.539 
+     │  ● V4 policy_lite: 0.524 
      │
-0.52 │  ● V4 subtle_emphasis: 0.516 ❌
+0.52 │  ● V4 subtle_emphasis: 0.516 
      │
-0.50 │  ● V1 combined_conservative: 0.500 ❌
-     │  ● V2 persona_balanced: 0.506 ❌
+0.50 │  ● V1 combined_conservative: 0.500 
+     │  ● V2 persona_balanced: 0.506 
      │
-0.44 │  ● V3 cultural_aware: 0.442 ❌
-     │  ● V3 optimized: 0.438 ❌ CATASTROPHIC
+0.44 │  ● V3 cultural_aware: 0.442 
+     │  ● V3 optimized: 0.438  CATASTROPHIC
      │
-0.38 │  ● V2 minimal_hybrid: 0.378 ❌ CATASTROPHIC
+0.38 │  ● V2 minimal_hybrid: 0.378  CATASTROPHIC
      │
-0.21 │  ● V5 example_only: 0.211 ❌ CATASTROPHIC
+0.21 │  ● V5 example_only: 0.211  CATASTROPHIC
      │
      └────────────────────────────────────────────────────
       Baseline  V1    V2    V3    V4    V5
@@ -433,29 +433,29 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 | Rank | Version | Strategy | Accuracy | Precision | Recall | F1 Score | vs Baseline | Result |
 |------|---------|----------|----------|-----------|--------|----------|-------------|--------|
-| **1** | **V5** | **chain_of_thought** | **0.610** | **0.567** | **0.723** | **0.636** | **+1.6%** | ✅ **WINNER** |
-| **2** | **V5** | **implicit_examples** | **0.620** | **0.582** | **0.681** | **0.627** | **+0.2%** | ✅ **SUCCESS** |
+| **1** | **V5** | **chain_of_thought** | **0.610** | **0.567** | **0.723** | **0.636** | **+1.6%** |  **WINNER** |
+| **2** | **V5** | **implicit_examples** | **0.620** | **0.582** | **0.681** | **0.627** | **+0.2%** |  **SUCCESS** |
 | 3 | Baseline | standard (100) | 0.650 | 0.615 | 0.340 | 0.626 | -- | Reference |
 | 4 | Baseline | standard (PROD) | 0.650 | 0.610 | 0.620 | 0.615 | -- | Target |
-| 5 | V1 | combined_optimized | 0.610 | 0.574 | 0.660 | 0.614 | -1.9% | ❌ |
-| 6 | V5 | minimal_signal | 0.580 | 0.541 | 0.702 | 0.611 | -2.4% | ❌ |
-| 7 | V4 | minimal_examples | 0.610 | 0.583 | 0.596 | 0.589 | -5.9% | ❌ |
-| 8 | V5 | compressed_tokens | 0.600 | 0.571 | 0.596 | 0.583 | -6.9% | ❌ |
-| 9 | V4 | balanced_lite | 0.670 | 0.733 | 0.468 | 0.571 | -8.8% | ❌ |
-| 10 | V2 | cultural_context | 0.660 | 0.625 | 0.617 | 0.565 | -9.7% | ❌ |
-| 11 | V3 | recall_focused | 0.590 | 0.565 | 0.553 | 0.559 | -10.7% | ❌ |
-| 12 | V2 | recall_optimized | 0.640 | 0.622 | 0.553 | 0.557 | -11.0% | ❌ |
-| 13 | V1 | combined_focused | 0.610 | 0.605 | 0.489 | 0.541 | -13.6% | ❌ |
-| 14 | V4 | community_aware | 0.590 | 0.571 | 0.511 | 0.539 | -13.9% | ❌ |
-| 15 | V4 | policy_lite | 0.600 | 0.595 | 0.468 | 0.524 | -16.3% | ❌ |
-| 16 | V2 | policy_focused | 0.620 | 0.615 | 0.489 | 0.521 | -16.8% | ❌ |
-| 17 | V4 | subtle_emphasis | 0.550 | 0.522 | 0.511 | 0.516 | -17.6% | ❌ |
-| 18 | V2 | persona_balanced | 0.610 | 0.625 | 0.426 | 0.506 | -19.2% | ❌ |
-| 19 | V1 | combined_conservative | 0.560 | 0.537 | 0.468 | 0.500 | -20.1% | ❌ |
-| 20 | V3 | cultural_aware | 0.570 | 0.567 | 0.362 | 0.442 | -29.4% | ❌ |
-| 21 | V3 | optimized | 0.590 | 0.615 | 0.340 | 0.438 | -30.0% | ❌ |
-| 22 | V2 | minimal_hybrid | 0.530 | 0.625 | 0.255 | 0.378 | -39.6% | ❌ |
-| 23 | V5 | example_only | 0.550 | 0.600 | 0.128 | 0.211 | -66.3% | ❌ **WORST** |
+| 5 | V1 | combined_optimized | 0.610 | 0.574 | 0.660 | 0.614 | -1.9% |  |
+| 6 | V5 | minimal_signal | 0.580 | 0.541 | 0.702 | 0.611 | -2.4% |  |
+| 7 | V4 | minimal_examples | 0.610 | 0.583 | 0.596 | 0.589 | -5.9% |  |
+| 8 | V5 | compressed_tokens | 0.600 | 0.571 | 0.596 | 0.583 | -6.9% |  |
+| 9 | V4 | balanced_lite | 0.670 | 0.733 | 0.468 | 0.571 | -8.8% |  |
+| 10 | V2 | cultural_context | 0.660 | 0.625 | 0.617 | 0.565 | -9.7% |  |
+| 11 | V3 | recall_focused | 0.590 | 0.565 | 0.553 | 0.559 | -10.7% |  |
+| 12 | V2 | recall_optimized | 0.640 | 0.622 | 0.553 | 0.557 | -11.0% |  |
+| 13 | V1 | combined_focused | 0.610 | 0.605 | 0.489 | 0.541 | -13.6% |  |
+| 14 | V4 | community_aware | 0.590 | 0.571 | 0.511 | 0.539 | -13.9% |  |
+| 15 | V4 | policy_lite | 0.600 | 0.595 | 0.468 | 0.524 | -16.3% |  |
+| 16 | V2 | policy_focused | 0.620 | 0.615 | 0.489 | 0.521 | -16.8% |  |
+| 17 | V4 | subtle_emphasis | 0.550 | 0.522 | 0.511 | 0.516 | -17.6% |  |
+| 18 | V2 | persona_balanced | 0.610 | 0.625 | 0.426 | 0.506 | -19.2% |  |
+| 19 | V1 | combined_conservative | 0.560 | 0.537 | 0.468 | 0.500 | -20.1% |  |
+| 20 | V3 | cultural_aware | 0.570 | 0.567 | 0.362 | 0.442 | -29.4% |  |
+| 21 | V3 | optimized | 0.590 | 0.615 | 0.340 | 0.438 | -30.0% |  |
+| 22 | V2 | minimal_hybrid | 0.530 | 0.625 | 0.255 | 0.378 | -39.6% |  |
+| 23 | V5 | example_only | 0.550 | 0.600 | 0.128 | 0.211 | -66.3% |  **WORST** |
 
 **Key Insight**: V5's noise-reduced approaches (chain_of_thought, implicit_examples) are the ONLY strategies to beat baseline across 5 iterations and 23 total strategies tested (21 iteration strategies on 100-sample validation + 2 baseline references).
 
@@ -466,31 +466,31 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 | Iteration | Goal | Technical Strategy Name | Conceptual Framework Name | F1 Score | Result |
 |-----------|------|------------------------|---------------------------|----------|--------|
 | **Iteration 1** | **Establish baseline with pattern-based rules** | | | | |
-| | | combined_optimized | Persona Framing | 0.614 | ❌ |
-| | | combined_focused | Role-Explicit System Prompt | 0.541 | ❌ |
-| | | combined_conservative | Strict Output Format | 0.500 | ❌ |
+| | | combined_optimized | Persona Framing | 0.614 |  |
+| | | combined_focused | Role-Explicit System Prompt | 0.541 |  |
+| | | combined_conservative | Strict Output Format | 0.500 |  |
 | **Iteration 2** | **Introduce few-shot examples for clarification** | | | | |
-| | | combined_v2_cultural_context | Example Diversity | 0.565 | ❌ |
-| | | combined_v2_recall_optimized | Contrastive Example Selection | 0.557 | ❌ |
-| | | combined_v2_policy_focused | Direct Policy Statement | 0.521 | ❌ |
-| | | combined_v2_persona_balanced | Multiple Example Prepending | 0.506 | ❌ |
-| | | combined_v2_minimal_hybrid | Minimal Context | 0.378 | ❌ |
+| | | combined_v2_cultural_context | Example Diversity | 0.565 |  |
+| | | combined_v2_recall_optimized | Contrastive Example Selection | 0.557 |  |
+| | | combined_v2_policy_focused | Direct Policy Statement | 0.521 |  |
+| | | combined_v2_persona_balanced | Multiple Example Prepending | 0.506 |  |
+| | | combined_v2_minimal_hybrid | Minimal Context | 0.378 |  |
 | **Iteration 3** | **Restore persona context (in-group/out-group)** | | | | |
-| | | combined_v3_recall_focused | Persona-Conditioned Examples | 0.559 | ❌ |
-| | | combined_v3_cultural_aware | In-Group Persona Framing | 0.442 | ❌ |
-| | | combined_v3_optimized | Persona-Driven Rationale | 0.438 | ❌ |
+| | | combined_v3_recall_focused | Persona-Conditioned Examples | 0.559 |  |
+| | | combined_v3_cultural_aware | In-Group Persona Framing | 0.442 |  |
+| | | combined_v3_optimized | Persona-Driven Rationale | 0.438 |  |
 | **Iteration 4** | **Apply conservative decoding and structure** | | | | |
-| | | combined_v4_minimal_examples | Essential Example Selection | 0.589 | ❌ |
-| | | combined_v4_balanced_lite | Concise Rationales | 0.571 | ❌ |
-| | | combined_v4_community_aware | Deterministic Sampling | 0.539 | ❌ |
-| | | combined_v4_policy_lite | Minimal Prompt Overhead | 0.524 | ❌ |
-| | | combined_v4_subtle_emphasis | Strict Output Enforcement | 0.516 | ❌ |
+| | | combined_v4_minimal_examples | Essential Example Selection | 0.589 |  |
+| | | combined_v4_balanced_lite | Concise Rationales | 0.571 |  |
+| | | combined_v4_community_aware | Deterministic Sampling | 0.539 |  |
+| | | combined_v4_policy_lite | Minimal Prompt Overhead | 0.524 |  |
+| | | combined_v4_subtle_emphasis | Strict Output Enforcement | 0.516 |  |
 | **Iteration 5** | **Compare example-only vs. hybrid pattern** | | | | |
-| | | combined_v5_chain_of_thought | Balanced Example Distribution | 0.636 | ✅ |
-| | | combined_v5_implicit_examples | Hybrid Prompt | 0.627 | ✅ |
-| | | combined_v5_minimal_signal | Minimal vs. Maximal Context | 0.611 | ❌ |
-| | | combined_v5_compressed_tokens | Direct Comparison Protocol | 0.583 | ❌ |
-| | | combined_v5_example_only | Example-Only Prompt | 0.211 | ❌ |
+| | | combined_v5_chain_of_thought | Balanced Example Distribution | 0.636 |  |
+| | | combined_v5_implicit_examples | Hybrid Prompt | 0.627 |  |
+| | | combined_v5_minimal_signal | Minimal vs. Maximal Context | 0.611 |  |
+| | | combined_v5_compressed_tokens | Direct Comparison Protocol | 0.583 |  |
+| | | combined_v5_example_only | Example-Only Prompt | 0.211 |  |
 
 **Key Insight**: V5's noise-reduced approaches (chain_of_thought, implicit_examples) are the ONLY strategies to beat baseline across 5 iterations and 23 total strategies tested (21 iteration strategies on 100-sample validation + 2 baseline references).
 
@@ -502,11 +502,11 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 **Evidence across versions**:
 - **0 examples** (baseline): F1=0.615
-- **2 examples** (V2 persona_balanced): F1=0.506 (-17.7%) ❌
-- **5 examples** (V1, V3): F1=0.438-0.614 (-4% to -28.8%) ❌
-- **6 examples with explanations** (V4 minimal): F1=0.589 (-4.2%) ❌
-- **6 examples WITHOUT explanations** (V5 implicit): F1=0.655 (+6.5%) ✅ **SUCCESS**
-- **15 examples** (V1 conservative): F1=0.500 (-18.7%) ❌
+- **2 examples** (V2 persona_balanced): F1=0.506 (-17.7%) 
+- **5 examples** (V1, V3): F1=0.438-0.614 (-4% to -28.8%) 
+- **6 examples with explanations** (V4 minimal): F1=0.589 (-4.2%) 
+- **6 examples WITHOUT explanations** (V5 implicit): F1=0.655 (+6.5%)  **SUCCESS**
+- **15 examples** (V1 conservative): F1=0.500 (-18.7%) 
 
 **Revised Conclusion (V5)**: Examples work when presented WITHOUT explanatory text (implicit encoding). V1-V4 failed because examples + explanations = noise. V5 proved demonstration > explanation.
 
@@ -516,10 +516,10 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 **Evidence across versions**:
 - **0 words policy** (baseline): F1=0.615
-- **Compressed policy** (V5 chain-of-thought, 4 steps): F1=0.654 (+6.3%) ✅ **SUCCESS**
-- **~50 words policy** (V4 policy_lite): F1=0.524 (-14.8%) ❌
-- **~100 words policy** (V2, V3): F1=0.438-0.557 (-9% to -28.8%) ❌
-- **~200 words policy** (V1): F1=0.590-0.614 (-4%) ❌
+- **Compressed policy** (V5 chain-of-thought, 4 steps): F1=0.654 (+6.3%)  **SUCCESS**
+- **~50 words policy** (V4 policy_lite): F1=0.524 (-14.8%) 
+- **~100 words policy** (V2, V3): F1=0.438-0.557 (-9% to -28.8%) 
+- **~200 words policy** (V1): F1=0.590-0.614 (-4%) 
 
 **Revised Conclusion (V5)**: Policy guidance works when compressed into structured reasoning steps (4 steps, ~40 words). Verbose policy explanations (50-200 words) degrade performance. Compression is key.
 
@@ -529,11 +529,11 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 **Evidence across versions**:
 - **No context** (baseline): F1=0.615
-- **Implicit context via examples** (V5 implicit_examples): F1=0.655 (+6.5%) ✅ **SUCCESS**
-- **1 sentence context** (V4 subtle_emphasis): F1=0.516 (-16.1%) ❌
-- **Brief context** (V4 community_aware): F1=0.539 (-12.4%) ❌
-- **Moderate context** (V2, V3): F1=0.506-0.559 (-9% to -17.7%) ❌
-- **Deep context** (V2 cultural, V3 cultural_aware): F1=0.442-0.565 (-8% to -28%) ❌
+- **Implicit context via examples** (V5 implicit_examples): F1=0.655 (+6.5%)  **SUCCESS**
+- **1 sentence context** (V4 subtle_emphasis): F1=0.516 (-16.1%) 
+- **Brief context** (V4 community_aware): F1=0.539 (-12.4%) 
+- **Moderate context** (V2, V3): F1=0.506-0.559 (-9% to -17.7%) 
+- **Deep context** (V2 cultural, V3 cultural_aware): F1=0.442-0.565 (-8% to -28%) 
 
 **Revised Conclusion (V5)**: Cultural context works when encoded implicitly through carefully chosen examples (showing in-group reclamation, policy vs people, coded patterns). Explicit cultural awareness text introduces bias. Show, don't tell.
 
@@ -545,12 +545,12 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 | Version | Word Count | Structure | F1 Score | Result |
 |---------|-----------|-----------|----------|--------|
-| V5 implicit | ~60 words | Raw examples | 0.655 | ✅ **BEST** |
-| V5 chain_of_thought | ~90 words | 4 reasoning steps | 0.654 | ✅ **SUCCESS** |
+| V5 implicit | ~60 words | Raw examples | 0.655 |  **BEST** |
+| V5 chain_of_thought | ~90 words | 4 reasoning steps | 0.654 |  **SUCCESS** |
 | Baseline | ~80 words | Generic | 0.615 | Reference |
-| V4 minimal | ~230 words | Examples + context | 0.589 | ❌ |
-| V1 optimized | ~500 words | Examples + policy + persona | 0.590 | ❌ |
-| V3 optimized | ~700 words | Examples + policy + framework | 0.438 | ❌ **CATASTROPHIC** |
+| V4 minimal | ~230 words | Examples + context | 0.589 |  |
+| V1 optimized | ~500 words | Examples + policy + persona | 0.590 |  |
+| V3 optimized | ~700 words | Examples + policy + framework | 0.438 |  **CATASTROPHIC** |
 
 **Validated Conclusion (V5)**: Goldilocks zone exists at 60-90 words with implicit encoding or compressed reasoning. Below 60 words (example_only F1=0.211) catastrophic. Above 90 words consistently degrades. Verbosity is toxic.
 
@@ -559,12 +559,12 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 ### Finding 5: Combination Strategies Succeed When Compressed (V5 UPDATED)
 
 **Evidence**:
-- **Implicit combination** (V5 implicit: examples + implicit policy/persona): F1=0.655 ✅
-- **Structured combination** (V5 CoT: reasoning steps + policy): F1=0.654 ✅
-- **Minimal addition** (V4 minimal: examples only): F1=0.589 ❌
-- **Double addition** (V4 balanced: examples + context): F1=0.571 ❌
-- **Triple addition** (V1: examples + policy + persona): F1=0.590 ❌
-- **Quad addition** (V3: examples + policy + persona + framework): F1=0.438 ❌
+- **Implicit combination** (V5 implicit: examples + implicit policy/persona): F1=0.655 
+- **Structured combination** (V5 CoT: reasoning steps + policy): F1=0.654 
+- **Minimal addition** (V4 minimal: examples only): F1=0.589 
+- **Double addition** (V4 balanced: examples + context): F1=0.571 
+- **Triple addition** (V1: examples + policy + persona): F1=0.590 
+- **Quad addition** (V3: examples + policy + persona + framework): F1=0.438 
 
 **Revised Conclusion (V5)**: Combination strategies succeed when compressed (60-90 words, implicit encoding). Verbose combinations (200-700 words) fail. Success requires: examples WITHOUT explanations OR structured reasoning WITHOUT frameworks.
 
@@ -573,13 +573,13 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 ### Finding 6: High Precision Strategies Have Catastrophic Recall (Still True)
 
 **Pattern observed in V3, V4, V5**:
-- **V3 optimized**: Precision=0.615, Recall=0.340 (missing 66% of hate) ❌
-- **V4 balanced_lite**: Precision=0.733, Recall=0.468 (missing 53% of hate) ❌
-- **V5 example_only**: Precision=0.600, Recall=0.128 (missing 87% of hate) ❌ **WORST**
+- **V3 optimized**: Precision=0.615, Recall=0.340 (missing 66% of hate) 
+- **V4 balanced_lite**: Precision=0.733, Recall=0.468 (missing 53% of hate) 
+- **V5 example_only**: Precision=0.600, Recall=0.128 (missing 87% of hate)  **WORST**
 
 **Successful balance (V5)**:
-- **V5 implicit_examples**: Precision=0.615, Recall=0.701 (balanced) ✅
-- **V5 chain_of_thought**: Precision=0.609, Recall=0.708 (balanced) ✅
+- **V5 implicit_examples**: Precision=0.615, Recall=0.701 (balanced) 
+- **V5 chain_of_thought**: Precision=0.609, Recall=0.708 (balanced) 
 
 **Conclusion**: Verbose prompts or zero framing → model conservatism → recall collapse. V5 winners achieve balance through optimal compression.
 
@@ -593,9 +593,9 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 - Middle Eastern FPR: 23.6%, FNR: 35.2%
 
 **V5 implicit_examples bias** (production):
-- LGBTQ+ FPR: 47.8% (+4.8% worse), FNR: 28.8% (-10.6% better) ✅
-- Mexican FPR: 8.1% (same), FNR: 31.7% (-8.1% better) ✅
-- Middle Eastern FPR: 26.4% (+2.8% worse), FNR: 29.6% (-5.6% better) ✅
+- LGBTQ+ FPR: 47.8% (+4.8% worse), FNR: 28.8% (-10.6% better) 
+- Mexican FPR: 8.1% (same), FNR: 31.7% (-8.1% better) 
+- Middle Eastern FPR: 26.4% (+2.8% worse), FNR: 29.6% (-5.6% better) 
 
 **Trade-off pattern**: V5 catches more hate (lower FNR by 6-10%) but flags more benign content (higher FPR by 3-5%). Acceptable for hate detection priority use cases.
 
@@ -609,10 +609,10 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 
 | Version | 100-Sample F1 | Production F1 | Change | Generalization |
 |---------|---------------|---------------|--------|----------------|
-| V5 implicit_examples | 0.627 | 0.655 | +2.8% | ✅ **POSITIVE** |
-| V5 chain_of_thought | 0.636 | 0.654 | +1.8% | ✅ **POSITIVE** |
-| Baseline | 0.626 | 0.615 | -1.1% | ✅ Excellent |
-| V1 optimized | 0.614 | 0.590 | -2.4% | ❌ Negative |
+| V5 implicit_examples | 0.627 | 0.655 | +2.8% |  **POSITIVE** |
+| V5 chain_of_thought | 0.636 | 0.654 | +1.8% |  **POSITIVE** |
+| Baseline | 0.626 | 0.615 | -1.1% |  Excellent |
+| V1 optimized | 0.614 | 0.590 | -2.4% |  Negative |
 
 **New Finding**: Strategies that IMPROVE from small to large sample are robust and production-ready. V5 winners showed positive generalization (+1.8% to +2.8%), opposite of V1's degradation (-2.4%). This validates V5's noise-reduction approach as fundamentally sound.
 
@@ -674,13 +674,13 @@ F1 Score Performance (Higher = Better, Target = 0.615 baseline)
 - Conflicted with pre-training through verbose explanations
 - Created ambiguity where model had strong priors
 - Introduced noise: 1:5 signal-to-noise ratio
-- Result: Confusion, degraded performance (F1=0.438-0.590) ❌
+- Result: Confusion, degraded performance (F1=0.438-0.590) 
 
 **V5 compressed prompts (60-90 words)**:
 - Enhanced pre-training through pattern demonstration
 - Reinforced correct intuitions without creating doubt
 - Minimal noise: 5:1 signal-to-noise ratio
-- Result: Clarity, improved performance (F1=0.654-0.655) ✅
+- Result: Clarity, improved performance (F1=0.654-0.655) 
 
 **Conclusion**: Instructions can work when they enhance (not conflict with) pre-training. Compression is key.
 
@@ -777,13 +777,13 @@ Model processing:
 ```
 Prompt Approach → Word Count → Performance → Finding
 
-V5 implicit:        60 words  → F1 = 0.655 ✅ Implicit demonstration works
-V5 chain_of_thought: 90 words → F1 = 0.654 ✅ Structured reasoning works
+V5 implicit:        60 words  → F1 = 0.655  Implicit demonstration works
+V5 chain_of_thought: 90 words → F1 = 0.654  Structured reasoning works
 Baseline:           80 words  → F1 = 0.615   Generic guidance sufficient
-V4 minimal:        230 words  → F1 = 0.589 ❌ Still too verbose
-V1 optimized:      500 words  → F1 = 0.590 ❌ High verbosity fails
-V3 optimized:      700 words  → F1 = 0.438 ❌ Extreme verbosity catastrophic
-V5 example_only:    35 words  → F1 = 0.211 ❌ Too minimal fails
+V4 minimal:        230 words  → F1 = 0.589  Still too verbose
+V1 optimized:      500 words  → F1 = 0.590  High verbosity fails
+V3 optimized:      700 words  → F1 = 0.438  Extreme verbosity catastrophic
+V5 example_only:    35 words  → F1 = 0.211  Too minimal fails
 ```
 
 **Revised understanding**:
@@ -812,7 +812,7 @@ V5 example_only:    35 words  → F1 = 0.211 ❌ Too minimal fails
 
 ### Production Deployment Decision
 
-**✅ DEPLOY: combined_v5_implicit_examples** (F1=0.655, +6.5% over baseline)
+** DEPLOY: combined_v5_implicit_examples** (F1=0.655, +6.5% over baseline)
 
 ```json
 {
@@ -837,13 +837,13 @@ V5 example_only:    35 words  → F1 = 0.211 ❌ Too minimal fails
 - **FIRST successful prompt engineering approach**
 
 **Why implicit_examples is optimal**:
-1. ✅ Beats baseline by 6.5% (F1: 0.615 → 0.655)
-2. ✅ Demonstrates policy+persona through examples (implicit encoding)
-3. ✅ Better recall (70.1% vs baseline 62.0%) - catches 8% more hate
-4. ✅ Maintains precision (61.5% vs baseline 61.0%)
-5. ✅ Robust generalization (improves on larger dataset)
-6. ✅ Simple, maintainable (60 words, 6 examples)
-7. ✅ Acceptable bias trade-off (better FNR, slightly worse FPR)
+1.  Beats baseline by 6.5% (F1: 0.615 → 0.655)
+2.  Demonstrates policy+persona through examples (implicit encoding)
+3.  Better recall (70.1% vs baseline 62.0%) - catches 8% more hate
+4.  Maintains precision (61.5% vs baseline 61.0%)
+5.  Robust generalization (improves on larger dataset)
+6.  Simple, maintainable (60 words, 6 examples)
+7.  Acceptable bias trade-off (better FNR, slightly worse FPR)
 
 **Alternate choice**: combined_v5_chain_of_thought (F1=0.654, +6.3%)
 - Use if structured reasoning preferred over examples
@@ -851,27 +851,27 @@ V5 example_only:    35 words  → F1 = 0.211 ❌ Too minimal fails
 
 ---
 
-### ✅ SUCCESS: V5 Noise-Reduction Breakthrough
+###  SUCCESS: V5 Noise-Reduction Breakthrough
 
 **Evidence from 5 iterations**:
 - V1: Verbose (500 words) → FAILED (-4.1%)
 - V2: Cultural awareness (300 words) → FAILED (-8% to -38%)
 - V3: Over-engineered (700 words) → FAILED (catastrophic -28.8%)
 - V4: Minimal additions (230 words) → FAILED (-4% to -16%)
-- **V5: Noise-reduced (60-90 words) → SUCCESS (+6.3% to +6.5%)** ✅
+- **V5: Noise-reduced (60-90 words) → SUCCESS (+6.3% to +6.5%)** 
 
 **Pattern is clear**: Compression and implicit encoding work where verbosity failed
 
 **V5 proved**:
-- ✅ Examples WITHOUT explanations work (implicit_examples)
-- ✅ Structured reasoning WITHOUT frameworks works (chain_of_thought)
-- ✅ Compression (60-90 words) > Verbose (200-700 words)
-- ✅ Demonstration > Explanation for pattern recognition
-- ✅ Goldilocks zone exists: Too little fails (example_only F1=0.211), optimal 60-90 words succeeds
+-  Examples WITHOUT explanations work (implicit_examples)
+-  Structured reasoning WITHOUT frameworks works (chain_of_thought)
+-  Compression (60-90 words) > Verbose (200-700 words)
+-  Demonstration > Explanation for pattern recognition
+-  Goldilocks zone exists: Too little fails (example_only F1=0.211), optimal 60-90 words succeeds
 
 ---
 
-### 🚀 Next Steps: LoRA Fine-Tuning for F1=0.70+
+###  Next Steps: LoRA Fine-Tuning for F1=0.70+
 
 **Current state**: V5 implicit_examples achieves F1=0.655 through prompt engineering
 
@@ -946,15 +946,15 @@ V5 example_only:    35 words  → F1 = 0.211 ❌ Too minimal fails
 
 **What we learned from 5 iterations**: 
 
-✅ **Instruction tuning CAN beat baseline** when:
+ **Instruction tuning CAN beat baseline** when:
 1. **Signals are compressed** (60-90 words, not 200-700 words)
 2. **Examples encode patterns implicitly** (demonstration, not explanation)
 3. **Structure is minimal** (reasoning steps, not frameworks)
 4. **Noise is eliminated** (raw examples, not verbose guidance)
 
-✅ **V5 achieved F1=0.655 (+6.5%)** through noise reduction
+ **V5 achieved F1=0.655 (+6.5%)** through noise reduction
 
-❌ **But instruction tuning still limited** because:
+ **But instruction tuning still limited** because:
 1. **You're guiding 120B parameters** with ~1,000 tokens of instructions
 2. **Model can't adapt weights**, only interpret instructions
 3. **Implicit learning ceiling** exists (~F1=0.655, likely hard to exceed further)
@@ -1007,9 +1007,9 @@ Instruction Tuning:
 
 LoRA Fine-Tuning:
   Training sees 20+ examples:
-    "Mexico isn't sending their best" → HATE ✓
-    "They're not sending their best players" → NORMAL ✓
-    "Border policy should be reformed" → NORMAL ✓
+    "Mexico isn't sending their best" → HATE 
+    "They're not sending their best players" → NORMAL 
+    "Border policy should be reformed" → NORMAL 
   
   Model learns: 
     ["not sending best" + immigration context + Mexico] → HATE
@@ -1032,10 +1032,10 @@ Instruction Tuning:
 
 LoRA Fine-Tuning:
   Training sees 100+ examples:
-    "I'm queer and proud" → NORMAL ✓
-    "We queers are fierce" → NORMAL ✓
-    "Those queers are disgusting" → HATE ✓
-    "Queers shouldn't exist" → HATE ✓
+    "I'm queer and proud" → NORMAL 
+    "We queers are fierce" → NORMAL 
+    "Those queers are disgusting" → HATE 
+    "Queers shouldn't exist" → HATE 
   
   Model learns implicitly:
     Empowerment words: ["proud", "fierce", "celebrating", "we"]
@@ -1055,15 +1055,15 @@ Example: "They're like rats crossing the border"
 Instruction Tuning:
   Your prompt: "Dehumanization (comparing to animals) is hate"
   Model: Sees "rats", "animals" in prompt
-  Overgeneralizes: "My cat is like a dog" → HATE? ❌
+  Overgeneralizes: "My cat is like a dog" → HATE? 
   Result: False positives or misses subtle cases
 
 LoRA Fine-Tuning:
   Training sees:
-    "They're like rats crossing" + Mexican context → HATE ✓
-    "Mexicans are like animals" → HATE ✓
-    "My cat acts like a dog" → NORMAL ✓
-    "Politicians are like rats" → Context-dependent ✓
+    "They're like rats crossing" + Mexican context → HATE 
+    "Mexicans are like animals" → HATE 
+    "My cat acts like a dog" → NORMAL 
+    "Politicians are like rats" → Context-dependent 
   
   Model learns:
     [animal comparison + protected group + immigration] → HATE
@@ -1118,11 +1118,11 @@ Persona Pattern 3: Group Discussion vs Stereotyping (306 Middle Eastern)
 ```
 
 **What LoRA captures that prompts can't**:
-1. ✅ **Implicit tone** (empowerment vs attack) - encoded in attention weights
-2. ✅ **Speaker intent** (discussing vs attacking) - learned from context patterns
-3. ✅ **Cultural nuance** (reclamation vs appropriation) - multi-example pattern recognition
-4. ✅ **Contextual generalization** (all vs some, specific vs general) - gradient-optimized distinctions
-5. ✅ **Protected group salience** (when ethnicity/orientation matters) - weighted in embeddings
+1.  **Implicit tone** (empowerment vs attack) - encoded in attention weights
+2.  **Speaker intent** (discussing vs attacking) - learned from context patterns
+3.  **Cultural nuance** (reclamation vs appropriation) - multi-example pattern recognition
+4.  **Contextual generalization** (all vs some, specific vs general) - gradient-optimized distinctions
+5.  **Protected group salience** (when ethnicity/orientation matters) - weighted in embeddings
 
 ---
 
@@ -1133,11 +1133,11 @@ Persona Pattern 3: Group Discussion vs Stereotyping (306 Middle Eastern)
 ```
 Examples Count → Performance:
 
-0 examples (baseline):       F1 = 0.615 ✓
-2 examples (V2):             F1 = 0.506 ❌ (valley of confusion)
-5 examples (V1, V3):         F1 = 0.438-0.614 ❌
-6 examples (V4):             F1 = 0.589 ❌
-15 examples (V1):            F1 = 0.500 ❌
+0 examples (baseline):       F1 = 0.615 
+2 examples (V2):             F1 = 0.506  (valley of confusion)
+5 examples (V1, V3):         F1 = 0.438-0.614 
+6 examples (V4):             F1 = 0.589 
+15 examples (V1):            F1 = 0.500 
 
 Pattern: ANY examples degrade performance
 ```
@@ -1160,9 +1160,9 @@ Optimization: Gradient descent minimizes classification loss
 Updates: LoRA adapters (low-rank matrices) tune attention
 
 No conflict:
-  Pre-training provides general language understanding ✓
-  LoRA adapters specialize for YOUR hate speech task ✓
-  Combined: Base knowledge + task-specific tuning ✓
+  Pre-training provides general language understanding 
+  LoRA adapters specialize for YOUR hate speech task 
+  Combined: Base knowledge + task-specific tuning 
 
 Result: No paradox - more training data = better (as expected)
 ```
@@ -1220,16 +1220,16 @@ No explicit instructions needed - model discovers patterns from labels
 
 | Pattern Type | Can Prompt? | LoRA Learns? | Example |
 |--------------|-------------|--------------|---------|
-| Explicit slurs | ✅ Yes | ✅ Yes | "faggot", "wetback" |
-| In-group reclamation | ⚠️ Partially | ✅ Yes | "I'm queer" vs "those queers" |
-| Dog whistles | ⚠️ Partially | ✅ Yes | "not sending their best" |
-| Tone detection | ❌ No | ✅ Yes | Empowerment vs attack tone |
-| Implicit bias | ❌ No | ✅ Yes | Subtle stereotyping |
-| Contextual generalization | ❌ No | ✅ Yes | "ALL Muslims" vs "ISIS" |
-| Intersectional hate | ❌ No | ✅ Yes | Multiple group targeting |
-| Cultural code-switching | ❌ No | ✅ Yes | Community-specific language |
-| Historical context | ⚠️ Partially | ✅ Yes | Reclaimed vs oppressive terms |
-| Speaker intent inference | ❌ No | ✅ Yes | Discussing vs attacking |
+| Explicit slurs |  Yes |  Yes | "faggot", "wetback" |
+| In-group reclamation |  Partially |  Yes | "I'm queer" vs "those queers" |
+| Dog whistles |  Partially |  Yes | "not sending their best" |
+| Tone detection |  No |  Yes | Empowerment vs attack tone |
+| Implicit bias |  No |  Yes | Subtle stereotyping |
+| Contextual generalization |  No |  Yes | "ALL Muslims" vs "ISIS" |
+| Intersectional hate |  No |  Yes | Multiple group targeting |
+| Cultural code-switching |  No |  Yes | Community-specific language |
+| Historical context |  Partially |  Yes | Reclaimed vs oppressive terms |
+| Speaker intent inference |  No |  Yes | Discussing vs attacking |
 
 **Conclusion**: LoRA can learn 80%+ of hate patterns that are impossible or impractical to encode in prompts.
 
@@ -1377,15 +1377,15 @@ Result: Model IS aligned with your task requirements
 After LoRA fine-tuning:
 
 Model now optimized for:
-  ✅ YOUR hate speech definition (HateXplain + ToxiGen)
-  ✅ YOUR protected groups (LGBTQ+, Mexican, Middle Eastern)
-  ✅ YOUR annotation guidelines (what you labeled as hate)
-  ✅ YOUR fairness requirements (balanced FPR/FNR)
+   YOUR hate speech definition (HateXplain + ToxiGen)
+   YOUR protected groups (LGBTQ+, Mexican, Middle Eastern)
+   YOUR annotation guidelines (what you labeled as hate)
+   YOUR fairness requirements (balanced FPR/FNR)
   
 No longer optimized for:
-  ❌ Generic web-scale hate speech
-  ❌ Other taxonomies/definitions
-  ❌ Other protected group sets
+   Generic web-scale hate speech
+   Other taxonomies/definitions
+   Other protected group sets
 
 This is EXACTLY what you want for production deployment
 ```
@@ -1433,11 +1433,11 @@ Bias Fairness:
 - Task-specific adaptation: Proven approach
 
 **Your specific advantages**:
-1. ✅ High-quality labeled data (1,009 samples, curated)
-2. ✅ Clear task definition (binary classification, well-defined)
-3. ✅ Strong baseline to improve from (F1=0.615, not random)
-4. ✅ Identified weaknesses to address (bias patterns known)
-5. ✅ Sufficient data per group (200-500 samples each)
+1.  High-quality labeled data (1,009 samples, curated)
+2.  Clear task definition (binary classification, well-defined)
+3.  Strong baseline to improve from (F1=0.615, not random)
+4.  Identified weaknesses to address (bias patterns known)
+5.  Sufficient data per group (200-500 samples each)
 
 ---
 
@@ -1449,12 +1449,12 @@ Bias Fairness:
 |--------|---------------------------|------------------|
 | **Best F1 achieved** | 0.615 (baseline, worse with additions) | 0.65-0.70 (projected) |
 | **Improvement over baseline** | 0% (all degraded) | +5-10% |
-| **Can learn implicit patterns** | ❌ No (text constraints) | ✅ Yes (weight updates) |
-| **Can learn persona nuances** | ❌ No (prompt conflicts) | ✅ Yes (multi-dimensional) |
-| **Can detect coded hate** | ⚠️ Partially (limited) | ✅ Yes (data-driven) |
-| **Can reduce bias** | ❌ No (made worse) | ✅ Yes (group-specific tuning) |
-| **Resolves example paradox** | ❌ No (more examples = worse) | ✅ Yes (more data = better) |
-| **Task alignment** | ❌ Weak (instruction-based) | ✅ Strong (gradient-optimized) |
+| **Can learn implicit patterns** |  No (text constraints) |  Yes (weight updates) |
+| **Can learn persona nuances** |  No (prompt conflicts) |  Yes (multi-dimensional) |
+| **Can detect coded hate** |  Partially (limited) |  Yes (data-driven) |
+| **Can reduce bias** |  No (made worse) |  Yes (group-specific tuning) |
+| **Resolves example paradox** |  No (more examples = worse) |  Yes (more data = better) |
+| **Task alignment** |  Weak (instruction-based) |  Strong (gradient-optimized) |
 | **Training time** | N/A (zero-shot) | 2-4 hours |
 | **Deployment size** | Base model only | Base + adapters (+50MB) |
 | **Cost** | $0 | $50-200 |
@@ -1469,10 +1469,10 @@ Bias Fairness:
 ### What We Learned from 4 Iterations
 
 **Definitive findings**:
-1. ✅ Baseline_standard (F1=0.615) is optimal for instruction-based zero-shot classification
-2. ✅ ANY prompt additions degrade performance (examples, policy, context, emphasis)
-3. ✅ Prompt engineering has reached its ceiling for this task + model
-4. ✅ The hypothesis that "combined approaches beat baseline" is **REJECTED**
+1.  Baseline_standard (F1=0.615) is optimal for instruction-based zero-shot classification
+2.  ANY prompt additions degrade performance (examples, policy, context, emphasis)
+3.  Prompt engineering has reached its ceiling for this task + model
+4.  The hypothesis that "combined approaches beat baseline" is **REJECTED**
 
 **Why it happened**:
 - Model's pre-training already optimal for zero-shot hate detection
@@ -1484,12 +1484,12 @@ Bias Fairness:
 
 ### Immediate Action: Production Deployment
 
-**✅ DEPLOY: baseline_standard**
+** DEPLOY: baseline_standard**
 - Proven F1=0.615 across 1,009 samples
 - No further prompt engineering needed
 - Simple, maintainable, reproducible
 
-**❌ DO NOT: Attempt V5 or further prompt variations**
+** DO NOT: Attempt V5 or further prompt variations**
 - 4 iterations proved the pattern
 - Would waste time repeating failures
 - Focus resources on LoRA instead
@@ -1499,12 +1499,12 @@ Bias Fairness:
 ### Next Steps: LoRA Fine-Tuning for Further Gains Beyond V5
 
 **Why LoRA after V5 success**:
-1. ✅ V5 proved persona+policy CAN be conveyed (F1=0.655)
-2. ✅ V5's implicit examples show the RIGHT patterns to encode
-3. ✅ LoRA will learn these patterns through weight updates (not prompts)
-4. ✅ Expected additional improvement: F1=0.655 → 0.70-0.75 (+5-10%)
-5. ✅ Reduces bias through group-specific weight adaptation
-6. ✅ Discovers coded hate patterns automatically from 1,009 samples
+1.  V5 proved persona+policy CAN be conveyed (F1=0.655)
+2.  V5's implicit examples show the RIGHT patterns to encode
+3.  LoRA will learn these patterns through weight updates (not prompts)
+4.  Expected additional improvement: F1=0.655 → 0.70-0.75 (+5-10%)
+5.  Reduces bias through group-specific weight adaptation
+6.  Discovers coded hate patterns automatically from 1,009 samples
 
 **Timeline**: 1-2 weeks, $50-200 investment
 **ROI**: Additional 5-10% F1 improvement (total 14-20% over baseline)
@@ -1515,11 +1515,11 @@ Bias Fairness:
 ### The Lesson: Compression and Implicit Encoding Work
 
 **5 iterations taught us**:
-- ✅ Noise reduction is critical (60-90 words optimal)
-- ✅ Demonstration beats explanation (implicit examples work)
-- ✅ Structured reasoning helps (chain-of-thought succeeds)
-- ✅ Verbosity is toxic (200-700 words all failed)
-- ✅ Prompt engineering CAN work when signals are compressed
+-  Noise reduction is critical (60-90 words optimal)
+-  Demonstration beats explanation (implicit examples work)
+-  Structured reasoning helps (chain-of-thought succeeds)
+-  Verbosity is toxic (200-700 words all failed)
+-  Prompt engineering CAN work when signals are compressed
 
 **V5 breakthrough proves**:
 - Persona+policy nuance CAN be conveyed through 6 examples
@@ -1534,7 +1534,7 @@ Bias Fairness:
 
 ---
 
-## 🎯 Final Summary: The 5-Iteration Journey
+##  Final Summary: The 5-Iteration Journey
 
 ### What We Set Out to Do
 Beat baseline F1=0.615 through combined policy + persona prompt engineering.
@@ -1542,12 +1542,12 @@ Beat baseline F1=0.615 through combined policy + persona prompt engineering.
 ### What Happened Across 5 Iterations
 
 **V1-V4 (Failures, 20+ strategies):**
-- Verbose approaches (200-700 words) → F1=0.438-0.590 ❌
+- Verbose approaches (200-700 words) → F1=0.438-0.590 
 - All underperformed baseline by 4-28%
 - Pattern: ANY verbosity degrades performance
 
 **V5 (Breakthrough, 5 strategies):**
-- Noise-reduced approaches (60-90 words) → F1=0.654-0.655 ✅
+- Noise-reduced approaches (60-90 words) → F1=0.654-0.655 
 - implicit_examples and chain_of_thought beat baseline by 6.3-6.5%
 - Pattern: Compression and implicit encoding work
 

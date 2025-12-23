@@ -2,7 +2,7 @@
 
 This document explains how to use the data unification pipeline to merge HateXplain and ToxiGen datasets into a single, consistent schema for hate speech detection. The current implementation is **filtered to include only 3 specific target groups**: LGBTQ, Mexican, and Middle East, with **comprehensive persona tag preservation**.
 
-## 🎯 **Target Group Selection & Persona Preservation**
+##  **Target Group Selection & Persona Preservation**
 
 The unified dataset is **filtered to include only 3 specific target groups** out of the 13+ available in the original datasets, with **original persona identities preserved**:
 
@@ -45,7 +45,7 @@ The unified dataset follows this comprehensive 12-field schema for the 3 selecte
 | `original_id` | Source dataset ID | `post_id` | Generated `toxigen_{idx}` |
 | `split` | Train/val/test designation | Inherited from source | Inherited from source |
 
-## 🎯 **Current Dataset Statistics**
+##  **Current Dataset Statistics**
 
 After filtering, unification, and balancing, the dataset contains:
 
@@ -75,7 +75,7 @@ After filtering, unification, and balancing, the dataset contains:
 - **middle_east**: 1,470 entries (28.5%)
 - **mexican**: 1,165 entries (22.6%)
 
-## 🚀 **Quick Start**
+##  **Quick Start**
 
 ### Basic Usage
 
@@ -245,7 +245,7 @@ this is text without specific target group [POLICY:HATE_SPEECH_DETECTION]
 - `[PERSONA:MEXICAN]` - For Mexican-targeted content (from ToxiGen)  
 - `[PERSONA:MIDDLE_EAST]` - For Middle East-targeted content (from ToxiGen)
 
-## 📊 **Output Statistics**
+##  **Output Statistics**
 
 The unification and balancing process generates comprehensive statistics for the optimized dataset:
 
@@ -329,7 +329,7 @@ def custom_embedding(self, text, target_group_norm, persona_tag, rationale_text,
 unifier.create_fine_tuning_embedding = custom_embedding
 ```
 
-## ✅ **Testing & Validation**
+##  **Testing & Validation**
 
 The data unification pipeline includes comprehensive unit testing with **36 test cases** covering all core functionality:
 
@@ -385,12 +385,12 @@ pytest tests/test_data_unification.py --cov=data_preparation.data_unification
 
 **Test Results:**
 
-- ✅ **36 tests passing** (100% success rate)
-- ✅ **63% coverage** of unification module (273/274 lines tested)
-- ✅ **Edge case handling** for None, empty, and invalid inputs
-- ✅ **Platform compatibility** (Windows/Unix path handling)
+-  **36 tests passing** (100% success rate)
+-  **63% coverage** of unification module (273/274 lines tested)
+-  **Edge case handling** for None, empty, and invalid inputs
+-  **Platform compatibility** (Windows/Unix path handling)
 
-## ✅ **Validation**
+##  **Validation**
 
 The scaffolding includes validation features:
 
@@ -400,7 +400,7 @@ The scaffolding includes validation features:
 4. **Statistics Generation**: Comprehensive dataset analysis
 5. **Format Support**: JSON, CSV, and Parquet export options
 
-## 🎯 **Expected Results (Current Implementation)**
+##  **Expected Results (Current Implementation)**
 
 With the **balanced dataset** focusing on 3 target groups, the optimized results are:
 

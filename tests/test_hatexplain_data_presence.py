@@ -183,7 +183,7 @@ def test_hatexplain_real_data_if_present():
         # If we get here, data is present and valid
         assert isinstance(result, dict)
         assert "dataset.json" in result
-        print("✅ HateXplain data validation passed with real data")
+        print(" HateXplain data validation passed with real data")
     except AssertionError as e:
         if "Missing directory" in str(e) or "Missing expected" in str(e):
             pytest.skip("HateXplain data not present - skipping data validation test")

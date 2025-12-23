@@ -46,7 +46,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
         self.assertIsNotNone(self.processor.annotated_data)
         self.assertGreater(len(self.processor.annotated_data), 0)
         
-        print(f"✓ Data loading test passed - {len(self.processor.train_data)} records loaded")
+        print(f" Data loading test passed - {len(self.processor.train_data)} records loaded")
     
     def test_label_encoders(self):
         """Test that label encoders are set up correctly."""
@@ -70,7 +70,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
         self.assertIn('toxic', label_encoder.classes_)
         self.assertIn('benign', label_encoder.classes_)
         
-        print(f"✓ Label encoders test passed - {len(target_encoder.classes_)} target groups")
+        print(f" Label encoders test passed - {len(target_encoder.classes_)} target groups")
     
     def test_data_quality_analysis(self):
         """Test data quality analysis functionality."""
@@ -101,7 +101,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
         self.assertIn('toxic', stats.label_distribution)
         self.assertIn('benign', stats.label_distribution)
         
-        print(f"✓ Data quality analysis test passed - {stats.total_entries} entries analyzed")
+        print(f" Data quality analysis test passed - {stats.total_entries} entries analyzed")
     
     def test_text_cleaning(self):
         """Test text cleaning functionality."""
@@ -128,7 +128,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
         self.assertIn('empty_texts_found', cleaning_stats)
         self.assertGreater(cleaning_stats['entries_processed'], 0)
         
-        print(f"✓ Text cleaning test passed - {cleaning_stats['entries_processed']} entries processed")
+        print(f" Text cleaning test passed - {cleaning_stats['entries_processed']} entries processed")
     
     def test_feature_extraction(self):
         """Test feature extraction functionality."""
@@ -157,7 +157,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
             # Check for train.parquet specific features
             self.assertIn('generation_method', features.columns)
             
-            print(f"✓ Feature extraction test passed - {features.shape[1]} features extracted")
+            print(f" Feature extraction test passed - {features.shape[1]} features extracted")
         else:
             # List of dicts
             expected_features = [
@@ -168,7 +168,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
             for feature in expected_features:
                 self.assertIn(feature, sample)
             
-            print(f"✓ Feature extraction test passed - {len(sample)} features extracted")
+            print(f" Feature extraction test passed - {len(sample)} features extracted")
     
     def test_training_data_preparation(self):
         """Test training data preparation and splitting."""
@@ -194,7 +194,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
         original_total = len(self.processor.annotated_data)
         self.assertEqual(total_split, original_total)
         
-        print(f"✓ Training data preparation test passed - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
+        print(f" Training data preparation test passed - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
     
     def test_export_functionality(self):
         """Test data export functionality."""
@@ -231,7 +231,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
                 self.assertIn('label_distribution', stats_data)
                 self.assertIn('group_distribution', stats_data)
             
-            print(f"✓ Export functionality test passed - Files created in {temp_dir}")
+            print(f" Export functionality test passed - Files created in {temp_dir}")
     
     def test_synthetic_field_creation(self):
         """Test that synthetic fields are created correctly from train.parquet data."""
@@ -255,7 +255,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
                 self.assertIn(sample_row['target_group'], self.processor.label_encoders['target_group'].classes_)
                 self.assertIn(sample_row['label_binary'], ['toxic', 'benign'])
                 
-                print("✓ Synthetic field creation test passed - Fields created from train.parquet")
+                print(" Synthetic field creation test passed - Fields created from train.parquet")
             else:
                 # List version
                 sample = self.processor.annotated_data[0]
@@ -275,7 +275,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
             self.assertIn('toxicity_human', sample)
             self.assertIn('stereotyping', sample)
         
-        print(f"✓ Synthetic field creation test passed")
+        print(f" Synthetic field creation test passed")
     
     def test_text_feature_extraction(self):
         """Test that text-based features are extracted correctly."""
@@ -318,7 +318,7 @@ class TestToxiGenDataPreparation(unittest.TestCase):
             self.assertGreaterEqual(sample['caps_ratio'], 0.0)
             self.assertLessEqual(sample['caps_ratio'], 1.0)
         
-        print(f"✓ Text feature extraction test passed")
+        print(f" Text feature extraction test passed")
 
 
 class TestToxiGenIntegration(unittest.TestCase):
@@ -337,32 +337,32 @@ class TestToxiGenIntegration(unittest.TestCase):
         print("Step 1: Loading data...")
         data = processor.load_raw_data()
         self.assertIsNotNone(data)
-        print(f"✓ Loaded {len(processor.train_data)} training records")
+        print(f" Loaded {len(processor.train_data)} training records")
         
         # Step 2: Analyze quality
         print("Step 2: Analyzing data quality...")
         stats = processor.analyze_data_quality()
         self.assertGreater(stats.total_entries, 0)
-        print(f"✓ Analyzed {stats.total_entries} entries")
+        print(f" Analyzed {stats.total_entries} entries")
         
         # Step 3: Clean text
         print("Step 3: Cleaning text...")
         cleaning_stats = processor.clean_text_data()
         self.assertGreater(cleaning_stats['entries_processed'], 0)
-        print(f"✓ Cleaned {cleaning_stats['entries_processed']} text entries")
+        print(f" Cleaned {cleaning_stats['entries_processed']} text entries")
         
         # Step 4: Extract features
         print("Step 4: Extracting features...")
         features = processor.extract_features()
         self.assertGreater(len(features), 0)
-        print(f"✓ Extracted features for {len(features)} entries")
+        print(f" Extracted features for {len(features)} entries")
         
         # Step 5: Prepare training data
         print("Step 5: Preparing training splits...")
         train_data, val_data, test_data = processor.prepare_training_data()
         total_samples = len(train_data) + len(val_data) + len(test_data)
         self.assertEqual(total_samples, stats.total_entries)
-        print(f"✓ Prepared splits - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
+        print(f" Prepared splits - Train: {len(train_data)}, Val: {len(val_data)}, Test: {len(test_data)}")
         
         print("\n" + "="*50)
         print("FULL PIPELINE INTEGRATION TEST PASSED")
@@ -412,6 +412,6 @@ if __name__ == '__main__':
     if len(result.failures) == 0 and len(result.errors) == 0:
         print("\n🎉 ALL TESTS PASSED! ToxiGen data preparation pipeline is working correctly.")
     else:
-        print(f"\n❌ {len(result.failures + result.errors)} test(s) failed.")
+        print(f"\n {len(result.failures + result.errors)} test(s) failed.")
     
     print(f"{'='*60}")

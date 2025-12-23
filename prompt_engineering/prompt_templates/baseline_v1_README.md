@@ -45,7 +45,7 @@ Respond in JSON format: {"classification": "[hate/normal]", "rationale": "[brief
 
 ## Parameter Impact Analysis
 
-### 🎯 **Temperature** (Randomness/Creativity) [2,3]
+###  **Temperature** (Randomness/Creativity) [2,3]
 - **0.0 (Conservative)**: Completely deterministic, most consistent responses [2]
 - **0.05 (Focused)**: Near-deterministic with minimal variation
 - **0.1 (Standard)**: Low randomness, reliable classifications [2]
@@ -53,14 +53,14 @@ Respond in JSON format: {"classification": "[hate/normal]", "rationale": "[brief
 - **0.3 (Creative)**: Higher creativity for nuanced reasoning
 - **0.5 (Exploratory)**: High creativity, may discover edge patterns
 
-### 🎯 **top_p** (Nucleus Sampling) [3]
+###  **top_p** (Nucleus Sampling) [3]
 - **0.8 (Focused)**: Very focused token selection, conservative choices
 - **0.9 (Conservative/Balanced)**: Balanced focus, excludes low-probability tokens [3]
 - **0.95 (Creative)**: Allows more diverse token choices
 - **1.0 (Standard)**: No nucleus sampling, considers all tokens
 - **0.85 (Exploratory)**: Moderate diversity with some constraint
 
-### 🎯 **max_tokens** (Response Length)
+###  **max_tokens** (Response Length)
 - **200 (Focused)**: Forces concise responses, may miss nuance
 - **256 (Conservative)**: Short but adequate explanations
 - **400 (Balanced)**: Optimal for classification + rationale
@@ -68,14 +68,14 @@ Respond in JSON format: {"classification": "[hate/normal]", "rationale": "[brief
 - **768 (Creative)**: Allows detailed analysis of complex cases
 - **1024 (Exploratory)**: Maximum flexibility for comprehensive reasoning
 
-### 🎯 **frequency_penalty** (Repetition Reduction)
+###  **frequency_penalty** (Repetition Reduction)
 - **0.0**: No penalty, natural language patterns
 - **0.05**: Minimal repetition reduction
 - **0.1**: Light repetition penalty, maintains coherence
 - **0.2**: Moderate penalty, encourages varied vocabulary
 - **0.3**: Higher penalty, forces diverse expression
 
-### 🎯 **presence_penalty** (Topic Diversity)
+###  **presence_penalty** (Topic Diversity)
 - **0.0**: No penalty, focused responses
 - **0.05**: Minimal topic expansion
 - **0.1**: Light encouragement of topic breadth

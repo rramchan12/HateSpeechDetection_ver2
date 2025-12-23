@@ -57,7 +57,7 @@ Middle Eastern Community:
 [+ 15 examples with explanations]
 ```
 
-**Result**: F1=0.590 (-4.1% vs baseline) ❌ **FAILED**
+**Result**: F1=0.590 (-4.1% vs baseline)  **FAILED**
 
 **Why it failed**: Information overload, verbose explanations created conflicting signals with model's pre-training.
 
@@ -91,7 +91,7 @@ Text: "{text}"
 Classify:
 ```
 
-**Result**: F1=0.655 (+6.5% vs baseline) ✅ **SUCCESS**
+**Result**: F1=0.655 (+6.5% vs baseline)  **SUCCESS**
 
 **Why it works**: Demonstrates patterns implicitly without verbal noise. Model learns through contrast, not explanation.
 
@@ -186,15 +186,15 @@ Classify:
 
 | Nuance Dimension | V1 Method | V5 Method | Preserved? | Evidence |
 |------------------|-----------|-----------|------------|----------|
-| **Policy: People vs Policy** | 100 words explaining distinction | 2 contrasting examples per group | ✅ **YES** | Mexican FNR -8.1%, Middle East FNR -5.6% |
-| **Persona: In-group reclamation** | 50 words + examples w/ explanations | "I'm queer" (normal) vs "faggots" (hate) | ✅ **YES** | LGBTQ+ FNR -10.6% (better detection) |
-| **Persona: Coded hate patterns** | 150 words listing patterns | "ALL [group]..." pattern shown | ✅ **YES** | All groups FNR improved 6-10% |
-| **Protected characteristics** | Listed 3x (~50 words total) | Demonstrated via 3 groups | ✅ **YES** | Balanced improvement across groups |
-| **Community harm perspective** | "Would communities view as hateful?" | Implied by example selection | ⚠️ **IMPLICIT** | Bias trade-off: better FNR, worse FPR |
-| **Group-specific context** | 300 words per group | 2 examples per group | ✅ **YES** | Group-specific FNR improvements |
-| **Generalizations** | "ALL/THEY = coded hate" explicit | "ALL [group]..." pattern in examples | ✅ **YES** | Generalization detection improved |
-| **Dehumanization** | Listed patterns explicitly | Shown via slur examples | ✅ **YES** | Slur detection maintained/improved |
-| **Policy critique allowance** | "policy debates OK" explanation | "Border policy reform" = normal | ✅ **YES** | No over-flagging of policy discussion |
+| **Policy: People vs Policy** | 100 words explaining distinction | 2 contrasting examples per group |  **YES** | Mexican FNR -8.1%, Middle East FNR -5.6% |
+| **Persona: In-group reclamation** | 50 words + examples w/ explanations | "I'm queer" (normal) vs "faggots" (hate) |  **YES** | LGBTQ+ FNR -10.6% (better detection) |
+| **Persona: Coded hate patterns** | 150 words listing patterns | "ALL [group]..." pattern shown |  **YES** | All groups FNR improved 6-10% |
+| **Protected characteristics** | Listed 3x (~50 words total) | Demonstrated via 3 groups |  **YES** | Balanced improvement across groups |
+| **Community harm perspective** | "Would communities view as hateful?" | Implied by example selection |  **IMPLICIT** | Bias trade-off: better FNR, worse FPR |
+| **Group-specific context** | 300 words per group | 2 examples per group |  **YES** | Group-specific FNR improvements |
+| **Generalizations** | "ALL/THEY = coded hate" explicit | "ALL [group]..." pattern in examples |  **YES** | Generalization detection improved |
+| **Dehumanization** | Listed patterns explicitly | Shown via slur examples |  **YES** | Slur detection maintained/improved |
+| **Policy critique allowance** | "policy debates OK" explanation | "Border policy reform" = normal |  **YES** | No over-flagging of policy discussion |
 
 **Overall nuance preservation**: 9/9 dimensions preserved (8 fully, 1 implicitly)
 
@@ -213,20 +213,20 @@ Classify:
 ### Group-Specific Performance (Bias Metrics)
 
 **LGBTQ+ (494 samples):**
-- **FPR**: 43.0% → 47.8% (+4.8% worse) ⚠️
-- **FNR**: 39.4% → 28.8% (-10.6% better) ✅
+- **FPR**: 43.0% → 47.8% (+4.8% worse) 
+- **FNR**: 39.4% → 28.8% (-10.6% better) 
 - **Interpretation**: Catches 10.6% more LGBTQ+ hate, but flags 4.8% more benign content
 - **Nuance validated**: In-group reclamation still distinguished (else FPR would be much higher)
 
 **Mexican/Latino (209 samples):**
-- **FPR**: 8.1% → 8.1% (same) ✅
-- **FNR**: 39.8% → 31.7% (-8.1% better) ✅
+- **FPR**: 8.1% → 8.1% (same) 
+- **FNR**: 39.8% → 31.7% (-8.1% better) 
 - **Interpretation**: Catches 8% more immigration-based coded hate without increasing false alarms
 - **Nuance validated**: Policy vs people distinction working (FPR stable while FNR drops)
 
 **Middle Eastern (306 samples):**
-- **FPR**: 23.6% → 26.4% (+2.8% worse) ⚠️
-- **FNR**: 35.2% → 29.6% (-5.6% better) ✅
+- **FPR**: 23.6% → 26.4% (+2.8% worse) 
+- **FNR**: 35.2% → 29.6% (-5.6% better) 
 - **Interpretation**: Catches 5.6% more terrorism generalizations with slight FPR increase
 - **Nuance validated**: ISIS discussion vs generalization distinction maintained
 
@@ -293,18 +293,18 @@ Result: Pattern recognition, no conflicting signals, improved performance (F1=0.
 **Example 1**: "Those faggots are disgusting" → hate
 
 **What it encodes**:
-- ✅ Slur usage in attack context
-- ✅ Out-group perspective (dehumanization)
-- ✅ Negative sentiment + slur = hate
-- ✅ Second-person attack ("those") indicates external perspective
+-  Slur usage in attack context
+-  Out-group perspective (dehumanization)
+-  Negative sentiment + slur = hate
+-  Second-person attack ("those") indicates external perspective
 
 **Example 2**: "I'm queer and proud" → normal
 
 **What it encodes**:
-- ✅ Same semantic field (LGBTQ+ terms) but different context
-- ✅ First-person perspective indicates in-group
-- ✅ Pride/empowerment framing
-- ✅ Reclamation of term without dehumanization
+-  Same semantic field (LGBTQ+ terms) but different context
+-  First-person perspective indicates in-group
+-  Pride/empowerment framing
+-  Reclamation of term without dehumanization
 
 **Combined learning**: The contrast teaches:
 - Context determines hate vs normal (who's speaking, intent)
@@ -319,18 +319,18 @@ Result: Pattern recognition, no conflicting signals, improved performance (F1=0.
 **Example 1**: "Mexicans are all illegals" → hate
 
 **What it encodes**:
-- ✅ Generalization pattern ("ALL" implied by "Mexicans are")
-- ✅ Immigration-based coded hate
-- ✅ Attacking entire ethnic group
-- ✅ Stereotype association (Mexican = illegal)
+-  Generalization pattern ("ALL" implied by "Mexicans are")
+-  Immigration-based coded hate
+-  Attacking entire ethnic group
+-  Stereotype association (Mexican = illegal)
 
 **Example 2**: "Border policy needs reform" → normal
 
 **What it encodes**:
-- ✅ Policy-focused language ("policy", "reform")
-- ✅ No generalization about people
-- ✅ Neutral/constructive framing
-- ✅ Discussing system, not attacking ethnicity
+-  Policy-focused language ("policy", "reform")
+-  No generalization about people
+-  Neutral/constructive framing
+-  Discussing system, not attacking ethnicity
 
 **Combined learning**: The contrast teaches:
 - Policy discussion ≠ hate
@@ -345,18 +345,18 @@ Result: Pattern recognition, no conflicting signals, improved performance (F1=0.
 **Example 1**: "All Muslims are terrorists" → hate
 
 **What it encodes**:
-- ✅ Explicit generalization ("All")
-- ✅ Terrorism stereotype
-- ✅ Attacking entire religious group
-- ✅ Islamophobic pattern
+-  Explicit generalization ("All")
+-  Terrorism stereotype
+-  Attacking entire religious group
+-  Islamophobic pattern
 
 **Example 2**: "ISIS commits terrorist acts" → normal
 
 **What it encodes**:
-- ✅ Specific group mentioned (ISIS, not "all Muslims")
-- ✅ Factual statement about specific organization
-- ✅ No generalization to entire religion/ethnicity
-- ✅ Discussing specific actors vs entire group
+-  Specific group mentioned (ISIS, not "all Muslims")
+-  Factual statement about specific organization
+-  No generalization to entire religion/ethnicity
+-  Discussing specific actors vs entire group
 
 **Combined learning**: The contrast teaches:
 - Specific group discussion ≠ hate
@@ -395,27 +395,27 @@ Result: Pattern recognition, no conflicting signals, improved performance (F1=0.
 
 **Evidence Summary**:
 
-✅ **Policy nuance preserved** (people vs policy):
+ **Policy nuance preserved** (people vs policy):
 - Demonstrated through contrasting examples
 - Mexican FNR -8.1%, Middle East FNR -5.6%
 - No over-flagging of policy discussion
 
-✅ **Persona nuance preserved** (in-group reclamation):
+ **Persona nuance preserved** (in-group reclamation):
 - Demonstrated through "I'm queer" vs "faggots" contrast
 - LGBTQ+ FNR -10.6% (better detection)
 - In-group context still distinguished
 
-✅ **Coded hate patterns preserved**:
+ **Coded hate patterns preserved**:
 - "ALL [group]..." pattern shown in examples
 - Generalization detection improved across all groups
 - FNR improvements: 6-10% for all protected groups
 
-✅ **Protected characteristics coverage**:
+ **Protected characteristics coverage**:
 - 3 groups demonstrate race/ethnicity, religion, sexual orientation
 - Balanced improvements across groups
 - Representative patterns for each community
 
-✅ **Performance validation**:
+ **Performance validation**:
 - F1=0.655 (+6.5% over baseline)
 - Positive generalization (+2.8% small→large)
 - First successful prompt engineering approach
@@ -436,8 +436,8 @@ Result: Pattern recognition, no conflicting signals, improved performance (F1=0.
 5. **Efficient encoding**: 6 examples encode what 500 words couldn't
 
 **Analogy**: Teaching a child to identify birds
-- ❌ Bad: "Birds have feathers, wings, beaks, lay eggs, have hollow bones..."
-- ✅ Good: Show 6 pictures - 3 birds, 3 non-birds (bat, butterfly, plane)
+-  Bad: "Birds have feathers, wings, beaks, lay eggs, have hollow bones..."
+-  Good: Show 6 pictures - 3 birds, 3 non-birds (bat, butterfly, plane)
 - Child learns pattern through contrast, not memorizing rules
 
 ---

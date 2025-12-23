@@ -319,7 +319,7 @@ def test_hatexplain_real_download():
             if result:
                 assert destination.exists()
                 assert destination.stat().st_size > 0
-                print("✅ Real download test passed - URLs are accessible")
+                print(" Real download test passed - URLs are accessible")
             else:
                 pytest.skip("Download failed - may be network/URL issue")
         except Exception as e:
@@ -333,14 +333,14 @@ def test_hatexplain_download_and_validate():
         # Try to validate existing data first
         from data_collection.hatexplain_data_presence_validator import validate_hatexplain_data_presence
         validate_hatexplain_data_presence()
-        print("✅ HateXplain data already present and valid")
+        print(" HateXplain data already present and valid")
     except AssertionError as e:
         if "Missing directory" in str(e) or "Missing expected" in str(e):
             # Data not present, try to download
             try:
                 result = download_hatexplain()
                 if result:
-                    print("✅ HateXplain download and validation successful")
+                    print(" HateXplain download and validation successful")
                 else:
                     pytest.skip("HateXplain download failed - may be network issue")
             except Exception as download_error:

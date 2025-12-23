@@ -59,9 +59,9 @@ This document presents 3 refined strategies that restore V1's proven 5-example f
 
 **1. Few-Shot Pattern Analysis**:
 
-- **5 examples** (V1): F1=0.614 (100 samples) ✅ SUCCESS - enough patterns to learn
-- **2 examples** (V2): F1=0.506 ❌ WORST - insufficient learning + confusion
-- **0 examples** (V2): F1=0.557-0.565 ⚠️ MODERATE - pure instruction-following
+- **5 examples** (V1): F1=0.614 (100 samples)  SUCCESS - enough patterns to learn
+- **2 examples** (V2): F1=0.506  WORST - insufficient learning + confusion
+- **0 examples** (V2): F1=0.557-0.565  MODERATE - pure instruction-following
 
 **Conclusion**: It's not overfitting, it's **UNDERFITTING**. 2 examples creates worst-case scenario: not enough to learn patterns, but enough to create confusion. 0 examples forces pure instruction-following. 5 examples provides sufficient patterns for learning.
 
@@ -71,10 +71,10 @@ This document presents 3 refined strategies that restore V1's proven 5-example f
 
 **4. V2's Success Elements**:
 
-- ✅ Temperature 0.1 (vs V1's 0.0 for conservative)
-- ✅ 512 tokens (vs V1's 256 for conservative)
-- ✅ Balanced guidance (cultural_context worked best)
-- ❌ Reduced examples to 0-2 (unnecessary abandonment)
+-  Temperature 0.1 (vs V1's 0.0 for conservative)
+-  512 tokens (vs V1's 256 for conservative)
+-  Balanced guidance (cultural_context worked best)
+-  Reduced examples to 0-2 (unnecessary abandonment)
 
 ---
 
@@ -83,16 +83,16 @@ This document presents 3 refined strategies that restore V1's proven 5-example f
 ### Design Principles
 
 **From V1 (Keep)**:
-1. ✅ **5 examples per group** (15 total) - proven success formula
-2. ✅ **Examples as PRIMARY signal** - dedicated sections, high visibility
-3. ✅ **Pattern learning** - let model learn from examples, not imperatives
-4. ✅ **Balanced guidance** - no aggressive contradictions
+1.  **5 examples per group** (15 total) - proven success formula
+2.  **Examples as PRIMARY signal** - dedicated sections, high visibility
+3.  **Pattern learning** - let model learn from examples, not imperatives
+4.  **Balanced guidance** - no aggressive contradictions
 
 **From V2 (Incorporate)**:
-1. ✅ **Temperature 0.1** (NOT 0.0) - determinism + generalization
-2. ✅ **512 tokens** (NOT 256) - sufficient rationale space
-3. ✅ **Cultural context** (from best V2 strategy)
-4. ✅ **Structured evaluation frameworks**
+1.  **Temperature 0.1** (NOT 0.0) - determinism + generalization
+2.  **512 tokens** (NOT 256) - sufficient rationale space
+3.  **Cultural context** (from best V2 strategy)
+4.  **Structured evaluation frameworks**
 
 **V3 Innovation**:
 
@@ -360,17 +360,17 @@ python prompt_runner.py \
 
 **What V2 Taught Us**:
 
-1. ❌ 2 examples = worst case (insufficient + confusion)
-2. ⚠️ 0 examples = moderate (instruction-following only)
+1.  2 examples = worst case (insufficient + confusion)
+2.  0 examples = moderate (instruction-following only)
 3. ❓ 5 examples at scale with better hyperparameters = UNTESTED (V3's goal)
-4. ✅ Temperature 0.1 + 512 tokens = optimal hyperparameters
+4.  Temperature 0.1 + 512 tokens = optimal hyperparameters
 
 **What V1 Proved**:
 
-1. ✅ 5 examples = F1=0.614 (100 samples), F1=0.590 (production)
-2. ✅ Examples improve Mexican FPR: 20%→7% at scale
-3. ✅ Temperature 0.1 + 512 tokens works (combined_optimized)
-4. ❌ Temperature 0.0 + 256 tokens = poor performance (F1=0.500 on 100 samples)
+1.  5 examples = F1=0.614 (100 samples), F1=0.590 (production)
+2.  Examples improve Mexican FPR: 20%→7% at scale
+3.  Temperature 0.1 + 512 tokens works (combined_optimized)
+4.  Temperature 0.0 + 256 tokens = poor performance (F1=0.500 on 100 samples)
 
 **V3's Hypothesis**:
 

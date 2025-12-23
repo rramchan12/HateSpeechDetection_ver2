@@ -506,8 +506,8 @@ V1: Policy + Examples (Verbose)           V2: Cultural Context           V3: Ref
                                           ├─ minimal_hybrid
 
 V4: Minimal Enhancements                  V5: NOISE-REDUCED (Breakthrough)
-├─ minimal_examples                       ├─ implicit_examples ★ 
-├─ balanced_lite                          ├─ chain_of_thought ★
+├─ minimal_examples                       ├─ implicit_examples  
+├─ balanced_lite                          ├─ chain_of_thought 
 ├─ community_aware                        ├─ minimal_signal
 ├─ policy_lite                            ├─ compressed_tokens
 ├─ subtle_emphasis                        ├─ example_only

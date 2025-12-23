@@ -66,7 +66,7 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 | Metric | Value | Change from 100-Sample | Interpretation |
 |--------|-------|------------------------|----------------|
-| **F1-Score** | **0.607** | +2.0% (0.587→0.607) | **Performance improvement at scale** ✅ |
+| **F1-Score** | **0.607** | +2.0% (0.587→0.607) | **Performance improvement at scale**  |
 | **Accuracy** | 66.8% | +4.8% (62.0%→66.8%) | Scale generalization validated |
 | **Precision** | 65.2% | +6.5% (58.7%→65.2%) | Reduced false positives at scale |
 | **Recall** | 56.8% | -1.9% (58.7%→56.8%) | Minor recall degradation |
@@ -80,20 +80,20 @@ This document presents empirical results from optimizing GPT-5 for hate speech d
 
 | Target Group | Sample Count | FPR | FNR | TP | TN | FP | FN | Fairness Status |
 |--------------|--------------|-----|-----|----|----|----|----|-----------------|
-| LGBTQ+ | 494 (49.0%) | 0.341 | 0.408 | 100 | 213 | 110 | 69 | ⚠️ Both elevated |
-| Mexican | 209 (20.7%) | **0.058** | 0.488 | 63 | 81 | 5 | 60 | ✅ **EXCEPTIONAL FPR** |
-| Middle East | 306 (30.3%) | **0.161** | 0.414 | 95 | 120 | 23 | 67 | ✅ FPR excellent |
+| LGBTQ+ | 494 (49.0%) | 0.341 | 0.408 | 100 | 213 | 110 | 69 |  Both elevated |
+| Mexican | 209 (20.7%) | **0.058** | 0.488 | 63 | 81 | 5 | 60 |  **EXCEPTIONAL FPR** |
+| Middle East | 306 (30.3%) | **0.161** | 0.414 | 95 | 120 | 23 | 67 |  FPR excellent |
 
 **Comparison: 100-Sample vs. Production Scale**:
 
 | Metric | 100-Sample | Production (1,009) | Change | Analysis |
 |--------|------------|-------------------|--------|----------|
-| **Mexican FPR** | 30.0% | **5.8%** | **-24.2%** | ✅ Dramatic improvement at scale |
-| **Middle East FPR** | 38.5% | 16.1% | -22.4% | ✅ Strong improvement |
-| **LGBTQ+ FPR** | 36.7% | 34.1% | -2.6% | ✅ Maintained consistency |
-| **Mexican FNR** | 45.5% | 48.8% | +3.3% | ⚠️ Minor degradation |
-| **LGBTQ+ FNR** | 36.8% | 40.8% | +4.0% | ⚠️ Minor degradation |
-| **Middle East FNR** | 43.8% | 41.4% | -2.4% | ✅ Slight improvement |
+| **Mexican FPR** | 30.0% | **5.8%** | **-24.2%** |  Dramatic improvement at scale |
+| **Middle East FPR** | 38.5% | 16.1% | -22.4% |  Strong improvement |
+| **LGBTQ+ FPR** | 36.7% | 34.1% | -2.6% |  Maintained consistency |
+| **Mexican FNR** | 45.5% | 48.8% | +3.3% |  Minor degradation |
+| **LGBTQ+ FNR** | 36.8% | 40.8% | +4.0% |  Minor degradation |
+| **Middle East FNR** | 43.8% | 41.4% | -2.4% |  Slight improvement |
 
 **Critical Production Findings**:
 
@@ -299,9 +299,9 @@ This template implements three distinct architectural patterns optimized for GPT
 
 | Target Group | Sample Count | FPR | FNR | TP | TN | FP | FN | Fairness Status |
 |--------------|--------------|-----|-----|----|----|----|----|-----------------|
-| LGBTQ+ | 49 (49.0%) | 0.367 | 0.368 | 12 | 19 | 11 | 7 | ⚠️ NEAR (balanced) |
-| Mexican | 22 (22.0%) | 0.300 | 0.455 | 6 | 7 | 3 | 5 | ⚠️ FPR OK, FNR elevated |
-| Middle East | 29 (29.0%) | 0.385 | 0.438 | 9 | 8 | 5 | 7 | ⚠️ Both elevated |
+| LGBTQ+ | 49 (49.0%) | 0.367 | 0.368 | 12 | 19 | 11 | 7 |  NEAR (balanced) |
+| Mexican | 22 (22.0%) | 0.300 | 0.455 | 6 | 7 | 3 | 5 |  FPR OK, FNR elevated |
+| Middle East | 29 (29.0%) | 0.385 | 0.438 | 9 | 8 | 5 | 7 |  Both elevated |
 
 **Optimized Bias Patterns**:
 - **LGBTQ+ Perfect Balance**: FPR (36.7%) and FNR (36.8%) nearly identical, indicating architectural fairness
@@ -313,9 +313,9 @@ This template implements three distinct architectural patterns optimized for GPT
 
 | Target Group | Sample Count | FPR | FNR | TP | TN | FP | FN | Fairness Status |
 |--------------|--------------|-----|-----|----|----|----|----|-----------------|
-| LGBTQ+ | 49 (49.0%) | **0.267** | 0.579 | 8 | 22 | 8 | 11 | ✅ FPR, ❌ FNR |
-| Mexican | 22 (22.0%) | **0.200** | 0.500 | 6 | 8 | 2 | 6 | ✅ FPR, ⚠️ FNR |
-| Middle East | 29 (29.0%) | 0.308 | 0.438 | 9 | 9 | 4 | 7 | ⚠️ NEAR threshold |
+| LGBTQ+ | 49 (49.0%) | **0.267** | 0.579 | 8 | 22 | 8 | 11 |  FPR,  FNR |
+| Mexican | 22 (22.0%) | **0.200** | 0.500 | 6 | 8 | 2 | 6 |  FPR,  FNR |
+| Middle East | 29 (29.0%) | 0.308 | 0.438 | 9 | 9 | 4 | 7 |  NEAR threshold |
 
 **Focused Bias Patterns**:
 - **Best FPR Performance**: LGBTQ+ (26.7%) and Mexican (20.0%) achieve lowest false positive rates across all strategies
@@ -327,9 +327,9 @@ This template implements three distinct architectural patterns optimized for GPT
 
 | Target Group | Sample Count | FPR | FNR | TP | TN | FP | FN | Fairness Status |
 |--------------|--------------|-----|-----|----|----|----|----|-----------------|
-| LGBTQ+ | 49 (49.0%) | 0.300 | 0.526 | 9 | 21 | 9 | 10 | ⚠️ FPR OK, FNR elevated |
-| Mexican | 22 (22.0%) | **0.200** | 0.583 | 5 | 8 | 2 | 7 | ✅ FPR, ❌ FNR |
-| Middle East | 29 (29.0%) | 0.308 | **0.625** | 6 | 9 | 4 | 10 | ⚠️ FPR near, FNR high |
+| LGBTQ+ | 49 (49.0%) | 0.300 | 0.526 | 9 | 21 | 9 | 10 |  FPR OK, FNR elevated |
+| Mexican | 22 (22.0%) | **0.200** | 0.583 | 5 | 8 | 2 | 7 |  FPR,  FNR |
+| Middle East | 29 (29.0%) | 0.308 | **0.625** | 6 | 9 | 4 | 10 |  FPR near, FNR high |
 
 **Conservative Bias Patterns**:
 - **Lowest Token Budget Impact**: 400 tokens insufficient for nuanced hate detection (highest FNRs: 52.6%, 58.3%, 62.5%)
@@ -415,22 +415,22 @@ This template implements three distinct architectural patterns optimized for GPT
 
 | Metric | GPT-5 Production (1,009) | GPT-OSS V5 Production (1,009) | Difference | Analysis |
 |--------|--------------------------|-------------------------------|------------|----------|
-| **F1-Score** | 0.607 | **0.655** | **-4.8%** | ✅ V5 breakthrough validates noise reduction |
+| **F1-Score** | 0.607 | **0.655** | **-4.8%** |  V5 breakthrough validates noise reduction |
 | **Accuracy** | 66.8% | **66.7%** | +0.1% | Virtually identical |
-| **Precision** | 65.2% | 61.5% | +3.7% | ✅ GPT-5 better precision |
-| **Recall** | 56.8% | **70.1%** | **-13.3%** | ✅ V5 compressed examples dramatically improve sensitivity |
+| **Precision** | 65.2% | 61.5% | +3.7% |  GPT-5 better precision |
+| **Recall** | 56.8% | **70.1%** | **-13.3%** |  V5 compressed examples dramatically improve sensitivity |
 | **FN/FP Ratio** | 1.42:1 | N/A | GPT-5 more conservative | Minor precision-recall tradeoff |
 
 ### Bias Fairness Comparison (Production Scale)
 
 | Group | Metric | GPT-5 Production | GPT-OSS V5 Production | Difference | Analysis |
 |-------|--------|------------------|------------------------|------------|----------|
-| **Mexican** | FPR | **5.8%** | 8.1% | **-2.3%** | ✅ GPT-5 exceptional precision |
-| **Mexican** | FNR | 48.8% | **31.7%** | **+17.1%** | ✅ V5 compressed signals dramatically improve recall |
-| **LGBTQ+** | FPR | **34.1%** | 47.8% | **-13.7%** | ✅ GPT-5 better precision |
-| **LGBTQ+** | FNR | 40.8% | **28.8%** | **+12.0%** | ✅ V5 better recall |
-| **Middle East** | FPR | **16.1%** | 26.4% | **-10.3%** | ✅ GPT-5 better precision |
-| **Middle East** | FNR | 41.4% | **29.6%** | **+11.8%** | ✅ V5 better recall |
+| **Mexican** | FPR | **5.8%** | 8.1% | **-2.3%** |  GPT-5 exceptional precision |
+| **Mexican** | FNR | 48.8% | **31.7%** | **+17.1%** |  V5 compressed signals dramatically improve recall |
+| **LGBTQ+** | FPR | **34.1%** | 47.8% | **-13.7%** |  GPT-5 better precision |
+| **LGBTQ+** | FNR | 40.8% | **28.8%** | **+12.0%** |  V5 better recall |
+| **Middle East** | FPR | **16.1%** | 26.4% | **-10.3%** |  GPT-5 better precision |
+| **Middle East** | FNR | 41.4% | **29.6%** | **+11.8%** |  V5 better recall |
 
 **Critical Production Comparison Findings**:
 

@@ -35,7 +35,7 @@ This document presents comprehensive empirical results from systematic instructi
 
 | Rank | Strategy | Model | Template | F1-Score | Bias Score | Hybrid Score | Mexican FPR | Notes |
 |------|----------|-------|----------|----------|------------|--------------|-------------|-------|
-| **1** | **baseline_standard** | **gpt-oss-120b** | baseline_v1.json | **0.615** | **0.685** | **0.930** | 8.1% | Optimal configuration ✅ |
+| **1** | **baseline_standard** | **gpt-oss-120b** | baseline_v1.json | **0.615** | **0.685** | **0.930** | 8.1% | Optimal configuration  |
 | 2 | combined_optimized | gpt-5 | combined_gpt5_v1.json | 0.607 | 0.689 | 0.773 | 5.8% | Best GPT-5 performance |
 | 3 | hybrid_fast_accurate | gpt-5 | gpt5_architecture_v1.json | 0.596 | 0.677 | 0.256 | 11.6% | Architecture optimization |
 | 4 | combined_optimized | gpt-oss-120b | combined_gptoss_v1.json | 0.590 | 0.672 | 0.000 | 7.0% | Few-shot learning |
@@ -71,9 +71,9 @@ This document presents comprehensive empirical results from systematic instructi
 **Bias Metrics by Protected Group**:
 | Group | FPR | FNR | Assessment |
 |-------|-----|-----|------------|
-| LGBTQ+ (494) | 43.0% | 39.4% | ⚠️ Highest FPR across all models |
-| Mexican (209) | **8.1%** | 39.8% | ✅ Second-best FPR (after GPT-5 combined) |
-| Middle East (306) | 23.6% | 35.2% | ⚠️ Balanced but elevated |
+| LGBTQ+ (494) | 43.0% | 39.4% |  Highest FPR across all models |
+| Mexican (209) | **8.1%** | 39.8% |  Second-best FPR (after GPT-5 combined) |
+| Middle East (306) | 23.6% | 35.2% |  Balanced but elevated |
 
 **Key Findings from `gptoss_ift_summary_README.md`**:
 - **Temperature Dominance**: 16.6% F1 decrease from temp=0.1 to temp=0.5, establishing temperature as primary optimization variable for classification tasks
@@ -92,9 +92,9 @@ This document presents comprehensive empirical results from systematic instructi
 **Bias Metrics by Protected Group**:
 | Group | FPR | FNR | Assessment |
 |-------|-----|-----|------------|
-| LGBTQ+ (494) | 39.2% | 41.2% | ⚠️ Nearly symmetric errors |
-| Mexican (209) | **7.0%** | 48.0% | ✅ **Best FPR across all models** |
-| Middle East (306) | 19.4% | 42.0% | ⚠️ Review needed |
+| LGBTQ+ (494) | 39.2% | 41.2% |  Nearly symmetric errors |
+| Mexican (209) | **7.0%** | 48.0% |  **Best FPR across all models** |
+| Middle East (306) | 19.4% | 42.0% |  Review needed |
 
 **Key Findings from `gpt_oss_combined_ift_summary_README.md`**:
 - **Few-Shot Learning Effectiveness**: Explicit Mexican/Latino hate examples reduced FPR from baseline (8.1%→7.0%), validating persona-specific prompting
@@ -115,15 +115,15 @@ This document presents comprehensive empirical results from systematic instructi
 **Optimal Configuration**: `hybrid_fast_accurate`
 - **Performance**: F1=0.596 (100-sample), **F1=0.528 (production)**, Accuracy=62.6%, Precision=61.3%, Recall=46.4%
 - **Architecture**: 2-stage reasoning (context analysis → binary classification), 600 tokens
-- **Production Run**: run_20251016_220311 (1,009 samples) ✓ CORRECTED
+- **Production Run**: run_20251016_220311 (1,009 samples)  CORRECTED
 - **Key Weakness**: 15.3% recall collapse at production scale (61.7%→46.4%)
 
 **Bias Metrics by Protected Group (Production)**:
 | Group | FPR | FNR | Assessment |
 |-------|-----|-----|------------|
-| LGBTQ+ (494) | 28.1% | 54.1% | ⚠️ Highest FNR across all models |
-| Mexican (209) | 11.6% | 48.8% | ⚠️ FPR higher than combined template |
-| Middle East (306) | 22.2% | **56.8%** | ⚠️ **Highest FNR across all groups** |
+| LGBTQ+ (494) | 28.1% | 54.1% |  Highest FNR across all models |
+| Mexican (209) | 11.6% | 48.8% |  FPR higher than combined template |
+| Middle East (306) | 22.2% | **56.8%** |  **Highest FNR across all groups** |
 
 **Key Findings from `gpt5_ift_summary_README.md`**:
 - **Production Underperformance**: F1=0.528 at scale, **-8.7% below GPT-OSS baseline (0.615)**, challenging architectural optimization claims
@@ -145,9 +145,9 @@ This document presents comprehensive empirical results from systematic instructi
 **Bias Metrics by Protected Group**:
 | Group | FPR | FNR | Assessment |
 |-------|-----|-----|------------|
-| LGBTQ+ (494) | 34.1% | 40.8% | ⚠️ Both elevated |
-| Mexican (209) | **5.8%** | 48.8% | ✅ **Second-best FPR across all models** |
-| Middle East (306) | 16.1% | 41.4% | ✅ Excellent FPR |
+| LGBTQ+ (494) | 34.1% | 40.8% |  Both elevated |
+| Mexican (209) | **5.8%** | 48.8% |  **Second-best FPR across all models** |
+| Middle East (306) | 16.1% | 41.4% |  Excellent FPR |
 
 **Key Findings from `gpt5_combined_ift_summary_README.md`**:
 - **Scale Robustness**: +2.0% F1 improvement (0.587→0.607) demonstrates superior generalization vs. typical degradation patterns, unique among GPT-5 configurations
@@ -354,9 +354,9 @@ Through comprehensive cross-model evaluation, this research demonstrates that **
 - **Ranked Results**: `pipeline/baseline/hyperparam/outputs/overall/comprehensive_analysis_results.csv`
 
 ### Production Validation Runs
-1. **run_20251012_191628**: GPT-OSS baseline (F1=0.615) ✅ WINNER
+1. **run_20251012_191628**: GPT-OSS baseline (F1=0.615)  WINNER
 2. **run_20251019_133309**: GPT-5 combined (F1=0.607)
-3. **run_20251016_220311**: GPT-5 architecture (F1=0.528) ✓ CORRECTED
+3. **run_20251016_220311**: GPT-5 architecture (F1=0.528)  CORRECTED
 4. **run_20251018_234643**: GPT-OSS combined (F1=0.590)
 
 ### Template Files

@@ -261,7 +261,7 @@ def test_toxigen_real_data_if_present():
         assert isinstance(result, dict)
         for split in _EXPECTED_SPLITS:
             assert split in result
-        print("✅ ToxiGen data validation passed with real data")
+        print(" ToxiGen data validation passed with real data")
     except AssertionError as e:
         if "Missing directory" in str(e) or "Missing expected" in str(e):
             pytest.skip("ToxiGen data not present - skipping data validation test")

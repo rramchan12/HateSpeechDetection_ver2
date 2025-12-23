@@ -308,10 +308,10 @@ Test 4 minimal baseline enhancements
 
 ```
 LOW EFFORT, HIGH EXPECTED GAIN:
-✓ Approach 1: Optimize example count (if V4 examples work)
-✓ Approach 2: Example quality selection
-✓ Approach 6: Ultra-minimal testing
-✓ Approach 7: Baseline wording variations
+ Approach 1: Optimize example count (if V4 examples work)
+ Approach 2: Example quality selection
+ Approach 6: Ultra-minimal testing
+ Approach 7: Baseline wording variations
 
 MEDIUM EFFORT, MEDIUM EXPECTED GAIN:
 ○ Approach 3: Dynamic context length
@@ -327,8 +327,8 @@ HIGH EFFORT, HIGH EXPECTED GAIN:
 △ Approach 13: Different base model
 
 HIGH EFFORT, UNCERTAIN GAIN:
-✗ Approach 14: Adversarial refinement
-✗ Approach 15: Human-in-the-loop
+ Approach 14: Adversarial refinement
+ Approach 15: Human-in-the-loop
 ```
 
 ---
@@ -352,11 +352,11 @@ IF F1 < 0.620:
 ### Decision 2: After V4 Production Test
 ```
 IF F1 > 0.615:
-  ✓ DEPLOY V4 WINNER
+   DEPLOY V4 WINNER
   → Consider Approach 1 or 3 for V5 refinement
 
 IF F1 ≤ 0.615:
-  ✓ DEPLOY baseline_standard (F1=0.615)
+   DEPLOY baseline_standard (F1=0.615)
   → Consider Approach 12 (fine-tuning) for major upgrade
 ```
 
@@ -373,7 +373,7 @@ IF prompt engineering plateaus at F1=0.615-0.625:
 ## Final Recommendations
 
 ### Immediate (This Week):
-1. ✅ **Test V4** (4 minimal baseline enhancements) - PRIORITY 1
+1.  **Test V4** (4 minimal baseline enhancements) - PRIORITY 1
 2. Analyze V4 results and select best performer
 3. If V4 succeeds → production test
 4. If V4 fails → try Approach 6 (ultra-minimal)

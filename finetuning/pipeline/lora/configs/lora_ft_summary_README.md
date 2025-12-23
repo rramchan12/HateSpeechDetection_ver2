@@ -454,24 +454,24 @@ The experiment demonstrates that **more parameters ≠ better performance**. Pha
 
 | Target Group | Samples | FPR | FNR | Change from Training Validation |
 |--------------|---------|-----|-----|--------------------------------|
-| **LGBTQ+** | 494 | 60.0% | 22.35% | -2.07% FPR ✅ (was 62.07%) |
-| **Mexican** | 209 | 21.18% | 20.0% | -8.82% FPR ✅ (was 30.0%) |
-| **Middle East** | 306 | 31.91% | 21.12% | +1.14% FPR ⚠️ (was 30.77%) |
+| **LGBTQ+** | 494 | 60.0% | 22.35% | -2.07% FPR  (was 62.07%) |
+| **Mexican** | 209 | 21.18% | 20.0% | -8.82% FPR  (was 30.0%) |
+| **Middle East** | 306 | 31.91% | 21.12% | +1.14% FPR  (was 30.77%) |
 
 ### Production Validation Analysis
 
 **Strengths**:
-1. ✅ **Consistent Performance**: F1 dropped only 2.34% on larger production set (0.6852 → 0.6692)
-2. ✅ **LGBTQ+ Bias Improved**: FPR decreased from 62.07% → 60.0% (-2.07%)
-3. ✅ **Mexican Bias Improved**: FPR decreased from 30.0% → 21.18% (-8.82%)
-4. ✅ **Stable Recall**: 78.71% maintains strong hate speech detection capability
-5. ✅ **Generalizes Well**: Model performs reliably on unseen production data
+1.  **Consistent Performance**: F1 dropped only 2.34% on larger production set (0.6852 → 0.6692)
+2.  **LGBTQ+ Bias Improved**: FPR decreased from 62.07% → 60.0% (-2.07%)
+3.  **Mexican Bias Improved**: FPR decreased from 30.0% → 21.18% (-8.82%)
+4.  **Stable Recall**: 78.71% maintains strong hate speech detection capability
+5.  **Generalizes Well**: Model performs reliably on unseen production data
 
 **Challenges**:
-1. ⚠️ **LGBTQ+ FPR Still High**: 60% false positive rate remains a concern
-2. ⚠️ **Middle East FPR Slight Increase**: 30.77% → 31.91% (+1.14%)
-3. ⚠️ **Precision Drop**: 59.68% → 58.20% (-2.48%) indicates more false positives
-4. ⚠️ **F1 Below 0.70**: Production F1=0.6692 still below stretch goal
+1.  **LGBTQ+ FPR Still High**: 60% false positive rate remains a concern
+2.  **Middle East FPR Slight Increase**: 30.77% → 31.91% (+1.14%)
+3.  **Precision Drop**: 59.68% → 58.20% (-2.48%) indicates more false positives
+4.  **F1 Below 0.70**: Production F1=0.6692 still below stretch goal
 
 **Key Insights**:
 - Model shows **good generalization** with minimal performance degradation on full production set
@@ -483,12 +483,12 @@ The experiment demonstrates that **more parameters ≠ better performance**. Pha
 
 | Criterion | Status | Notes |
 |-----------|--------|-------|
-| **F1 ≥ 0.615** | ✅ PASS | 0.6692 (+8.7% above minimum) |
-| **F1 ≥ 0.70** | ❌ FAIL | 0.6692 (-4.4% below stretch goal) |
-| **Generalization** | ✅ PASS | <2.5% F1 drop on production set |
-| **Bias Fairness** | ⚠️ REVIEW | LGBTQ+ FPR=60% requires attention |
-| **Recall ≥ 75%** | ✅ PASS | 78.71% hate speech detection |
-| **Stability** | ✅ PASS | Consistent across demographics |
+| **F1 ≥ 0.615** |  PASS | 0.6692 (+8.7% above minimum) |
+| **F1 ≥ 0.70** |  FAIL | 0.6692 (-4.4% below stretch goal) |
+| **Generalization** |  PASS | <2.5% F1 drop on production set |
+| **Bias Fairness** |  REVIEW | LGBTQ+ FPR=60% requires attention |
+| **Recall ≥ 75%** |  PASS | 78.71% hate speech detection |
+| **Stability** |  PASS | Consistent across demographics |
 
 **Recommendation**: **APPROVED for production deployment** with mandatory monitoring of LGBTQ+ false positives and scheduled threshold tuning optimization within 2 weeks.
 
@@ -580,7 +580,7 @@ The experiment demonstrates that **more parameters ≠ better performance**. Pha
 
 ### Production Deployment Status
 - **Model**: Phase 2 (high_capacity) at `finetuning/models/high_capacity`
-- **Status**: ✅ APPROVED for production deployment
+- **Status**:  APPROVED for production deployment
 - **Production F1**: 0.6692 (validated on 1,009 samples)
 - **Deployment Date**: October 26, 2025
 - **Monitoring**: Required for LGBTQ+ false positive rate (60%)

@@ -77,9 +77,9 @@ This document presents empirical results from optimizing gpt-oss-120b (Phi-3.5-M
 
 | Target Group | Samples | FPR | FNR | Fairness |
 |--------------|---------|-----|-----|----------|
-| LGBTQ+ | 494 (49.0%) | 0.392 | 0.412 | ⚠️ REVIEW |
-| **Mexican** | 209 (20.7%) | **0.070** | **0.480** | ✅ BEST FPR |
-| Middle East | 306 (30.3%) | 0.194 | 0.420 | ⚠️ REVIEW |
+| LGBTQ+ | 494 (49.0%) | 0.392 | 0.412 |  REVIEW |
+| **Mexican** | 209 (20.7%) | **0.070** | **0.480** |  BEST FPR |
+| Middle East | 306 (30.3%) | 0.194 | 0.420 |  REVIEW |
 
 **Critical Production Findings**:
 
@@ -111,7 +111,7 @@ This document presents empirical results from optimizing gpt-oss-120b (Phi-3.5-M
 **Design**: Added explicit 5-example block demonstrating hate vs. normal contrast
 
 **Results (50-sample validation)**:
-- **Conservative strategy**: 71% accuracy, 0.667 F1 ✅✅✅ **BEST OVERALL**
+- **Conservative strategy**: 71% accuracy, 0.667 F1  **BEST OVERALL**
 - Mexican FNR: Consistent 33% across all strategies (-50% improvement from v3)
 - LGBTQ+ balance: Conservative achieved 25%/25% FPR/FNR
 
@@ -137,10 +137,10 @@ NORMAL: "Immigration system should prioritize legal pathways" (policy critique)
 ### Decision Rationale: Why Option B?
 
 **Empirical Evidence**:
-1. ✅ **Best Overall Performance**: Conservative achieved 71% accuracy vs. 58-60% for Option C
-2. ✅ **Consistency**: ALL Option B strategies achieved 33% Mexican FNR (vs. Option C mixed results)
-3. ✅ **Deterministic Synergy**: Conservative strategy (temp=0.0) + few-shot examples = optimal pattern learning
-4. ✅ **Interpretability**: Clear HATE/NORMAL labels make model behavior predictable
+1.  **Best Overall Performance**: Conservative achieved 71% accuracy vs. 58-60% for Option C
+2.  **Consistency**: ALL Option B strategies achieved 33% Mexican FNR (vs. Option C mixed results)
+3.  **Deterministic Synergy**: Conservative strategy (temp=0.0) + few-shot examples = optimal pattern learning
+4.  **Interpretability**: Clear HATE/NORMAL labels make model behavior predictable
 
 **Trade-offs Accepted**:
 - Option C optimized had better LGBTQ+ FNR (11% vs. 33%)
@@ -184,7 +184,7 @@ NORMAL: "Immigration system should prioritize legal pathways" (policy critique)
 
 | Metric | Value | Change from 100-sample | Interpretation |
 |--------|-------|------------------------|----------------|
-| **F1-Score** | **0.590** | -2.4% (0.614→0.590) | **Minimal degradation at scale** ✅ |
+| **F1-Score** | **0.590** | -2.4% (0.614→0.590) | **Minimal degradation at scale**  |
 | **Accuracy** | 64.5% | +3.5% (61.0%→64.5%) | Accuracy improvement with diversity |
 | **Precision** | 61.6% | +4.2% (57.4%→61.6%) | More conservative predictions |
 | **Recall** | 56.7% | -9.3% (66.0%→56.7%) | Moderate recall degradation |
@@ -197,20 +197,20 @@ NORMAL: "Immigration system should prioritize legal pathways" (policy critique)
 
 | Target Group | Sample Distribution | FPR | FNR | Fairness Status | Key Achievement |
 |--------------|---------------------|-----|-----|-----------------|-----------------|
-| **LGBTQ+** | 494 (49.0%) | 0.392 | 0.412 | ⚠️ REVIEW | Nearly balanced FPR/FNR |
-| **Mexican** | 209 (20.7%) | **0.070** | 0.480 | ✅ **EXCEPTIONAL FPR** | Few-shot examples validated |
-| **Middle East** | 306 (30.3%) | 0.194 | 0.420 | ⚠️ REVIEW | FPR improvement at scale |
+| **LGBTQ+** | 494 (49.0%) | 0.392 | 0.412 |  REVIEW | Nearly balanced FPR/FNR |
+| **Mexican** | 209 (20.7%) | **0.070** | 0.480 |  **EXCEPTIONAL FPR** | Few-shot examples validated |
+| **Middle East** | 306 (30.3%) | 0.194 | 0.420 |  REVIEW | FPR improvement at scale |
 
 **Comparison: 100-Sample vs. Production Scale**:
 
 | Metric | 100-Sample | Production (1,009) | Change | Analysis |
 |--------|------------|-------------------|--------|----------|
-| **Mexican FPR** | 20.0% | **7.0%** | **-13.0%** | ✅ Few-shot generalization excellent |
-| **LGBTQ+ FPR** | 56.7% | 39.2% | -17.5% | ✅ Improved with dataset diversity |
-| **Middle East FPR** | 30.8% | 19.4% | -11.4% | ✅ Better at scale |
-| **Mexican FNR** | 58.3% | 48.0% | -10.3% | ✅ Recall improvement |
-| **LGBTQ+ FNR** | 21.1% | 41.2% | +20.1% | ❌ Recall degradation |
-| **Middle East FNR** | 31.3% | 42.0% | +10.7% | ❌ Moderate recall loss |
+| **Mexican FPR** | 20.0% | **7.0%** | **-13.0%** |  Few-shot generalization excellent |
+| **LGBTQ+ FPR** | 56.7% | 39.2% | -17.5% |  Improved with dataset diversity |
+| **Middle East FPR** | 30.8% | 19.4% | -11.4% |  Better at scale |
+| **Mexican FNR** | 58.3% | 48.0% | -10.3% |  Recall improvement |
+| **LGBTQ+ FNR** | 21.1% | 41.2% | +20.1% |  Recall degradation |
+| **Middle East FNR** | 31.3% | 42.0% | +10.7% |  Moderate recall loss |
 
 **Critical Production Findings**:
 
@@ -222,11 +222,11 @@ NORMAL: "Immigration system should prioritize legal pathways" (policy critique)
 6. **Middle Eastern Consistency**: Maintained moderate FPR/FNR balance across scales, no catastrophic failures
 
 **Production Deployment Recommendation**: Architecture demonstrates **production readiness** with:
-- ✅ Minimal performance degradation at scale (-2.4% F1)
-- ✅ Exceptional Mexican FPR (7.0%) through few-shot learning
-- ✅ Improved FPR across all groups vs. small-scale testing
-- ⚠️ Requires LGBTQ+-focused recall optimization (41.2% FNR target: <30%)
-- ⚠️ Consider adding LGBTQ+-specific few-shot examples to mirror Mexican success
+-  Minimal performance degradation at scale (-2.4% F1)
+-  Exceptional Mexican FPR (7.0%) through few-shot learning
+-  Improved FPR across all groups vs. small-scale testing
+-  Requires LGBTQ+-focused recall optimization (41.2% FNR target: <30%)
+-  Consider adding LGBTQ+-specific few-shot examples to mirror Mexican success
 
 ---
 
@@ -257,18 +257,18 @@ NORMAL: "Immigration system should prioritize legal pathways" (policy critique)
 **Summary**: Production scale revealed different bias patterns from small-scale testing:
 
 **Mexican Persona: Fairness Champion**
-- **FPR: 7.0%** ✅ (dramatically improved from 20.0% at 100-sample)
-- FNR: 48.0% ⚠️ (improved from 58.3% but still elevated)
+- **FPR: 7.0%**  (dramatically improved from 20.0% at 100-sample)
+- FNR: 48.0%  (improved from 58.3% but still elevated)
 - **Achievement**: Only persona approaching fairness threshold, validating few-shot examples approach
 
 **LGBTQ+ Persona: Balanced Bias**
-- FPR: 39.2% ⚠️ (improved from 56.7%)
-- FNR: 41.2% ⚠️ (degraded from 21.1%)
+- FPR: 39.2%  (improved from 56.7%)
+- FNR: 41.2%  (degraded from 21.1%)
 - **Pattern**: Nearly symmetrical error rates suggest architectural fairness, but both elevated
 
 **Middle Eastern Persona: Moderate Bias**
-- FPR: 19.4% ✅ (improved from 30.8%)
-- FNR: 42.0% ⚠️ (degraded from 31.3%)
+- FPR: 19.4%  (improved from 30.8%)
+- FNR: 42.0%  (degraded from 31.3%)
 - **Pattern**: Good specificity, moderate sensitivity issues
 
 **Critical Fairness Findings**:
