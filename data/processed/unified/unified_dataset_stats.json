@@ -1,0 +1,36 @@
+{
+  "total_entries": 5151,
+  "hatexplain_entries": 2427,
+  "toxigen_entries": 2724,
+  "label_binary_distribution": {
+    "normal": 2725,
+    "hate": 2426
+  },
+  "label_multiclass_distribution": {
+    "benign_implicit": 1362,
+    "normal": 526,
+    "hatespeech": 1064,
+    "offensive": 837,
+    "toxic_implicit": 1362
+  },
+  "target_group_distribution": {
+    "middle_east": 1470,
+    "mexican": 1165,
+    "lgbtq": 2516
+  },
+  "persona_tag_distribution": {
+    "middle_east": 898,
+    "arab": 572,
+    "hispanic": 265,
+    "homosexual": 1590,
+    "lgbtq": 926,
+    "mexican": 900
+  },
+  "source_distribution": {
+    "hatexplain": 2427,
+    "toxigen": 2724
+  },
+  "synthetic_ratio": 0.0,
+  "avg_text_length": 102.08660194174757,
+  "rationale_coverage": 0.36886041545331005
+}

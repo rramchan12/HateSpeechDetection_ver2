@@ -4,10 +4,10 @@
 
 **Research Title:** HATEFUL CONTENT DETECTION IN SOCIAL MEDIA USING LARGE LANGUAGE MODELS (LLMs) INCLUDING PERSONA-BASED AND POLICY-BASED TECHNIQUES
 
-**Author:** Ravi Ramchandran  
+**Author:** Ravi Ramchandran | [LinkedIn](https://www.linkedin.com/in/raviramchandran/)  
 **Programme:** MS Machine Learning & Artificial Intelligence (ML&AI)  
 **Student ID:** 1180967  
-**Thesis Supervisor:** Dr Dattatraya Parle  
+**Thesis Supervisor:** Dr Dattatraya Parle | [LinkedIn](https://www.linkedin.com/in/dr-dattatraya-parle-1bb2635/)  
 **Institution:** Liverpool John Moores University  
 **Research Proposal:** [View PDF](https://github.com/rramchan12/LJMU_MLAI_RR/blob/main/Research_Proposal_RaviR_FinalD.pdf)
 
@@ -17,13 +17,21 @@
 
 The rapid escalation of hate speech on social media has created an urgent need for scalable, fair, and context-sensitive automated moderation systems. Traditional rule-based and machine learning approaches struggle with implicit, coded, or context-dependent hate speech, while no prior work has systematically unified persona-based and policy-based techniques within Large Language Models (LLMs). This thesis presents a novel, empirically validated approach that integrates persona-based and policy-based signals using both open-source (GPT-OSS) and commercial (GPT-5) LLMs, explicitly focusing on three high-prevalence personas: LGBTQ+, Mexican, and Middle East. The methodology combines HateXplain and ToxiGen datasets into a unified, balanced corpus of 5,151 samples, employing a modular framework for Instruction Fine-Tuning (IFT) and Supervised Fine-Tuning (SFT) with LoRA. This research advances hate speech detection by providing a reproducible, data-driven methodology that emphasizes prompt design, model adaptation, and fairness-aware evaluation for ethical AI-driven moderation on social media platforms.
 
-### Novel Reusable Frameworks
+### Research Contributions
 
-This thesis contributes two novel, reusable frameworks designed for large-scale rapid experimentation and validation of LLMs (tested on GPT-OSS and GPT-5) for the further benefit of the research community:
+This thesis advances the field through three primary contributions to the research community:
 
-- **[Prompt Validation Framework](prompt_engineering/README.md)** - Systematic IFT experimentation  through multi-threaded inference orchestration, supporting baseline, persona-based, policy-based, and hybrid prompt strategies with automated metric computation and fairness-aware evaluation across demographic groups.
+#### 1. Unified Benchmark Dataset
 
-- **[SFT Framework](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)** - Parameter-efficient fine-tuning using LoRA/QLoRA with 4-bit quantization, leveraging explicit label and rationale supervision from the unified dataset with support for multi-GPU training (4x A100 80GB) and comprehensive evaluation metrics.
+We publicly release a curated, cleaned, benchmark-ready unified dataset combining HateXplain and ToxiGen sources. The dataset provides 5,151 stratified samples with 47/53 class balance, 36.9% rationale coverage, and explicit demographic group annotations (LGBTQ+, Mexican, Middle East) designed for fairness-aware evaluation. **[Dataset Documentation](data/processed/unified/README.md)**
+
+#### 2. Reusable Prompt Suite for Instruction Fine-Tuning
+
+The thesis provides a reusable prompt suite covering baseline, persona-based, and policy-constrained variants, allowing researchers to benchmark LLM behavior consistently. We introduce general-purpose instruction templates that can be reused across LLM families (GPT-OSS, Qwen, LLaMA) with systematic evaluation protocols. **[Prompt Validation Framework](prompt_engineering/README.md)**
+
+#### 3. Modular Supervised Fine-Tuning Framework
+
+We contribute a parameter-efficient fine-tuning framework implementing LoRA/QLoRA with 4-bit quantization, designed for reproducible experimentation across model architectures. The framework provides multi-GPU training orchestration, explicit rationale supervision, and comprehensive fairness-aware evaluation metrics. **[SFT Framework](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)**
 
 ## Project Architecture
 

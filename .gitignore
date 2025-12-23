@@ -179,7 +179,15 @@ data/hatexplain/classes_two.npy
 data/hatexplain/post_id_divisions.json
 data/toxigen/*.parquet
 data/toxigen/*.jsonl
-data/processed/*/
+
+# Exclude all processed data except unified dataset
+data/processed/hatexplain/
+data/processed/toxigen/
+
+# Include unified dataset (core contribution)
+!data/processed/unified/
+!data/processed/unified/*.json
+
 test_output/
 
 # Temporary files
