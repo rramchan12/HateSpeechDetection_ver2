@@ -67,7 +67,7 @@ Supports multi-GPU training (4x A100 80GB), parameter-efficient fine-tuning (r=3
 
 Multi-threaded execution framework (5 workers, batch size 10) with 5 prompt strategies (Baseline, Policy, Persona, Combined, Enhanced Combined). Features intelligent rate limiting, exponential backoff retry logic, and runID-based incremental storage.
 
-**Documentation**: [`prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)  
+**Documentation**: [`prompt_engineering/pipeline/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/pipeline/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)  
 **User Guide**: [`prompt_engineering/README.md`](prompt_engineering/README.md)  
 **Debugging**: [`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)
 
@@ -147,12 +147,12 @@ python runner.py --model-path ../lora/outputs/checkpoint-final
 - **[`data_preparation/data_preparation_README.md`](data_preparation/data_preparation_README.md)** - Preprocessing and unification pipeline
 - **[`data_preparation/UNIFICATION_APPROACH.md`](data_preparation/UNIFICATION_APPROACH.md)** - Comprehensive unification methodology analysis
 - **[`finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md`](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)** - LoRA training and evaluation framework
-- **[`prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)** - Prompt validation framework architecture
+- **[`prompt_engineering/pipeline/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md`](prompt_engineering/pipeline/PROMPT_VALIDATION_FRAMEWORK_ARCHITECTURE.md)** - Prompt validation framework architecture
 - **[`prompt_engineering/README.md`](prompt_engineering/README.md)** - Prompt engineering user guide
 - **[`prompt_engineering/DEBUG.md`](prompt_engineering/DEBUG.md)** - Debugging and troubleshooting guide
 
 ### Implementation Guides
-- **[`IFT_APPROACH_IMPLEMENTATION.md`](IFT_APPROACH_IMPLEMENTATION.md)** - In-context fine-tuning implementation
+- **[`prompt_engineering/pipeline/IFT_APPROACH_IMPLEMENTATION.md`](prompt_engineering/pipeline/IFT_APPROACH_IMPLEMENTATION.md)** - In-context fine-tuning implementation
 - **[`TRAINING_EVALUATION_DATASET_NOTE.md`](TRAINING_EVALUATION_DATASET_NOTE.md)** - Dataset usage guidelines
 - **[`finetuning/A100_SSH_TRAINING_GUIDE.md`](finetuning/A100_SSH_TRAINING_GUIDE.md)** - Remote A100 training setup
 - **[`finetuning/VALIDATION_GUIDE.md`](finetuning/VALIDATION_GUIDE.md)** - Model validation procedures
