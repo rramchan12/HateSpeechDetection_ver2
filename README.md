@@ -1,6 +1,21 @@
 # Hate Speech Detection Research Framework
 
-A comprehensive hate speech detection framework integrating dataset unification, prompt engineering validation, and LoRA-based fine-tuning. The project unifies HateXplain (real social media) and ToxiGen (synthetic) datasets with stratified balancing, achieving 47/53 class balance across 5,151 high-quality entries with 36.9% rationale coverage.
+## Master's Thesis Implementation - Liverpool John Moores University
+
+**Research Title:** HATEFUL CONTENT DETECTION IN SOCIAL MEDIA USING LARGE LANGUAGE MODELS (LLMs) INCLUDING PERSONA-BASED AND POLICY-BASED TECHNIQUES
+
+**Author:** Ravi Ramchandran  
+**Programme:** MS Machine Learning & Artificial Intelligence (ML&AI)  
+**Student ID:** 1180967  
+**Thesis Supervisor:** Dr Dattatraya Parle  
+**Institution:** Liverpool John Moores University
+
+---
+
+## Abstract
+
+The rapid escalation of hate speech on social media has created an urgent need for scalable, fair, and context-sensitive automated moderation systems. Traditional rule-based and machine learning approaches struggle with implicit, coded, or context-dependent hate speech, while no prior work has systematically unified persona-based and policy-based techniques within Large Language Models (LLMs). This thesis presents a novel, empirically validated approach that integrates persona-based and policy-based signals using both open-source (GPT-OSS) and commercial (GPT-5) LLMs, explicitly focusing on three high-prevalence personas: LGBTQ+, Mexican, and Middle East. The methodology combines HateXplain and ToxiGen datasets into a unified, balanced corpus of 5,151 samples, employing a modular framework for Instruction Fine-Tuning (IFT) and Supervised Fine-Tuning (SFT) with LoRA. This research advances hate speech detection by providing a reproducible, data-driven methodology that emphasizes prompt design, model adaptation, and fairness-aware evaluation for ethical AI-driven moderation on social media platforms.
+
 
 ## Project Architecture
 
@@ -220,10 +235,29 @@ python run_tests.py coverage
 6. Push to branch (`git push origin feature/amazing-feature`)
 7. Open a Pull Request
 
-## License
+## License & Citation
 
-This project processes publicly available datasets:
-- **HateXplain**: MIT License
-- **ToxiGen**: Apache License 2.0
+This project is released as **open-source software** for research and educational purposes.
 
-Please cite the original papers when using this unified dataset.
+### Citation Requirement
+
+**Citation is mandatory** when using this framework, methodology, or unified dataset in your work. Please cite:
+
+```bibtex
+@mastersthesis{ramchandran2025hatespeechtdetection,
+  author = {Ramchandran, Ravi},
+  title = {Hateful Content Detection in Social Media Using Large Language Models (LLMs) Including Persona-Based and Policy-Based Techniques},
+  school = {Liverpool John Moores University},
+  year = {2025},
+  type = {Master's Thesis},
+  program = {MS Machine Learning \& Artificial Intelligence}
+}
+```
+
+### Source Dataset Licenses
+
+This project processes publicly available datasets under the following licenses:
+- **HateXplain**: MIT License - Cite [Mathew et al., 2021](https://arxiv.org/abs/2012.10289)
+- **ToxiGen**: Apache License 2.0 - Cite [Hartvigsen et al., 2022](https://arxiv.org/abs/2203.09509)
+
+Please cite the original papers when using the unified dataset or methodology described in this framework.
