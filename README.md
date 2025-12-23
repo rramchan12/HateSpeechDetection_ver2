@@ -1,4 +1,4 @@
-# Hate Speech Detection Research Framework
+# Hate Speech Detection Using LLMs: Integrating Persona-Based and Policy-Based Techniques
 
 ## Master's Thesis Implementation - Liverpool John Moores University
 
@@ -8,7 +8,8 @@
 **Programme:** MS Machine Learning & Artificial Intelligence (ML&AI)  
 **Student ID:** 1180967  
 **Thesis Supervisor:** Dr Dattatraya Parle  
-**Institution:** Liverpool John Moores University
+**Institution:** Liverpool John Moores University  
+**Research Proposal:** [View PDF](https://github.com/rramchan12/LJMU_MLAI_RR/blob/main/Research_Proposal_RaviR_FinalD.pdf)
 
 ---
 
@@ -16,6 +17,13 @@
 
 The rapid escalation of hate speech on social media has created an urgent need for scalable, fair, and context-sensitive automated moderation systems. Traditional rule-based and machine learning approaches struggle with implicit, coded, or context-dependent hate speech, while no prior work has systematically unified persona-based and policy-based techniques within Large Language Models (LLMs). This thesis presents a novel, empirically validated approach that integrates persona-based and policy-based signals using both open-source (GPT-OSS) and commercial (GPT-5) LLMs, explicitly focusing on three high-prevalence personas: LGBTQ+, Mexican, and Middle East. The methodology combines HateXplain and ToxiGen datasets into a unified, balanced corpus of 5,151 samples, employing a modular framework for Instruction Fine-Tuning (IFT) and Supervised Fine-Tuning (SFT) with LoRA. This research advances hate speech detection by providing a reproducible, data-driven methodology that emphasizes prompt design, model adaptation, and fairness-aware evaluation for ethical AI-driven moderation on social media platforms.
 
+### Novel Reusable Frameworks
+
+This thesis contributes two novel, reusable frameworks designed for large-scale rapid experimentation and validation of LLMs (tested on GPT-OSS and GPT-5) for the further benefit of the research community:
+
+- **[Prompt Validation Framework](prompt_engineering/README.md)** - Systematic IFT experimentation  through multi-threaded inference orchestration, supporting baseline, persona-based, policy-based, and hybrid prompt strategies with automated metric computation and fairness-aware evaluation across demographic groups.
+
+- **[SFT Framework](finetuning/pipeline/SFT_IMPLEMENTATION_FRAMEWORK_ARCHITECTURE.md)** - Parameter-efficient fine-tuning using LoRA/QLoRA with 4-bit quantization, leveraging explicit label and rationale supervision from the unified dataset with support for multi-GPU training (4x A100 80GB) and comprehensive evaluation metrics.
 
 ## Project Architecture
 
