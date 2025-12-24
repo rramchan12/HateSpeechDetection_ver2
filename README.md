@@ -17,7 +17,7 @@
 
 The rapid escalation of hate speech on social media has created an urgent need for scalable, fair, and context-sensitive automated moderation systems. Traditional rule-based and machine learning approaches struggle with implicit, coded, or context-dependent hate speech, while no prior work has systematically unified persona-based and policy-based techniques within Large Language Models (LLMs). This thesis presents a novel, empirically validated approach that integrates persona-based and policy-based signals using both open-source (GPT-OSS) and commercial (GPT-5) LLMs, explicitly focusing on three high-prevalence personas: LGBTQ+, Mexican, and Middle East. The methodology combines HateXplain and ToxiGen datasets into a unified, balanced corpus of 5,151 samples, employing a modular framework for Instruction Fine-Tuning (IFT) and Supervised Fine-Tuning (SFT) with LoRA. This research advances hate speech detection by providing a reproducible, data-driven methodology that emphasizes prompt design, model adaptation, and fairness-aware evaluation for ethical AI-driven moderation on social media platforms.
 
-### Research Contributions
+### Open Source Contributions for future Research
 
 This thesis advances the field through three primary contributions to the research community:
 
