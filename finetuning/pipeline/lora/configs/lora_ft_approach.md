@@ -140,8 +140,11 @@ Training samples follow the chat-based conversational format with system, user, 
 
 **Source**: Unified dataset combining HateXplain and ToxiGen corpora (filtered for LoRA training)  
 **Total LoRA Training Samples**: 2,686 (filtered from unified training set)  
-**LoRA Validation Split**: 55 samples (filtered from unified validation set)  
+**LoRA Validation Split**: 100 samples (size-varied ablation set)  
 **Test/Production Validation**: 1,009 samples (unified test set, used for post-training evaluation)
+
+**Rationale for Training Subset (74% of Available Data)**:  
+LoRA fine-tuning updates only 0.038%-0.114% of model parameters (7.96M-23.9M trainable params from 20.9B total), making it highly parameter-efficient. Using a smaller, curated subset (2,686 samples) prevents the risk of memorizing training patterns while preserving generalization capability. The 74% sampling strategy balances sufficient data volume for convergence with protection against overfitting to dataset artifacts.
 
 **Unified Dataset Context**:
 - Original unified corpus: 5,151 total samples
